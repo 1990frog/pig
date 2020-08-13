@@ -109,7 +109,8 @@
 		<module>pig-common</module>
 		<module>pig-visual</module>
         <module>etl-tactics</module>
-    </modules>
+		<module>etl-tactics-api</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>

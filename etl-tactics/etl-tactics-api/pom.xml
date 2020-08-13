@@ -1,19 +1,16 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-            http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<groupId>com.clinbrain.dip</groupId>
-		<artifactId>etl-strategy</artifactId>
+		<artifactId>etl-tactics</artifactId>
 		<version>1.0.0</version>
 	</parent>
+	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>etl-strategy-api</artifactId>
-	<packaging>jar</packaging>
-
-	<description>pig archetype gen</description>
+	<artifactId>etl-tactics-api</artifactId>
+	<version>1.0.0</version>
 
 	<dependencies>
 		<!--core 工具类-->
@@ -26,11 +23,6 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.clinbrain.dip</groupId>
-			<artifactId>dip-core-metadata</artifactId>
 		</dependency>
 
 	</dependencies>

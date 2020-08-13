@@ -20,8 +20,8 @@ package com.pig4cloud.pig.common.log.aspect;
 
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
-import com.pig4cloud.pig.common.log.event.SysLogEvent;
 import com.pig4cloud.pig.common.log.util.SysLogUtils;
+import com.pig4cloud.pig.common.log.event.SysLogEvent;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;

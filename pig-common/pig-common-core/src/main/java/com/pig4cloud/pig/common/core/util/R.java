@@ -18,8 +18,12 @@
 
 package com.pig4cloud.pig.common.core.util;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
@@ -38,17 +42,28 @@ public class R<T> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@Getter
 	@Setter
 	private int code;
 
-	@Getter
 	@Setter
 	private String msg;
 
-	@Getter
 	@Setter
 	private T data;
+
+	@JsonGetter("status")
+	public int getCode() {
+		return code;
+	}
+
+	@JsonGetter("message")
+	public String getMsg() {
+		return msg;
+	}
+
+	public T getData() {
+		return data;
+	}
 
 	public static <T> R<T> ok() {
 		return restResult(null, CommonConstants.SUCCESS, null);

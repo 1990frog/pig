@@ -21,8 +21,8 @@ package com.pig4cloud.pig.common.security.component;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.security.exception.PigAuth2Exception;
+import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import lombok.SneakyThrows;
 
 /**

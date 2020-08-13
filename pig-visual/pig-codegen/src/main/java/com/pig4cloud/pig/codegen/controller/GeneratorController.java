@@ -20,9 +20,9 @@ package com.pig4cloud.pig.codegen.controller;
 
 import cn.hutool.core.io.IoUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.codegen.entity.GenConfig;
 import com.pig4cloud.pig.codegen.service.GeneratorService;
-import com.pig4cloud.pig.common.core.util.R;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;

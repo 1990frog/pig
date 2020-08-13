@@ -20,10 +20,10 @@ package com.pig4cloud.pig.codegen.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.pig4cloud.pig.codegen.entity.GenFormConf;
-import com.pig4cloud.pig.codegen.service.GenFormConfService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.codegen.entity.GenFormConf;
+import com.pig4cloud.pig.codegen.service.GenFormConfService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;

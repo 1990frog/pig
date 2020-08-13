@@ -6,9 +6,9 @@
 
 package com.pig4cloud.pig.admin.api.vo;
 
+import com.pig4cloud.pig.admin.api.entity.SysMenu;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.api.dto.TreeNode;
-import com.pig4cloud.pig.admin.api.entity.SysMenu;
 import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;

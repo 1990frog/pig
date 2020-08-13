@@ -1,0 +1,45 @@
+server:
+  port: 7001
+  servlet:
+    context-path: /clinbrain/api
+security:
+  oauth2:
+    client:
+      client-id: pig
+      client-secret: pig
+      scope: server
+spring:
+  application:
+    name: @artifactId@
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS-HOST:pig-register}:${NACOS-PORT:8848}
+        metadata:
+          management:
+            context-path: '${server.servlet.context-path}/actuator'
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        file-extension: yml
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+  profiles:
+    active: @profiles.active@
+  boot:
+    admin:
+      client:
+        instance:
+          service-url: ${server.servlet.context-path}
+          health-url: ${server.servlet.context-path}/actuator/health
+          management-url: ${server.servlet.context-path}/actuator
+  quartz:
+    auto-startup: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    elasticsearch:
+      enabled: false
+

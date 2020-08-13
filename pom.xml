@@ -108,7 +108,8 @@
 		<module>pig-upms</module>
 		<module>pig-common</module>
 		<module>pig-visual</module>
-	</modules>
+        <module>etl-tactics</module>
+    </modules>
 
 	<dependencyManagement>
 		<dependencies>

@@ -103,7 +103,7 @@ public class CodeGenUtils {
 	 */
 	@SneakyThrows
 	public void generatorCode(GenConfig genConfig, Map<String, String> table, List<Map<String, String>> columns,
-			ZipOutputStream zip, GenFormConf formConf) {
+							  ZipOutputStream zip, GenFormConf formConf) {
 		// 配置信息
 		Configuration config = getConfig();
 		boolean hasBigDecimal = false;

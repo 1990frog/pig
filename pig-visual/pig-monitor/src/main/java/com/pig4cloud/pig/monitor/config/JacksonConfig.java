@@ -36,7 +36,7 @@ public class JacksonConfig {
 	public Jackson2ObjectMapperBuilderCustomizer customizer(SimpleModule adminJacksonModule) {
 		return builder -> {
 			builder.locale(Locale.CHINA);
-			builder.timeZone(TimeZone.getTimeZone("Asia/Shanghai"));
+			builder.timeZone(TimeZone.getTimeZone("GMT+8"));
 			builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
 			builder.modules(new PigJavaTimeModule(), adminJacksonModule);
 		};

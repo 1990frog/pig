@@ -53,3 +53,5 @@ target/
 Thumbs.db
 Servers
 .metadata
+
+.gitee

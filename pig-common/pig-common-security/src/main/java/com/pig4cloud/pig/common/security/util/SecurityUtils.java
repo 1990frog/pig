@@ -19,8 +19,8 @@
 package com.pig4cloud.pig.common.security.util;
 
 import cn.hutool.core.util.StrUtil;
-import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

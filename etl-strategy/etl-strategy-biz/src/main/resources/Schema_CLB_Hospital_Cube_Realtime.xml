@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Schema name="Schema_CLB_Hospital_Cube_Realtime" metamodelVersion='4.0'>
+    <PhysicalSchema>
+        <Table name='olap_dim_date'/>
+        <Table name='olap_fact_ipd_charge_realtime'/>
+    </PhysicalSchema>
+
+    <Dimension name='日期' type='TIME' table='olap_dim_date' key='日期'>
+        <Attributes>
+            <Attribute name='日期' keyColumn='date_key' levelType='TimeDays' orderByColumn='date_key' hasHierarchy='false'/>
+            <Attribute name='月' keyColumn='month_key' levelType='TimeMonths' hasHierarchy='false'/>
+            <Attribute name='季度' keyColumn='quater_en' levelType='TimeQuarters' hasHierarchy='false'/>
+            <Attribute name='年' keyColumn='year_key' levelType='TimeYears' hasHierarchy='false'/>
+            <Attribute name='周' levelType='TimeWeeks' hasHierarchy='false'>
+                <Key>
+                    <Column name='year_key'/>
+                    <Column name='week_en'/>
+                </Key>
+                <Name>
+                    <Column name='week_en'/>
+                </Name>
+            </Attribute>
+            <Attribute name='星期' keyColumn='day_of_week' hasHierarchy='false'/>
+        </Attributes>
+        <Hierarchies>
+            <Hierarchy name='年-半年-季-月-日' hasAll='true' allMemberName='All'>
+                <Level attribute='年'/>
+                <Level attribute='季度'/>
+                <Level attribute='月'/>
+                <Level attribute='日期' name='天'/>
+            </Hierarchy>
+            <Hierarchy name='周层次结构' hasAll='True'>
+                <Level attribute='年'/>
+                <Level attribute='周'/>
+                <Level attribute='星期'/>
+            </Hierarchy>
+        </Hierarchies>
+    </Dimension>
+
+    <Cube name='CLB_Hospital_Cube_Realtime' defaultMeasure='实时-住院收费-住院登记'>
+        <Dimensions>
+            <Dimension source='日期'/>
+        </Dimensions>
+
+        <MeasureGroups>
+            <MeasureGroup name='住院收费' table='olap_fact_ipd_charge_realtime'>
+                <Measures>
+                    <Measure name='实时-住院收费-住院登记' column='charge_item_amount' aggregator='sum' formatString='####0.00'/>
+                    <Measure name='实时-住院收费数量' column='charge_item_quantity' aggregator='sum' formatString='####0.00'/>
+                </Measures>
+                <DimensionLinks>
+                    <ForeignKeyLink dimension='日期' foreignKeyColumn='charge_date_id'/>
+                </DimensionLinks>
+            </MeasureGroup>
+
+        </MeasureGroups>
+    </Cube>
+</Schema>

@@ -19,8 +19,8 @@
 package com.pig4cloud.pig.common.security.component;
 
 import cn.hutool.core.util.StrUtil;
-import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

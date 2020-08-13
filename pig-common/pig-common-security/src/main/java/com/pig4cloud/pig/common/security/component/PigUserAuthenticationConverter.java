@@ -18,8 +18,8 @@
 
 package com.pig4cloud.pig.common.security.component;
 
-import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

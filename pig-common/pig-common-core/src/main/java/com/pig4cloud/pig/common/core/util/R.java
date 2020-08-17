@@ -19,6 +19,7 @@
 package com.pig4cloud.pig.common.core.util;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -42,14 +43,22 @@ public class R<T> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@Setter
+	@JsonProperty("status")
 	private int code;
 
-	@Setter
+	@JsonProperty("message")
 	private String msg;
 
 	@Setter
 	private T data;
+
+	public void setStatus(int code) {
+		this.code = code;
+	}
+
+	public void setMessage(String msg) {
+		this.msg = msg;
+	}
 
 	@JsonGetter("status")
 	public int getCode() {
@@ -95,9 +104,9 @@ public class R<T> implements Serializable {
 
 	private static <T> R<T> restResult(T data, int code, String msg) {
 		R<T> apiResult = new R<>();
-		apiResult.setCode(code);
+		apiResult.setStatus(code);
 		apiResult.setData(data);
-		apiResult.setMsg(msg);
+		apiResult.setMessage(msg);
 		return apiResult;
 	}
 

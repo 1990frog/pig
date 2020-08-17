@@ -29,6 +29,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
@@ -59,7 +60,11 @@ public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
 		// 1. 清洗请求头中from 参数
 		ServerHttpRequest request = exchange.getRequest().mutate()
 				.headers(httpHeaders -> httpHeaders.remove(SecurityConstants.FROM)).build();
-
+		// 判断是否跳过 下面的【2.重写部分】，避免由于系统使用contextPath后路由不到对应的路径
+		boolean skip = Boolean.parseBoolean(Optional.ofNullable(request.getHeaders().getFirst("skip")).orElse("false"));
+		if(skip) {
+			return chain.filter(exchange);
+		}
 		// 2. 重写StripPrefix
 		addOriginalRequestUrl(exchange, request.getURI());
 		String rawPath = request.getURI().getRawPath();
@@ -73,7 +78,7 @@ public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public int getOrder() {
-		return -1000;
+		return 2;
 	}
 
 }

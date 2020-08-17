@@ -97,4 +97,13 @@ pig
 
 #### Star 历史
 
-[![Stargazers over time](https://starchart.cc/pigxcloud/pig.svg)](https://starchart.cc/pigxcloud/pig.svg)
+
+#### 启动顺序
+
+1. PigNacosApplication  
+2. PigGatewayApplication  
+3. PigAuthApplication 
+4. PigAdminApplication  
+使用代码生成、监控时再启动以下项目
+6. PigCodeGenApplication  
+7. PigMonitorApplication  

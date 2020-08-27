@@ -61,4 +61,6 @@ public interface CacheConstants {
 	 */
 	String PARAMS_DETAILS = "params_details";
 
+	String SSO_CLIENT_CACHE = "sso_client:token";
+
 }

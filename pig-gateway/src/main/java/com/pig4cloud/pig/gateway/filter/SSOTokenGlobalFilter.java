@@ -1,0 +1,179 @@
+/*
+ *
+ *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
+ *  *  <p>
+ *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
+ *  *  you may not use this file except in compliance with the License.
+ *  *  You may obtain a copy of the License at
+ *  *  <p>
+ *  * https://www.gnu.org/licenses/lgpl.html
+ *  *  <p>
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *
+ */
+
+package com.pig4cloud.pig.gateway.filter;
+
+import cn.hutool.crypto.SecureUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.gateway.sso.CustomAutoLogin;
+import com.pig4cloud.pig.gateway.sso.SSOClientInfo;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+import sun.misc.BASE64Encoder;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * @author lengleng
+ * @date 2019/2/1
+ * <p>
+ * 全局拦截器，作用所有的微服务
+ * <p>
+ * 1. 对请求头中参数进行处理 from 参数进行清洗 2. 重写StripPrefix = 1,支持全局
+ * <p>
+ * 支持swagger添加X-Forwarded-Prefix header （F SR2 已经支持，不需要自己维护）
+ */
+@Component
+@RequiredArgsConstructor
+public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
+
+	private static final String SSO_TOKEN_CACHE = "sso:cache:token:";
+
+	private final CustomAutoLogin autoLogin;
+
+	private final SSOClientInfo ssoClientInfo;
+
+	private final RestTemplate restTemplate;
+
+	private final CacheManager cacheManager;
+
+
+	private final ObjectMapper objectMapper;
+
+	/**
+	 * Process the Web request and (optionally) delegate to the next {@code WebFilter}
+	 * through the given {@link GatewayFilterChain}.
+	 *
+	 * @param exchange the current server exchange
+	 * @param chain    provides a way to delegate to the next filter
+	 * @return {@code Mono<Void>} to indicate when request processing is complete
+	 */
+	@Override
+	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+
+		if(!ssoClientInfo.isEnable()) {
+			return chain.filter(exchange);
+		}
+		// sso 的token
+		ServerHttpRequest request = exchange.getRequest();
+		final String token = request.getHeaders().getFirst("token");
+		String errMsg = "";
+		if (!StringUtils.isEmpty(token)) {
+			final Map userInfo = getUser(token);
+			Object userName;
+			if (userInfo != null && (userName = userInfo.get("Identity")) != null) {
+				final Map loginMap = autoLogin.login(String.valueOf(userName), ssoClientInfo.getCryptogram());
+				if (loginMap != null) {
+					final ServerHttpRequest newRequest = request.mutate()
+						.headers(httpHeaders -> httpHeaders.add("Authorization", "Bearer "
+							+ Optional.ofNullable(loginMap.get("access_token")).orElse(""))).build();
+					return chain.filter(exchange.mutate().request(newRequest.mutate().build()).build());
+				}
+				return chain.filter(exchange);
+			}else {
+				errMsg = String.valueOf(Optional.ofNullable(userInfo.get("message"))
+					.orElse("无法验证token，请重新登录！"));
+			}
+		}
+
+		autoLogin.logout(request);
+		// 登录失败。返回401错误
+		ServerHttpResponse response = exchange.getResponse();
+		R<String> result = new R<>();
+		result.setStatus(cn.hutool.http.HttpStatus.HTTP_UNAUTHORIZED);
+		result.setData(ssoClientInfo.getServerUrl());
+		result.setMessage(errMsg);
+
+		byte[] bits = new byte[0];
+		try {
+			bits = objectMapper.writeValueAsString(result)
+				.getBytes(StandardCharsets.UTF_8);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		DataBuffer buffer = response.bufferFactory().wrap(bits);
+		response.setStatusCode(HttpStatus.UNAUTHORIZED);
+		response.getHeaders().add("Content-Type", "text/json;charset=UTF-8");
+
+		return response.writeWith(Mono.just(buffer));
+	}
+
+	private Map getUser(String token) {
+		final Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_CACHE);
+		if ( cache != null && cache.get(token) != null) {
+			return (Map) cache.get(token).get();
+		}
+
+		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
+		formData.add("token", token);
+		//header = Base64(AppName)|TimeStamp|Sign
+		//Sign= MD5(Base64(AppName)|AppCode|TimeStamp|Token)
+		BASE64Encoder encoder = new BASE64Encoder();
+		byte[] textByte = ssoClientInfo.getAppName().getBytes(StandardCharsets.UTF_8);
+		String base64AppName = encoder.encode(textByte);
+
+		//初始化LocalDateTime对象
+		ZoneOffset zoneOffset = ZoneOffset.ofHours(0);
+		//初始化LocalDateTime对象
+		LocalDateTime localDateTime = LocalDateTime.now();
+		long TimeStamp = localDateTime.toEpochSecond(zoneOffset);
+		String buffer = base64AppName + "|" + ssoClientInfo.getAppCode() + "|" + TimeStamp + "|" + token;
+		String Sign = SecureUtil.md5(buffer);
+		String header = base64AppName + "|" + TimeStamp + "|" + Sign;
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Basic " + header);
+		final HttpEntity<String> entity = new HttpEntity<String>(headers);
+		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
+			HttpMethod.GET, entity, Map.class).getBody();
+		cache.put(token, map);
+		return map;
+	}
+
+	@Override
+	public int getOrder() {
+		return -1;
+	}
+
+}

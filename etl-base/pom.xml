@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.pig4cloud</groupId>
 		<artifactId>pig-cloud-dependencies-parent</artifactId>
 		<version>Hoxton.SR5</version>
 	</parent>
-	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.clinbrain.dip</groupId>
-	<artifactId>etl-tactics</artifactId>
+	<artifactId>etl-base</artifactId>
 	<version>1.0.0</version>
 	<packaging>pom</packaging>
+	<name>etl-base</name>
 
 	<properties>
 		<spring-boot.version>2.3.1.RELEASE</spring-boot.version>
@@ -36,16 +37,13 @@
 		<mybatis.mapper.version>1.1.4</mybatis.mapper.version>
 		<mybatis.pagehelper.version>1.2.3</mybatis.pagehelper.version>
 
-		<jedis.version>3.3.0</jedis.version>
-
 		<dip.etl.version>1.0.0</dip.etl.version>
-
 	</properties>
 
 	<!--项目子模块-->
 	<modules>
-		<module>etl-tactics-api</module>
-		<module>etl-tactics-biz</module>
+		<module>etl-base-api</module>
+		<module>etl-base-biz</module>
 	</modules>
 
 	<dependencies>
@@ -88,16 +86,6 @@
 
 	<dependencyManagement>
 		<dependencies>
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-data-redis</artifactId>
-				<version>${spring-boot.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>redis.clients</groupId>
-				<artifactId>jedis</artifactId>
-				<version>${jedis.version}</version>
-			</dependency>
 			<dependency>
 				<groupId>com.pig4cloud</groupId>
 				<artifactId>pig-common-security</artifactId>
@@ -179,6 +167,47 @@
 				<version>${swagger.core.version}</version>
 			</dependency>
 
+			<dependency>
+				<groupId>tk.mybatis</groupId>
+				<artifactId>mapper-spring-boot-starter</artifactId>
+				<version>${mybatis.mapper.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.mybatis.spring.boot</groupId>
+						<artifactId>mybatis-spring-boot-starter</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>com.github.pagehelper</groupId>
+				<artifactId>pagehelper-spring-boot-starter</artifactId>
+				<version>${mybatis.pagehelper.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.clinbrain.dip</groupId>
+				<artifactId>dip-core-metadata</artifactId>
+				<version>${dip.etl.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-log4j12</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<dependency>
+				<groupId>com.clinbrain.dip</groupId>
+				<artifactId>dip-core-etl</artifactId>
+				<version>${dip.etl.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-log4j12</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
@@ -233,4 +262,15 @@
 			</activation>
 		</profile>
 	</profiles>
+
+	<distributionManagement>
+		<repository>
+			<id>release</id>
+			<url>http://node1:8099/repository/maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<url>http://node1:8099/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>

@@ -18,16 +18,24 @@
 
 package com.pig4cloud.pig.common.core.config;
 
+import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author lengleng
@@ -49,7 +57,25 @@ public class RedisTemplateConfiguration {
 		redisTemplate.setValueSerializer(new JdkSerializationRedisSerializer());
 		redisTemplate.setHashValueSerializer(new JdkSerializationRedisSerializer());
 		redisTemplate.setConnectionFactory(factory);
+
 		return redisTemplate;
+	}
+
+	@Bean
+	public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+		return new RedisCacheManager(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory),
+			RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ZERO),
+			this.getRedisCacheConfigurationMap());
+
+	}
+
+	private Map<String, RedisCacheConfiguration> getRedisCacheConfigurationMap() {
+		Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>();
+		//SsoCache和BasicDataCache进行过期时间配置
+		redisCacheConfigurationMap.put(CacheConstants.SSO_CLIENT_CACHE,
+			RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30)));
+
+		return redisCacheConfigurationMap;
 	}
 
 	@Bean

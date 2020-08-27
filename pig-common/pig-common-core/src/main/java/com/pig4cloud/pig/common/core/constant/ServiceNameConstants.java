@@ -34,9 +34,5 @@ public interface ServiceNameConstants {
 	 */
 	String UMPS_SERVICE = "pig-upms-biz";
 
-	/**
-	 * ETL 服务
-	 */
-	String ETL_SERVICE = "etl-strategy-biz";
 
 }

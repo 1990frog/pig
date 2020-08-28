@@ -1,7 +1,11 @@
 package com.pig4cloud.pig.gateway.sso;
 
+import cn.hutool.core.util.StrUtil;
+import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -29,7 +33,15 @@ public class CustomAutoLogin {
 
 	private final RestTemplate restTemplate;
 
-	public Map login(String username,String password) {
+	private final CacheManager cacheManager;
+
+	public Map login(String username,String password, String token) {
+		String cacheKey = "user:" + token;
+		final Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_CACHE);
+		if(cache != null && cache.get(cacheKey) != null) {
+			return (Map) cache.get(cacheKey).get();
+		}
+
 		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
 		formData.add("username", username);
 		formData.add("password", password);
@@ -39,16 +51,20 @@ public class CustomAutoLogin {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Authorization", getAuthorizationHeader("test", "test"));
 		Map<String, Object> map = postForMap(ssoClientInfo.getOauthTokenUrl(), formData, headers);
+		if(map != null && !map.isEmpty()) {
+			cache.put(cacheKey, map);
+		}
 		return map;
 	}
 
 	public void logout(ServerHttpRequest request) {
 		final String authorization = request.getHeaders().getFirst("Authorization");
-		System.out.println(authorization);
-		final String logoutUrl = ssoClientInfo.getOauthTokenUrl().replaceFirst("/oauth/token", "/token/logout");
-		final Map result = restTemplate.exchange(logoutUrl, HttpMethod.DELETE, null, Map.class).getBody();
-		log.info("登出成功, {}", result);
-		System.out.println(result);
+		if(authorization != null && authorization.startsWith("Bearer")) {
+			final String logoutUrl = ssoClientInfo.getOauthTokenUrl().replaceFirst("/oauth/token", "/token/logout");
+			final Map result = restTemplate.exchange(logoutUrl, HttpMethod.DELETE, null, Map.class).getBody();
+			log.info("登出成功, {}", result);
+		}
+
 	}
 
 	private String getAuthorizationHeader(String clientId, String clientSecret) {

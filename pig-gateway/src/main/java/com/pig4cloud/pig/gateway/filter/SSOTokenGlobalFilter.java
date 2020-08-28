@@ -60,9 +60,9 @@ import java.util.Optional;
  * <p>
  * 全局拦截器，作用所有的微服务
  * <p>
- * 1. 对请求头中参数进行处理 from 参数进行清洗 2. 重写StripPrefix = 1,支持全局
+ * 1. 连接sso登录逻辑： 前端访问后台接口，header中带 token 参数（从sso平台登录后获取）
+ * 过滤器通过token.去sso平台获取用户信息来验证token失效与否，不失效则模拟登录本平台，失效则清除信息。返回401错误
  * <p>
- * 支持swagger添加X-Forwarded-Prefix header （F SR2 已经支持，不需要自己维护）
  */
 @Component
 @RequiredArgsConstructor
@@ -98,45 +98,43 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		// sso 的token
 		ServerHttpRequest request = exchange.getRequest();
 		final String token = request.getHeaders().getFirst("token");
-		String errMsg = "";
+		String errMsg = "无法验证token，请重新登录！";
 		if (!StringUtils.isEmpty(token)) {
 			final Map userInfo = getUser(token);
 			Object userName;
 			if (userInfo != null && (userName = userInfo.get("Identity")) != null) {
-				final Map loginMap = autoLogin.login(String.valueOf(userName), ssoClientInfo.getCryptogram());
+				final Map loginMap = autoLogin.login(String.valueOf(userName), ssoClientInfo.getCryptogram(), token);
 				if (loginMap != null) {
 					final ServerHttpRequest newRequest = request.mutate()
 						.headers(httpHeaders -> httpHeaders.add("Authorization", "Bearer "
 							+ Optional.ofNullable(loginMap.get("access_token")).orElse(""))).build();
 					return chain.filter(exchange.mutate().request(newRequest.mutate().build()).build());
 				}
-				return chain.filter(exchange);
 			}else {
-				errMsg = String.valueOf(Optional.ofNullable(userInfo.get("message"))
-					.orElse("无法验证token，请重新登录！"));
+				autoLogin.logout(request);
+				// 登录失败。返回401错误
+				ServerHttpResponse response = exchange.getResponse();
+				R<String> result = new R<>();
+				result.setStatus(cn.hutool.http.HttpStatus.HTTP_UNAUTHORIZED);
+				result.setData(ssoClientInfo.getServerUrl());
+				result.setMessage(errMsg);
+
+				byte[] bits = new byte[0];
+				try {
+					bits = objectMapper.writeValueAsString(result)
+						.getBytes(StandardCharsets.UTF_8);
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+				}
+				DataBuffer buffer = response.bufferFactory().wrap(bits);
+				response.setStatusCode(HttpStatus.UNAUTHORIZED);
+				response.getHeaders().add("Content-Type", "text/json;charset=UTF-8");
+
+				return response.writeWith(Mono.just(buffer));
 			}
 		}
+		return chain.filter(exchange);
 
-		autoLogin.logout(request);
-		// 登录失败。返回401错误
-		ServerHttpResponse response = exchange.getResponse();
-		R<String> result = new R<>();
-		result.setStatus(cn.hutool.http.HttpStatus.HTTP_UNAUTHORIZED);
-		result.setData(ssoClientInfo.getServerUrl());
-		result.setMessage(errMsg);
-
-		byte[] bits = new byte[0];
-		try {
-			bits = objectMapper.writeValueAsString(result)
-				.getBytes(StandardCharsets.UTF_8);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-		DataBuffer buffer = response.bufferFactory().wrap(bits);
-		response.setStatusCode(HttpStatus.UNAUTHORIZED);
-		response.getHeaders().add("Content-Type", "text/json;charset=UTF-8");
-
-		return response.writeWith(Mono.just(buffer));
 	}
 
 	private Map getUser(String token) {
@@ -167,7 +165,9 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		final HttpEntity<String> entity = new HttpEntity<String>(headers);
 		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
 			HttpMethod.GET, entity, Map.class).getBody();
-		cache.put(token, map);
+		if(map != null && map.get("Username") != null) {
+			cache.put(token, map);
+		}
 		return map;
 	}
 

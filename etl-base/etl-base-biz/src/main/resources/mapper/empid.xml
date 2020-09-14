@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinbrain.dip.rest.mapper.DBETLEmpidMapper">
+
+    <update id="updateStatusBatch" parameterType="java.util.List">
+
+        update etl_empid set exec_status = -1 where empid_where in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="false">
+        insert into etl_empid
+        (empid_set, empid_where, created_at, exec_status)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.empidSet},
+            #{item.empidWhere},
+            now(),
+            0
+            )
+        </foreach>
+    </insert>
+</mapper>

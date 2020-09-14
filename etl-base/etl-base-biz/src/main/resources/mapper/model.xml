@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinbrain.dip.rest.mapper.DBModelsMapper">
+
+    <resultMap id="modelResultMap" type="modelMeta">
+        <id column="id" property="id"/>
+        <result column="project_id" property="projectId"/>
+        <result column="model_name" property="modelName"/>
+        <result column="model_description" property="modelDescription"/>
+        <result column="fact_table" property="factTable"/>
+        <result column="filter_condition" property="filterCondition"/>
+        <result column="partition_date_column" property="partitionDateColumn"/>
+        <result column="partition_date_format" property="partitionDateFormat"/>
+        <result column="capacity" property="capacity"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="schema" property="schema"/>
+
+        <association property="cubeId" select="selectCubeIdbyModelId" column="id"/>
+        <association property="project" select="selectProjectById" column="{id=project_id}" autoMapping="true"/>
+
+        <collection property="lookupTables" ofType="lookupTables" column="id" select="selectLookupsR"/>
+        <collection property="measures" javaType="List" ofType="measure" column="id" select="selectMeasureR"/>
+        <collection property="rowkeys" javaType="List" ofType="dimensionRowKey" column="id"
+                    select="selectDimRowkeyByModelId"/>
+    </resultMap>
+
+    <resultMap id="dimensiones" type="dimension">
+        <id property="id" column="id"/>
+        <result property="table" column="table"/>
+        <result property="column" column="column"/>
+        <result column="column_datatype" property="columnDatatype"/>
+        <result column="column_pk_fk" property="columnPkFk"/>
+        <result column="dimension_name" property="dimensionName"/>
+        <result column="dimension_type" property="dimensionType"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="dimension_name_alias" property="dimensionNameAlias"/>
+    </resultMap>
+
+    <select id="selectProjectById" resultType="projectModel">
+      select * from kylin_project where id = #{id}
+    </select>
+
+    <select id="deleteModelLookupByModelId" parameterType="int">
+        DELETE FROM kylin_modellookup
+        WHERE model_id = #{modelId}
+    </select>
+
+    <select id="deleteModelMeasureByModelId" parameterType="int">
+        DELETE FROM kylin_measure
+        WHERE model_id = #{modelId}
+    </select>
+
+    <select id="selectModelInfo" parameterType="int" resultMap="modelResultMap">
+        SELECT * FROM kylin_model
+        <where>
+            <if test="proId !=null and proId !=''">
+                AND project_id=#{proId}
+            </if>
+        </where>
+    </select>
+    <select id="selectMeasureR" parameterType="int" resultType="measure">
+        SELECT *
+        FROM kylin_measure
+        WHERE model_id = #{id}
+    </select>
+    <select id="selectDimenR" resultType="dimension">
+        SELECT
+            a.*,
+            b.model_id
+        FROM kylin_dimension a
+            LEFT JOIN kylin_dimension_model b ON a.id = b.dimension_id
+        WHERE b.model_id = #{id}
+    </select>
+
+    <select id="selectLookupsR" resultType="lookupTables">
+         SELECT
+            kmp.model_id,
+            CONCAT(km.`schema`,'.',kmp.`table`) as `table`,
+            join_type,
+            group_concat(primary_key) AS primary_key,
+            group_concat(foreign_key) AS foreign_key
+        FROM kylin_modellookup kmp,kylin_model km
+        WHERE model_id = #{id} and kmp.model_id=km.id
+        GROUP BY kmp.model_id, kmp.`table`, kmp.join_type
+    </select>
+
+    <select id="selectModelById" resultMap="modelResultMap" parameterType="Integer">
+        SELECT * FROM kylin_model
+        <where>
+            <if test="id !=null and id !=''">
+                AND id= #{id}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectDimensionsByModelId" resultType="dimension">
+        SELECT *
+        FROM kylin_dimension
+        WHERE id IN (SELECT dimension_id
+                     FROM kylin_dimension_model
+                     WHERE model_id = #{id})
+    </select>
+
+    <select id="selectCubeIdbyModelId" resultType="Integer">
+        select id from kylin_cube where model_id = #{id};
+    </select>
+
+    <select id="selectLookupTablesByModelId" resultType="lookupTables">
+        SELECT *
+        FROM kylin_modellookup
+        WHERE model_id = #{id}
+    </select>
+
+    <select id="selectMeasuresByModelId" resultType="measure">
+        SELECT *
+        FROM kylin_measure
+        WHERE model_id = #{id}
+    </select>
+
+    <delete id="deleteModel" parameterType="int">
+        DELETE FROM kylin_model
+        WHERE id = #{modelId}
+    </delete>
+
+    <insert id="newCreateModel" parameterType="modelMeta" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO kylin_model (
+            `model_name`,
+            `model_description`,
+            `fact_table`,
+            `filter_condition`,
+            `partition_date_column`,
+            `partition_date_format`,
+            `capacity`,
+            `created_at`,
+            `updated_at`,
+            `project_id`,
+            `schema`
+        ) VALUES (#{modelName}, #{modelDescription}, #{factTable}, #{filterCondition}, #{partitionDateColumn},
+                                #{partitionDateFormat}, #{capacity}, now(), now(), #{projectId}, #{schema})
+    </insert>
+
+
+    <select id="selectModelByName" parameterType="String" resultType="modelMeta">
+        SELECT
+            id,
+            model_name,
+            model_description
+        FROM kylin_model
+        WHERE model_name = #{name};
+    </select>
+
+    <select id="selectModelByNames" parameterType="String" resultType="modelMeta">
+        SELECT
+            id,
+            model_name,
+            model_description
+        FROM kylin_model
+        WHERE model_name = #{name};
+    </select>
+
+    <insert id="addLookupsTable" useGeneratedKeys="true" parameterType="map">
+        INSERT INTO kylin_modellookup (`table`, join_type, primary_key, foreign_key, created_at, updated_at, model_id)
+        VALUES
+            (#{table}, #{joinType}, #{primary_key}, #{foreign_key}, now(), now(), #{modelId})
+    </insert>
+
+    <insert id="addModelMeasure" parameterType="measure">
+        INSERT INTO kylin_measure (measure_column, measure_column_datatype, measure_name, measure_expression, measure_type, created_at, updated_at, model_id)
+        VALUES (#{name}, #{dataType}, #{measureName}, #{measureExpression}, #{measureType}, now(),
+                now(), #{modelId})
+    </insert>
+
+    <update id="updateModelInfo" parameterType="modelMeta">
+        UPDATE kylin_model
+        SET
+            model_description     = #{modelDescription},
+            fact_table            = #{factTable},
+            filter_condition      = #{filterCondition},
+            capacity              = #{capacity},
+            partition_date_column = #{partitionDateColumn},
+            partition_date_format = #{partitionDateFormat},
+            updated_at            = now(),
+            `schema`              = #{schema}
+        WHERE model_name = #{modelName}
+    </update>
+
+    <update id="updateModelLookups" parameterType="map">
+        UPDATE kylin_modellookup
+        SET
+            `table`     = #{table},
+            join_type   = #{join_type},
+            primary_key = #{primary_key},
+            foreign_key = #{foreign_key},
+            updated_at  = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateModelmeasure" parameterType="map">
+        UPDATE kylin_measure
+        SET
+            measure_column          = #{measure_column},
+            measure_column_datatype = #{measure_column_datatype},
+            measure_name            = #{measure_name},
+            measure_expression      = #{measure_expression},
+            measure_type            = #{measure_type},
+            updated_at              = #{updated_at}
+        WHERE id = #{id}
+    </update>
+
+
+    <select id="selectDimensionByfactTable" parameterType="String" resultMap="dimensiones">
+        SELECT *
+        FROM kylin_dimension
+        WHERE `table` = #{tableName}
+    </select>
+
+
+    <!-- harvey -->
+    <select id="selectModels" resultType="modelMeta">
+        SELECT
+            a.*,
+            b.project_name
+        FROM kylin_model a
+            JOIN kylin_project b ON a.project_id = b.id
+    </select>
+    <select id="selectConcatLookups" resultType="lookupTables">
+        SELECT
+            model_id,
+            `table`,
+            join_type,
+            group_concat(primary_key) AS primary_key,
+            group_concat(foreign_key) AS foreign_key
+        FROM kylin_modellookup
+        GROUP BY model_id, `table`, join_type
+    </select>
+    <select id="selectMeasures" resultType="measure">
+        SELECT *
+        FROM kylin_measure
+    </select>
+    <select id="selectDimensions" resultType="dimension">
+        SELECT
+            a.*,
+            b.model_id
+        FROM kylin_dimension a
+            LEFT JOIN kylin_dimension_model b ON a.id = b.dimension_id
+    </select>
+
+    <select id="selectDimRowkeyByModelId" parameterType="Integer" resultType="dimensionRowKey">
+            select rowkey_column,rowkey_sort,created_at,updated_at,model_id,rowkey_encoding,rowkey_issharedby from kylin_dimensionrowkey
+            WHERE model_id=#{id} ORDER BY rowkey_sort
+    </select>
+
+
+    <insert id="cloneModelDimension">
+        insert into kylin_dimension_model(dimension_id,model_id)
+            select dimension_id,${newModelId} from kylin_dimension_model where model_id = #{modelId}
+    </insert>
+
+    <insert id="cloneModelMeasure">
+        insert into kylin_measure(measure_column,measure_column_datatype,measure_name,
+                                       measure_expression,measure_type,created_at,updated_at,model_id)
+            SELECT  measure_column,measure_column_datatype,measure_name,measure_expression,measure_type,
+                now() as created_at,
+                now() as updated_at,
+                ${newModelId}
+            FROM kylin_measure where model_id = #{modelId}
+    </insert>
+
+    <insert id="cloneModelLookups">
+        insert into kylin_modellookup(`table`,join_type,primary_key,foreign_key,
+                                      created_at,updated_at,model_id)
+            SELECT `table`,join_type,primary_key,foreign_key,
+                now() as created_at,now() as updated_at, ${newModelId} as model_id
+            FROM kylin_modellookup where model_id = #{modelId}
+    </insert>
+
+    <select id="selectKylinCubeByModelId" resultType="kylinCube" parameterType="int">
+        SELECT * FROM `kylin_cube` WHERE model_id=#{modelId}
+    </select>
+
+    <!-- Eric -->
+    <select id="selectProjectRelatedTables" resultType="String" parameterType="String">
+        select  distinct fact_table  as tables
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        where p.project_name = #{projectName}
+        union all
+        select
+        distinct
+        d.table as tables
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        join kylin_dimension_model dm on m.id = dm.model_id
+        join kylin_dimension d on dm.dimension_id = d.id
+        where p.project_name = #{projectName}
+    </select>
+
+    <select id="selectProjectRelatedDimensions" resultType="Map" parameterType="String">
+        select
+        distinct
+        d.table as dimTable,d.dimension_name as dimTableName
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        join kylin_dimension_model dm on m.id = dm.model_id
+        join kylin_dimension d on dm.dimension_id = d.id
+        where p.project_name = #{projectName}
+        and dimension_type = 'derived'
+    </select>
+
+    <select id="selectProjectRelatedDimensionAttributes" resultType="Map" parameterType="String">
+        select
+        distinct
+        d.table
+        ,d.column
+        ,d.column_datatype
+        ,d.dimension_name
+        ,d.dimension_type
+        ,case when d.dimension_type = 'normal' then d.dimension_name else d.dimension_name_alias end as dimension_name_alias
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        join kylin_dimension_model dm on m.id = dm.model_id
+        join kylin_dimension d on dm.dimension_id = d.id
+        where p.project_name =  #{projectName}
+        and d.table = #{tableName}
+    </select>
+
+    <select id="selectProjectRelatedAllDimensionAttributes" resultType="Map" parameterType="String">
+        select
+        distinct
+        d.table
+        ,d.column
+        ,d.column_datatype
+        ,d.dimension_name
+        ,d.dimension_type
+        ,d.dimension_name_alias
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        join kylin_dimension_model dm on m.id = dm.model_id
+        join kylin_dimension d on dm.dimension_id = d.id
+        where p.project_name =  #{projectName}
+    </select>
+
+    <select id="selectProjectRelatedDimensionHierarchy" resultType="String" parameterType="String">
+        select distinct  ca.hierarchy_dims
+        from kylin_project p
+        join kylin_model m on  p.id = m.project_id
+        join kylin_cube c on p.id = c.project_id and m.id = c.model_id
+        join kylin_cubeagggroup  ca on c.id = ca.cube_id
+        where p.project_name =  #{projectName}
+        and ca.hierarchy_dims != ''
+    </select>
+
+    <select id="selectProjectRelatedMGs" resultType="Map" parameterType="String">
+        select  distinct fact_table  as MGTable,model_description as MGName
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        where p.project_name = #{projectName}
+    </select>
+
+    <select id="selectProjectRelatedMeasures" resultType="Map" parameterType="String">
+        select
+        distinct
+        km.measure_name,km.measure_column,km.measure_expression,measure_column_datatype
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        join kylin_measure km on m.id = km.model_id
+        where p.project_name = #{projectName}
+        and m.model_description = #{mgName}
+    </select>
+
+    <select id="selectProjectRelatedFL" resultType="Map" parameterType="String">
+        select
+        distinct a.dimension_name,
+        ml.foreign_key
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        join kylin_modellookup ml on m.id = ml.model_id
+        join
+        (
+        select
+        distinct
+        d.table as dim_tables,d.dimension_name
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        join kylin_dimension_model dm on m.id = dm.model_id
+        join kylin_dimension d on dm.dimension_id = d.id
+        where p.project_name = #{projectName}
+        and dimension_type = 'derived'
+        )a on ml.table = a.dim_tables
+        where p.project_name = #{projectName}
+        and m.model_description = #{mgName}
+    </select>
+
+    <select id="selectProjectRelatedCalMeasures" resultType="Map" parameterType="String">
+        select mcm.measure_name,mcm.measure_expression,mcm.measure_datatype
+        from kylin_project p
+        join kylin_projectschema ps on p.id = ps.project_id
+        join kylin_model m on  p.id = m.project_id
+        join kylin_modelcalmeasure mcm on m.id = mcm.model_id
+        where p.project_name = #{projectName}
+    </select>
+
+</mapper>

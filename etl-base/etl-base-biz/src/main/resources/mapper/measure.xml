@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinbrain.dip.rest.mapper.DBMeasureMapper">
+
+    <update id="clearMeasureNameByModelId" parameterType="Integer">
+        update kylin_measure set measure_column_datatype = '',measure_name = '',measure_expression = '',measure_type = '',updated_at = now()
+where model_id = #{modelId} ;
+    </update>
+</mapper>

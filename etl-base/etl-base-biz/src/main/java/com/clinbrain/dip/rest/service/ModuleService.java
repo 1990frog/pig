@@ -126,195 +126,7 @@ public class ModuleService extends BaseService<ETLModule> {
         if (module == null) {
             return null;
         }
-        ModuleTaskRequest moduleTaskRequest = new ModuleTaskRequest();
-        String moduleCode = module.getModuleCode();
 
-        try {
-            BeanUtils.copyProperties(module,moduleTaskRequest);
-            if (module.getRangeStartDate() != null) {
-                moduleTaskRequest.setRangeStartDate(module.getRangeStartDate().getTime());
-                moduleTaskRequest.setRangeEndDate(module.getRangeEndDate().getTime());
-            }
-        } catch (BeansException e){
-            logger.error("转换module异常:", e);
-        }
-
-
-
-        if (moduleTaskRequest.getRangeStartDate() == null) {
-            moduleTaskRequest.setRangeStartDate(0L);
-        }
-        if (moduleTaskRequest.getRangeEndDate() == null) {
-            moduleTaskRequest.setRangeEndDate(0L);
-        }
-        List<ModuleTaskRequest.InnerWorkflow> workflows = new ArrayList<>();
-        moduleTaskRequest.setWorkflows(workflows);
-        List<ETLWorkflow> workflowList = module.getWorkflows();
-        if (workflowList != null && workflowList.size() > 0) {
-            workflowList.stream().sorted(Comparator.comparingInt(ETLWorkflow::getWorkflowSequenceCustomized)).forEach(workflowItem -> {
-                ModuleTaskRequest.InnerWorkflow innerWorkflow = new ModuleTaskRequest.InnerWorkflow();
-                workflows.add(innerWorkflow);
-                //添加workflow 数据
-                String workflowCode = workflowItem.getWorkflowCode();
-                String lastBefore = StringUtils.substringBeforeLast(workflowCode, "_");
-                String tempCode = StringUtils.substringAfterLast(lastBefore, "_") + "_"
-                        + StringUtils.substringAfterLast(workflowCode, "_");
-                innerWorkflow.setWorkflowCode(StringUtils.substringBefore(tempCode, "_"));
-                innerWorkflow.setWorkflowName(workflowItem.getWorkflowName());
-                innerWorkflow.setDesc(workflowItem.getWorkflowDesc());
-                innerWorkflow.setParamDefine(workflowItem.getParamDefine());
-                // code = component_code  +  sequence_default_custom
-                innerWorkflow.setWorkflowSequenceDefault(workflowItem.getComponentCode() + "_" +
-                        (workflowItem.getWorkflowSequenceCustomized() == null ?workflowItem.getWorkflowSequenceDefault():
-                        workflowItem.getWorkflowSequenceCustomized())); // workflow_code
-                innerWorkflow.setSequenceCustomized(workflowItem.getWorkflowSequenceCustomized());
-                innerWorkflow.setCategory(workflowItem.getWorkflowCategory());
-                innerWorkflow.setTargetSchema(workflowItem.getTargetSchema());
-                innerWorkflow.setTargetTable(workflowItem.getTargetTable());
-                innerWorkflow.setLoc(workflowItem.getLoc());
-                innerWorkflow.setRunnable(workflowItem.getRunnable());
-                innerWorkflow.setIncrementalMode(workflowItem.getIncrementalMode());
-                ObjectMapper objectMapper = new ObjectMapper();
-                try {
-                    String workflowParam = StringUtils.isNotEmpty(workflowItem.getWorkflowParam())?workflowItem.getWorkflowParam():"{}";
-                    innerWorkflow.setParameterJson(objectMapper.readValue(workflowParam, ModuleTaskRequest.WorkflowParamInfo.class));
-                } catch (Exception e) {
-                    logger.error("设置workflow param 出错",e);
-                }
-
-                //添加connection
-                WorkflowExtraData extraData = new WorkflowExtraData();
-                WorkflowExtraData.DisassembleSql sql = new WorkflowExtraData.DisassembleSql();
-                innerWorkflow.setExtraData(extraData);
-                extraData.setConnection(workflowItem.getConnection());
-                extraData.setTargetConnection(workflowItem.getTargetConnection());
-                extraData.setSql(sql);
-                extraData.setFullSql(workflowItem.getFullSql());
-                sql.setSelect(workflowItem.getSelectList().isEmpty() ? new ArrayList<>() : workflowItem
-                        .getSelectList().stream().peek(selectItem -> {
-                            if (selectItem.getSourceTableAliasName() != null
-                                    && selectItem.getSourceColumnName() != null) {
-                                selectItem.setSourceColumnName(selectItem.getSourceTableAliasName() + "."
-                                        + selectItem.getSourceColumnName());
-                            }
-                        }).collect(Collectors.toList()));
-                ETLWorkflowTokenFilter filter = workflowItem.getFilter();
-                sql.setFilter(filter);
-
-                if (filter != null) {
-                    sql.setWhere(filter.getCommonFilterExpressionCustomized());
-                    sql.setIncrementalWhere(filter.getIncrementalFilterExpressionCustomized());
-                    sql.setRangeWhere(filter.getRangeFilterExpressionCustomized());
-                }
-
-                // 添加reader 和 writer
-                List<ETLWorkflowDataxflow> dataxflows = workflowItem.getDataxflows();
-                if(dataxflows != null && !dataxflows.isEmpty() || "datax".equalsIgnoreCase(workflowItem.getWorkflowCategory())) {
-                    innerWorkflow.setIsGroup(true);
-                    innerWorkflow.setGroupCategory("Group");
-                    Optional<ETLWorkflowDataxflow> readerItem = dataxflows.stream().filter(d -> d.getDataflowType() == CommonConstant.DataXType.READER.getValue()).findFirst();
-                    Optional<ETLWorkflowDataxflow> writerItem = dataxflows.stream().filter(d -> d.getDataflowType()== CommonConstant.DataXType.WRITER.getValue()).findFirst();
-                    readerItem.ifPresent(reader -> {
-                        WorkflowExtraData.DataFlow readerFlow = new WorkflowExtraData.DataFlow();
-                        readerFlow.setDataflowCode(reader.getDataflowCode());
-                        readerFlow.setDataflowName(reader.getDataflowDesc());
-                        readerFlow.setDataflowType(reader.getDataxflow().getDataflowType());
-                        readerFlow.setDataflowParam(reader.getDataxflow().getDataflowParam());
-                        readerFlow.setJdbcType(reader.getDataxflow().getJdbcType());
-                        try {
-                            if(reader.getDataflowParameter() != null) {
-                                readerFlow.setParameter(objectMapper.readValue(reader.getDataflowParameter(), Map.class));
-                            }
-                        } catch (IOException e) {
-                            logger.error("设置dataxflow param 出错",e);
-                        }
-                        extraData.setReader(readerFlow);
-
-                        ModuleTaskRequest.InnerWorkflow readerWorkflow = new ModuleTaskRequest.InnerWorkflow();
-                        readerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
-                        readerWorkflow.setGroupCategory("GroupNode");
-                        readerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_"+readerFlow.getDataflowCode());
-                        readerWorkflow.setWorkflowName(readerFlow.getDataflowName());
-                        readerWorkflow.setWorkflowSequenceDefault(tempCode);
-                        readerWorkflow.setColor("lightgreen");
-                        readerWorkflow.setParamDefine(workflowItem.getParamDefine());
-                        readerWorkflow.setCategory(workflowItem.getWorkflowCategory());
-                        readerWorkflow.setDataFlowType(CommonConstant.DataXType.READER.getValue());
-                        workflows.add(readerWorkflow);
-
-                    });
-                    // 如果没有，设置为默认
-                    if(!readerItem.isPresent()){
-                        ModuleTaskRequest.InnerWorkflow readerWorkflow = new ModuleTaskRequest.InnerWorkflow();
-                        readerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
-                        readerWorkflow.setGroupCategory("GroupNode");
-                        readerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_reader");
-                        readerWorkflow.setWorkflowName("读取");
-                        readerWorkflow.setWorkflowSequenceDefault(tempCode);
-                        readerWorkflow.setColor("lightgreen");
-                        readerWorkflow.setParamDefine(workflowItem.getParamDefine());
-                        readerWorkflow.setCategory(workflowItem.getWorkflowCategory());
-                        readerWorkflow.setDataFlowType(CommonConstant.DataXType.READER.getValue());
-                        workflows.add(readerWorkflow);
-                    }
-                    writerItem.ifPresent(writer -> {
-                        WorkflowExtraData.DataFlow writerFlow = new WorkflowExtraData.DataFlow();
-                        writerFlow.setDataflowCode(writer.getDataflowCode());
-                        writerFlow.setDataflowName(writer.getDataflowDesc());
-                        writerFlow.setDataflowType(writer.getDataxflow().getDataflowType());
-                        writerFlow.setDataflowParam(writer.getDataxflow().getDataflowParam());
-                        writerFlow.setJdbcType(writer.getDataxflow().getJdbcType());
-                        try {
-                            if(writer.getDataflowParameter() != null) {
-                                writerFlow.setParameter(objectMapper.readValue(writer.getDataflowParameter(), Map.class));
-                            }
-                        } catch (IOException e) {
-                            logger.error("设置dataxflow param 出错",e);
-                        }
-                        extraData.setWriter(writerFlow);
-
-                        ModuleTaskRequest.InnerWorkflow writerWorkflow = new ModuleTaskRequest.InnerWorkflow();
-                        writerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
-                        writerWorkflow.setGroupCategory("GroupNode");
-                        writerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_"+writerFlow.getDataflowCode());
-                        writerWorkflow.setWorkflowName(writerFlow.getDataflowName());
-                        writerWorkflow.setWorkflowSequenceDefault(tempCode);
-                        writerWorkflow.setColor("pink");
-                        writerWorkflow.setParamDefine(workflowItem.getParamDefine());
-                        writerWorkflow.setCategory(workflowItem.getWorkflowCategory());
-                        writerWorkflow.setDataFlowType(CommonConstant.DataXType.WRITER.getValue());
-                        workflows.add(writerWorkflow);
-                    });
-                    if(!writerItem.isPresent()){
-                        ModuleTaskRequest.InnerWorkflow writerWorkflow = new ModuleTaskRequest.InnerWorkflow();
-                        writerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
-                        writerWorkflow.setGroupCategory("GroupNode");
-                        writerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_writer");
-                        writerWorkflow.setWorkflowName("输出");
-                        writerWorkflow.setWorkflowSequenceDefault(tempCode);
-                        writerWorkflow.setColor("pink");
-                        writerWorkflow.setParamDefine(workflowItem.getParamDefine());
-                        writerWorkflow.setCategory(workflowItem.getWorkflowCategory());
-                        writerWorkflow.setDataFlowType(CommonConstant.DataXType.WRITER.getValue());
-                        workflows.add(writerWorkflow);
-                    }
-                }
-
-                WorkflowExtraData.DisassembleFrom from = new WorkflowExtraData.DisassembleFrom();
-                if (!workflowItem.getFromOrJoinList().isEmpty()) {
-                    List<ETLWorkflowTokenFromOrJoin> joinTables = new ArrayList<>();
-                    Optional.ofNullable(workflowItem.getFromOrJoinList()).ifPresent(froms -> {
-                        joinTables.addAll(froms.stream().peek(p -> {
-                            if (p.getIsPrimaryTable() != null && p.getIsPrimaryTable() == 1) {
-                                from.setPrimaryTable(p);
-                            }
-                        }).filter(f -> f.getIsPrimaryTable() == null).collect(Collectors.toList()));
-                        from.setJoinTables(joinTables);
-                    });
-                }
-                sql.setFrom(from);
-            });
-        }
 
         /*try {
             if (StringUtils.isNotEmpty(module.getModuleJsonInfo())) {
@@ -326,8 +138,199 @@ public class ModuleService extends BaseService<ETLModule> {
             logger.error("转换moduleExtraInfo异常", e);
         }*/
 
-        return moduleTaskRequest;
+        return transformModule(module);
     }
+
+    public ModuleTaskRequest transformModule(ETLModule module) {
+		ModuleTaskRequest moduleTaskRequest = new ModuleTaskRequest();
+		String moduleCode = module.getModuleCode();
+
+		try {
+			BeanUtils.copyProperties(module,moduleTaskRequest);
+			if (module.getRangeStartDate() != null) {
+				moduleTaskRequest.setRangeStartDate(module.getRangeStartDate().getTime());
+				moduleTaskRequest.setRangeEndDate(module.getRangeEndDate().getTime());
+			}
+		} catch (BeansException e){
+			logger.error("转换module异常:", e);
+		}
+
+		if (moduleTaskRequest.getRangeStartDate() == null) {
+			moduleTaskRequest.setRangeStartDate(0L);
+		}
+		if (moduleTaskRequest.getRangeEndDate() == null) {
+			moduleTaskRequest.setRangeEndDate(0L);
+		}
+		List<ModuleTaskRequest.InnerWorkflow> workflows = new ArrayList<>();
+		moduleTaskRequest.setWorkflows(workflows);
+		List<ETLWorkflow> workflowList = module.getWorkflows();
+		if (workflowList != null && workflowList.size() > 0) {
+			workflowList.stream().sorted(Comparator.comparingInt(ETLWorkflow::getWorkflowSequenceCustomized)).forEach(workflowItem -> {
+				ModuleTaskRequest.InnerWorkflow innerWorkflow = new ModuleTaskRequest.InnerWorkflow();
+				workflows.add(innerWorkflow);
+				//添加workflow 数据
+				String workflowCode = workflowItem.getWorkflowCode();
+				String lastBefore = StringUtils.substringBeforeLast(workflowCode, "_");
+				String tempCode = StringUtils.substringAfterLast(lastBefore, "_") + "_"
+					+ StringUtils.substringAfterLast(workflowCode, "_");
+				innerWorkflow.setWorkflowCode(StringUtils.substringBefore(tempCode, "_"));
+				innerWorkflow.setWorkflowName(workflowItem.getWorkflowName());
+				innerWorkflow.setDesc(workflowItem.getWorkflowDesc());
+				innerWorkflow.setParamDefine(workflowItem.getParamDefine());
+				// code = component_code  +  sequence_default_custom
+				innerWorkflow.setWorkflowSequenceDefault(workflowItem.getComponentCode() + "_" +
+					(workflowItem.getWorkflowSequenceCustomized() == null ?workflowItem.getWorkflowSequenceDefault():
+						workflowItem.getWorkflowSequenceCustomized())); // workflow_code
+				innerWorkflow.setSequenceCustomized(workflowItem.getWorkflowSequenceCustomized());
+				innerWorkflow.setCategory(workflowItem.getWorkflowCategory());
+				innerWorkflow.setTargetSchema(workflowItem.getTargetSchema());
+				innerWorkflow.setTargetTable(workflowItem.getTargetTable());
+				innerWorkflow.setLoc(workflowItem.getLoc());
+				innerWorkflow.setRunnable(workflowItem.getRunnable());
+				innerWorkflow.setIncrementalMode(workflowItem.getIncrementalMode());
+				ObjectMapper objectMapper = new ObjectMapper();
+				try {
+					String workflowParam = StringUtils.isNotEmpty(workflowItem.getWorkflowParam())?workflowItem.getWorkflowParam():"{}";
+					innerWorkflow.setParameterJson(objectMapper.readValue(workflowParam, ModuleTaskRequest.WorkflowParamInfo.class));
+				} catch (Exception e) {
+					logger.error("设置workflow param 出错",e);
+				}
+
+				//添加connection
+				WorkflowExtraData extraData = new WorkflowExtraData();
+				WorkflowExtraData.DisassembleSql sql = new WorkflowExtraData.DisassembleSql();
+				innerWorkflow.setExtraData(extraData);
+				extraData.setConnection(workflowItem.getConnection());
+				extraData.setTargetConnection(workflowItem.getTargetConnection());
+				extraData.setSql(sql);
+				extraData.setFullSql(workflowItem.getFullSql());
+				sql.setSelect(workflowItem.getSelectList().isEmpty() ? new ArrayList<>() : workflowItem
+					.getSelectList().stream().peek(selectItem -> {
+						if (selectItem.getSourceTableAliasName() != null
+							&& selectItem.getSourceColumnName() != null) {
+							selectItem.setSourceColumnName(selectItem.getSourceTableAliasName() + "."
+								+ selectItem.getSourceColumnName());
+						}
+					}).collect(Collectors.toList()));
+				ETLWorkflowTokenFilter filter = workflowItem.getFilter();
+				sql.setFilter(filter);
+
+				if (filter != null) {
+					sql.setWhere(filter.getCommonFilterExpressionCustomized());
+					sql.setIncrementalWhere(filter.getIncrementalFilterExpressionCustomized());
+					sql.setRangeWhere(filter.getRangeFilterExpressionCustomized());
+				}
+
+				// 添加reader 和 writer
+				List<ETLWorkflowDataxflow> dataxflows = workflowItem.getDataxflows();
+				if(dataxflows != null && !dataxflows.isEmpty() || "datax".equalsIgnoreCase(workflowItem.getWorkflowCategory())) {
+					innerWorkflow.setIsGroup(true);
+					innerWorkflow.setGroupCategory("Group");
+					Optional<ETLWorkflowDataxflow> readerItem = dataxflows.stream().filter(d -> d.getDataflowType() == CommonConstant.DataXType.READER.getValue()).findFirst();
+					Optional<ETLWorkflowDataxflow> writerItem = dataxflows.stream().filter(d -> d.getDataflowType()== CommonConstant.DataXType.WRITER.getValue()).findFirst();
+					readerItem.ifPresent(reader -> {
+						WorkflowExtraData.DataFlow readerFlow = new WorkflowExtraData.DataFlow();
+						readerFlow.setDataflowCode(reader.getDataflowCode());
+						readerFlow.setDataflowName(reader.getDataflowDesc());
+						readerFlow.setDataflowType(reader.getDataxflow().getDataflowType());
+						readerFlow.setDataflowParam(reader.getDataxflow().getDataflowParam());
+						readerFlow.setJdbcType(reader.getDataxflow().getJdbcType());
+						try {
+							if(reader.getDataflowParameter() != null) {
+								readerFlow.setParameter(objectMapper.readValue(reader.getDataflowParameter(), Map.class));
+							}
+						} catch (IOException e) {
+							logger.error("设置dataxflow param 出错",e);
+						}
+						extraData.setReader(readerFlow);
+
+						ModuleTaskRequest.InnerWorkflow readerWorkflow = new ModuleTaskRequest.InnerWorkflow();
+						readerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
+						readerWorkflow.setGroupCategory("GroupNode");
+						readerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_"+readerFlow.getDataflowCode());
+						readerWorkflow.setWorkflowName(readerFlow.getDataflowName());
+						readerWorkflow.setWorkflowSequenceDefault(tempCode);
+						readerWorkflow.setColor("lightgreen");
+						readerWorkflow.setParamDefine(workflowItem.getParamDefine());
+						readerWorkflow.setCategory(workflowItem.getWorkflowCategory());
+						readerWorkflow.setDataFlowType(CommonConstant.DataXType.READER.getValue());
+						workflows.add(readerWorkflow);
+
+					});
+					// 如果没有，设置为默认
+					if(!readerItem.isPresent()){
+						ModuleTaskRequest.InnerWorkflow readerWorkflow = new ModuleTaskRequest.InnerWorkflow();
+						readerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
+						readerWorkflow.setGroupCategory("GroupNode");
+						readerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_reader");
+						readerWorkflow.setWorkflowName("读取");
+						readerWorkflow.setWorkflowSequenceDefault(tempCode);
+						readerWorkflow.setColor("lightgreen");
+						readerWorkflow.setParamDefine(workflowItem.getParamDefine());
+						readerWorkflow.setCategory(workflowItem.getWorkflowCategory());
+						readerWorkflow.setDataFlowType(CommonConstant.DataXType.READER.getValue());
+						workflows.add(readerWorkflow);
+					}
+					writerItem.ifPresent(writer -> {
+						WorkflowExtraData.DataFlow writerFlow = new WorkflowExtraData.DataFlow();
+						writerFlow.setDataflowCode(writer.getDataflowCode());
+						writerFlow.setDataflowName(writer.getDataflowDesc());
+						writerFlow.setDataflowType(writer.getDataxflow().getDataflowType());
+						writerFlow.setDataflowParam(writer.getDataxflow().getDataflowParam());
+						writerFlow.setJdbcType(writer.getDataxflow().getJdbcType());
+						try {
+							if(writer.getDataflowParameter() != null) {
+								writerFlow.setParameter(objectMapper.readValue(writer.getDataflowParameter(), Map.class));
+							}
+						} catch (IOException e) {
+							logger.error("设置dataxflow param 出错",e);
+						}
+						extraData.setWriter(writerFlow);
+
+						ModuleTaskRequest.InnerWorkflow writerWorkflow = new ModuleTaskRequest.InnerWorkflow();
+						writerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
+						writerWorkflow.setGroupCategory("GroupNode");
+						writerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_"+writerFlow.getDataflowCode());
+						writerWorkflow.setWorkflowName(writerFlow.getDataflowName());
+						writerWorkflow.setWorkflowSequenceDefault(tempCode);
+						writerWorkflow.setColor("pink");
+						writerWorkflow.setParamDefine(workflowItem.getParamDefine());
+						writerWorkflow.setCategory(workflowItem.getWorkflowCategory());
+						writerWorkflow.setDataFlowType(CommonConstant.DataXType.WRITER.getValue());
+						workflows.add(writerWorkflow);
+					});
+					if(!writerItem.isPresent()){
+						ModuleTaskRequest.InnerWorkflow writerWorkflow = new ModuleTaskRequest.InnerWorkflow();
+						writerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
+						writerWorkflow.setGroupCategory("GroupNode");
+						writerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_writer");
+						writerWorkflow.setWorkflowName("输出");
+						writerWorkflow.setWorkflowSequenceDefault(tempCode);
+						writerWorkflow.setColor("pink");
+						writerWorkflow.setParamDefine(workflowItem.getParamDefine());
+						writerWorkflow.setCategory(workflowItem.getWorkflowCategory());
+						writerWorkflow.setDataFlowType(CommonConstant.DataXType.WRITER.getValue());
+						workflows.add(writerWorkflow);
+					}
+				}
+
+				WorkflowExtraData.DisassembleFrom from = new WorkflowExtraData.DisassembleFrom();
+				if (!workflowItem.getFromOrJoinList().isEmpty()) {
+					List<ETLWorkflowTokenFromOrJoin> joinTables = new ArrayList<>();
+					Optional.ofNullable(workflowItem.getFromOrJoinList()).ifPresent(froms -> {
+						joinTables.addAll(froms.stream().peek(p -> {
+							if (p.getIsPrimaryTable() != null && p.getIsPrimaryTable() == 1) {
+								from.setPrimaryTable(p);
+							}
+						}).filter(f -> f.getIsPrimaryTable() == null).collect(Collectors.toList()));
+						from.setJoinTables(joinTables);
+					});
+				}
+				sql.setFrom(from);
+			});
+		}
+		return moduleTaskRequest;
+	}
 
     @Transactional(rollbackFor = Exception.class)
     public boolean editEtlModule(ModuleTaskRequest module) {

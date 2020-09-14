@@ -47,11 +47,17 @@ public abstract class BaseService<T> {
         return mapper.selectAll();
     }
 
-    public Page<T> selectAll(int offset,@DefaultValue(value = "10") int limit){
-        logger.debug("selectAll,page parameter: offset:"+ offset+",limit:"+limit);
-        PageHelper.offsetPage(offset,limit);
+    public Page<T> selectAll(int pageNum, int pageSize){
+        logger.debug("selectAll,page parameter: pageNum:"+ pageNum+",pageSize:"+pageSize);
+        PageHelper.startPage(pageNum,pageSize);
         return (Page<T>) mapper.selectAll();
     }
+
+	public Page<T> selectPageAll(int pageNum, int pageSize, T t){
+		logger.debug("selectPageAll, page parameter: pageNum:"+ pageNum+",pageSize:"+pageSize);
+		PageHelper.startPage(pageNum, pageSize);
+		return (Page<T>) mapper.select(t);
+	}
 
     /**
      * 自定义查询条件，具体可以查看example用法

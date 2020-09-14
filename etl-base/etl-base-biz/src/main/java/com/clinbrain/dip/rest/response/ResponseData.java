@@ -9,7 +9,7 @@ import java.util.List;
 
 public class ResponseData<T> {
     public enum Status {
-        SUCCESS(1), ERROR(0);
+        SUCCESS(0), ERROR(1);
         private Integer code;
 
         Status(int i) {

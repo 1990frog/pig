@@ -1,33 +1,33 @@
 version: '2'
 services:
-  pig-mysql:
-    build:
-      context: ./db
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-    restart: always
-    container_name: pig-mysql
-    image: pig-mysql
-    ports:
-      - 3306:3306
+#  pig-mysql:
+#    build:
+#      context: ./db
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#    restart: always
+#    container_name: pig-mysql
+#    image: pig-mysql
+#    ports:
+#      - 3306:3306
 
-  pig-redis:
-    image: redis:6.0
-    ports:
-      - 6379:6379
-    restart: always
-    container_name: pig-redis
-    hostname: pig-redis
+#  pig-redis:
+#    image: redis:6.0
+#    ports:
+#      - 6379:6379
+#    restart: always
+#    container_name: pig-redis
+#    hostname: pig-redis
 
-  pig-register:
-    build:
-      context: ./pig-register
-    restart: always
-    ports:
-      - 8848:8848
-    container_name: pig-register
-    hostname: pig-register
-    image: pig-register
+#  pig-register:
+#    build:
+#      context: ./pig-register
+#    restart: always
+#    ports:
+#      - 8848:8848
+#    container_name: pig-register
+#    hostname: pig-register
+#    image: pig-register
 
   pig-gateway:
     build:
@@ -36,8 +36,13 @@ services:
     ports:
       - 9999:9999
     container_name: pig-gateway
+    network_mode: "host"
     hostname: pig-gateway
     image: pig-gateway
+    extra_hosts:
+      - "pig-register:192.168.0.112"
+      - "pig-mysql:192.168.0.112"
+      - "pig-redis:192.168.0.112"
 
   pig-auth:
     build:
@@ -45,7 +50,12 @@ services:
     restart: always
     container_name: pig-auth
     hostname: pig-auth
+    network_mode: "host"
     image: pig-auth
+    extra_hosts:
+      - "pig-register:192.168.0.112"
+      - "pig-mysql:192.168.0.112"
+      - "pig-redis:192.168.0.112"
 
   pig-upms:
     build:
@@ -53,7 +63,12 @@ services:
     restart: always
     container_name: pig-upms
     hostname: pig-upms
+    network_mode: "host"
     image: pig-upms
+    extra_hosts:
+      - "pig-register:192.168.0.112"
+      - "pig-mysql:192.168.0.112"
+      - "pig-redis:192.168.0.112"
 
   pig-monitor:
     build:
@@ -63,6 +78,7 @@ services:
       - 5001:5001
     container_name: pig-monitor
     hostname: pig-monitor
+    network_mode: "host"
     image: pig-monitor
 
   pig-sentinel:
@@ -71,13 +87,19 @@ services:
     restart: always
     image: pig-sentinel
     container_name: pig-sentinel
+    network_mode: "host"
     ports:
       - 5003:5003
+    extra_hosts:
+      - "pig-register:192.168.0.112"
+      - "pig-mysql:192.168.0.112"
+      - "pig-redis:192.168.0.112"
 
-  pig-codegen:
-    build:
-      context: ./pig-visual/pig-codegen
-    restart: always
-    container_name: pig-codegen
-    hostname: pig-codegen
-    image: pig-codegen
+#  pig-codegen:
+#    build:
+#      context: ./pig-visual/pig-codegen
+#    restart: always
+#    container_name: pig-codegen
+#    hostname: pig-codegen
+#    image: pig-codegen
+

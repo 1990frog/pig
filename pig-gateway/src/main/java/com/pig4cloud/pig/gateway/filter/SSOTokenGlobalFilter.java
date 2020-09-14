@@ -113,6 +113,9 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 			}else {
 				autoLogin.logout(request);
 				// 登录失败。返回401错误
+				if(userInfo != null) {
+					errMsg = String.valueOf(userInfo.getOrDefault("message", errMsg));
+				}
 				ServerHttpResponse response = exchange.getResponse();
 				R<String> result = new R<>();
 				result.setStatus(cn.hutool.http.HttpStatus.HTTP_UNAUTHORIZED);

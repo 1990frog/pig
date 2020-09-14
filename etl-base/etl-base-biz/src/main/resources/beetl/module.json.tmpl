@@ -1,0 +1,199 @@
+{
+  "moduleCode" : "${moduleCode}",
+  "moduleName" : "${moduleName}",
+  "moduleDescription" : "${moduleDescription}",
+  "connectionCode" : "${connectionCode}",
+  "targetSchema" : "${targetSchema}",
+  "targetTable" : "${targetTable}",
+  "modulePriority" : "${modulePriority}",
+  "moduleCategory" : "STRATEGY",
+  "etlType" : null,
+  "enabled" : 1,
+  "fullWhileMonths" : 0,
+  "rangeStartDate" : 0,
+  "rangeEndDate" : 0,
+  "topicId" : null,
+  "engineId" : null,
+  "jobId" : ${jobId},
+  "hospitalName" : "",
+  "createdAt" : null,
+  "updatedAt" : null,
+  "numberRange" : null,
+  "workflows" : [
+  <%
+   for(workflow in workflows) {
+  %>
+  {
+    "loc" : "${workflow.loc}",
+    "runnable" : ${workflow.runnable},
+    "incrementalMode" : "${workflow.incrementalMode}",
+    "color" : "${workflow.color}",
+    "targetSchema" : "${workflow.targetSchema}",
+    "targetTable" : "${workflow.targetTable}",
+    "extraData" : "${workflow.extraData}"
+    <% if(workflow["extraData"] != null) { %>
+    {
+      "connection" : {
+        "connectionCode" : "${workflow.extraData.connection!connectionCode}"
+      },
+      "targetConnection" : {
+        "connectionCode" : "${workflow.extraData.targetConnection!connectionCode}"
+      }
+      ,
+      "sql" : {
+        "select" : [
+        <%
+        if(workflow.extraData.sql["select"].~size > 0) {
+          for(selectItem in workflow.extraData!sql["select"]) {
+
+        %>
+        {
+            "workflowTokenCode" : "${selectItem!workflowTokenCode}",
+            "sourceTableAliasName" : "${selectItem.sourceTableAliasName}",
+            "sourceColumnName" : "${selectItem.sourceColumnName}",
+            "sourceColumnExpressionDefault" : "${selectItem.sourceColumnExpressionDefault}",
+            "sourceColumnExpressionCustomized" : "${selectItem.sourceColumnExpressionCustomized}",
+            "targetColumnAliasName" : "${selectItem.targetColumnAliasName}",
+            "isEnable" : 1,
+            "isDefault" : 1,
+            "createdAt" : null,
+            "updatedAt" : null
+        }
+        <%
+          if(!selectItemLP.last) {
+           %>,<%
+          }
+          }
+          }
+        %>
+        ],
+        "where" : "${workflow.extraData.sql.where!' 1 = 1 '}",
+        "incrementalWhere" : "${workflow.extraData.sql.incrementalWhere}",
+        "rangeWhere" : "${workflow.extraData.sql.rangeWhere}",
+        "filter" : {
+          "workflowTokenCode" : "${workflow.extraData.sql.filter.workflowTokenCode}",
+          "commonFilterExpression" : "${workflow.extraData.sql.filter.commonFilterExpression}",
+          "commonFilterExpressionCustomized" : "${workflow.extraData.sql.filter.commonFilterExpressionCustomized}",
+          "incrementalFilterExpression" : "${workflow.extraData.sql.filter.incrementalFilterExpression}",
+          "incrementalFilterExpressionCustomized" : "${workflow.extraData.sql.filter.incrementalFilterExpressionCustomized}",
+          "rangeFilterExpression" : "${workflow.extraData.sql.filter.rangeFilterExpression}",
+          "rangeFilterExpressionCustomized" : "${workflow.extraData.sql.filter.rangeFilterExpressionCustomized}",
+          "isEnable" : 1,
+          "isDefault" : 1,
+          "createdAt" : null,
+          "updatedAt" : null
+        },
+        "from" : {
+          "primaryTable" :
+          <%
+           if(workflow.extraData.sql.from.primaryTable== null){
+           %>
+           null
+           <%
+           }else {
+          %>
+          {
+             "id" : "${workflow.extraData.sql.from.primaryTable.id}",
+             "workflowTokenCode" : "${workflow.extraData.sql.from.primaryTable.workflowTokenCode}",
+             "isPrimaryTable" : 1,
+             "joinType" : null,
+             "joinOnCurrentColumnName" : null,
+             "joinOnRightTableAliasName" : null,
+             "joinOnRightTableColumnName" : null,
+             "joinOnExpression" : null,
+             "isEnable" : 1,
+             "isDefault" : 1,
+             "incrementalColumn" : "${workflow.extraData.sql.from.primaryTable.incrementalColumn}",
+             "createdAt" : null,
+             "updatedAt" : null,
+             "dbName" : "${workflow.extraData.sql.from.primaryTable.dbName}",
+             "tableName" : "${workflow.extraData.sql.from.primaryTable.tableName}",
+             "tableExpression" : "${workflow.extraData.sql.from.primaryTable.tableExpression}",
+             "tableAliasName" : "${workflow.extraData.sql.from.primaryTable.tableAliasName}"
+           },
+           <%}%>
+          "joinTables" :
+          <%
+            if(workflow.extraData.sql.from.joinTables != null) {
+            %>[
+            <%
+            for (joinTable in workflow.extraData.sql.from.joinTables) {
+          %>
+          {
+             "id" : {joinTable.id},
+             "workflowTokenCode" : "${joinTable.workflowTokenCode}",
+             "isPrimaryTable" : null,
+             "joinType" : "${joinTable.joinType}",
+             "joinOnCurrentColumnName" : "${joinTable.joinOnCurrentColumnName}",
+             "joinOnRightTableAliasName" : "${joinTable.joinOnRightTableAliasName}",
+             "joinOnRightTableColumnName" : "${joinTable.joinOnRightTableColumnName}",
+             "joinOnExpression" : "${joinTable.joinOnExpression}",
+             "isEnable" : 1,
+             "isDefault" : 1,
+             "incrementalColumn" : "${joinTable.incrementalColumn}",
+             "createdAt" : null,
+             "updatedAt" : null,
+             "dbName" : "${joinTable.dbName}",
+             "tableName" : "${joinTable.tableName}",
+             "tableExpression" : "${joinTable.tableExpression}",
+             "tableAliasName" : "${joinTable.tableAliasName}"
+           }
+           <%
+              if(!joinTableLP.last) {
+                %>,<%
+              }
+            }
+            %>]<%
+            }else {
+           %>
+           null
+           <%}%>
+        }
+      },
+      "fullSql" : "${workflow.extraData!fullSql}",
+      "reader" : <%if(workflow.extraData!= null && workflow.extraData.reader != null) {%>
+        {
+          "id" : ${workflow.extraData.reader.id},
+          "dataflowCode" : "${workflow.extraData.reader.dataflowCode}",
+          "dataflowName" : "${workflow.extraData.reader.dataflowName}",
+          "dataflowType" : "${workflow.extraData.reader.dataflowType}",
+          "jdbcType" : "${workflow.extraData.reader.jdbcType}",
+          "dataflowParam" : "${workflow.extraData.reader.dataflowParam}",
+          "parameter" : "${workflow.extraData.reader.parameter}"
+        }
+      <%}else {%>"null"<%}%>,
+      "writer" : <%if(workflow.extraData != null && workflow.extraData.writer != null) {%>
+             {
+               "id" : ${workflow.extraData.writer.id},
+               "dataflowCode" : "${workflow.extraData.writer.dataflowCode}",
+               "dataflowName" : "${workflow.extraData.writer.dataflowName}",
+               "dataflowType" : "${workflow.extraData.writer.dataflowType}",
+               "jdbcType" : "${workflow.extraData.writer.jdbcType}",
+               "dataflowParam" : "${workflow.extraData.writer.dataflowParam}",
+               "parameter" : "${workflow.extraData.writer.parameter}"
+             }
+           <%}else {%>"null"<%}%>
+     }
+    <% }else { %>
+    null
+    <%}%>
+    ,
+    "key" : "${workflow.key}",
+    "text" : "${workflow.text}",
+    "code" : "${workflow.code}",
+    "sequenceCustomized" : ${workflow.sequenceCustomized},
+    "paramDefine" : "${workflow.paramDefine}",
+    "componentCategory" : "${workflow.componentCategory}",
+    "parameterJson" : "${workflow.parameterJson}",
+    "desc" : "${workflow.desc}",
+    "flowType" : "${workflow.flowType}"
+  }
+  <%
+      if(!workflowLP.last) {
+        %>,<%
+      }
+    } // end workflow for
+  %>
+
+  ]
+}

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinbrain.dip.rest.mapper.DBCubeMapper">
+
+    <resultMap id="kylinAllResultMap" type="kylinCube">
+        <id column="id" property="id"/>
+        <result column="cube_name" property="cubeName"/>
+        <result column="cube_description" property="cubeDescription"/>
+        <result column="notify_list" property="notifyList"/>
+        <result column="status_need_notify" property="statusNeedNotify"/>
+        <result column="auto_merge_time_ranges" property="autoMergeTimeRanges"/>
+        <result column="retention_range" property="retentionRange"/>
+        <result column="engine_type" property="engineType"/>
+        <result column="storage_type" property="storageType"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="model_id" property="modelId"/>
+        <result column="model_name" property="modelName"/>
+        <result column="project_id" property="projectId"/>
+
+        <association property="model" column="model_id" select="selectModelById"/>
+
+        <association property="project" column="project_id" select="selectProjectById"/>
+
+        <collection property="cubeAggGroupList" column="id" select="selectAggGroupListByCubeId" autoMapping="true">
+        </collection>
+        <collection property="cubeDictionaryList" column="id" select="selectCubeDictionaryListByCubeId" autoMapping="true">
+        </collection>
+        <collection property="cubePropertyList" column="id" select="selectCubePropertyListByCubeId" autoMapping="true">
+        </collection>
+
+        <collection property="cubeDimensionList" column="{modelId=model_id}" select="selectCubeDimensions" autoMapping="true">
+        </collection>
+    </resultMap>
+
+    <select id="selectAllCubes" resultMap="kylinAllResultMap">
+        <if test="searchText != null and searchText != ''">
+            <bind name="searchValue" value="'%' + searchText + '%'"/>
+        </if>
+        select * from kylin_cube
+        <where>
+            <if test="searchText != null and searchText != '' ">
+                (cube_name like #{searchValue} or cube_description like #{searchValue})
+            </if>
+            <if test="projectId != null and projectId != 0">
+                and project_id = #{projectId}
+            </if>
+        </where>
+        <if test="order != null and order != ''">
+            order by ${order}
+        </if>
+        <if test="limit != null and limit != ''">
+            LIMIT #{offset}, #{limit}
+        </if>
+
+    </select>
+
+    <select id="selectProjectById" resultMap="com.clinbrain.dip.rest.mapper.DBProjectMapper.projectModelMap">
+        SELECT
+            kp.*,
+            kps.id          AS kps_id,
+            kps.schema_name AS kps_schema_name,
+            kps.created_at  AS kps_created_at,
+            kps.updated_at  AS kps_updated_at,
+            kps.project_id  AS kps_project_id
+        FROM kylin_project kp LEFT JOIN kylin_projectschema kps ON kp.id = kps.project_id
+        WHERE kp.id = #{project_id}
+    </select>
+
+    <select id="selectModelById" resultMap="com.clinbrain.dip.rest.mapper.DBModelsMapper.modelResultMap">
+        SELECT * FROM kylin_model where id= #{model_id}
+    </select>
+
+    <select id="selectAggGroupListByCubeId" resultType="cubeAggGroup">
+        SELECT * FROM kylin_cubeagggroup WHERE cube_id = #{id};
+    </select>
+
+    <select id="selectCubeDictionaryListByCubeId" resultType="cubeDictionary">
+        SELECT * FROM kylin_cubedictionary WHERE cube_id = #{id};
+    </select>
+
+    <select id="selectCubePropertyListByCubeId" resultType="cubeProperty">
+        SELECT * FROM kylin_cubeproperty WHERE cube_id = #{id};
+    </select>
+
+
+    <select id="selectCustomCount" resultType="long">
+        <if test="searchText != null and searchText != ''">
+            <bind name="searchValue" value="'%' + searchText + '%'"/>
+        </if>
+        select count(0) from kylin_cube
+        <where>
+            <if test="projectId != null and projectId != 0">
+                project_id = #{projectId}
+            </if>
+            <if test="searchText != null and searchText != '' ">
+                and (cube_name like #{searchValue} or cube_description like #{searchValue})
+            </if>
+        </where>
+    </select>
+
+
+    <select id="selectOneByPrimaryKey" parameterType="Integer" resultMap="kylinAllResultMap">
+        select * from kylin_cube
+        <where>
+            <if test="cubeId != null and cubeId != '' ">
+                id = #{cubeId}
+            </if>
+        </where>
+
+    </select>
+
+    <select id="selectCubes" resultType="kylinCube">
+        SELECT
+            a.*,
+            b.model_name,
+            c.project_name
+        FROM kylin_cube a
+            JOIN kylin_model b ON a.model_id = b.id
+            JOIN kylin_project c ON a.project_id = c.id
+    </select>
+    <select id="selectCubeAggGroups" resultType="cubeAggGroup">
+        SELECT a.*
+        FROM kylin_cubeagggroup a
+    </select>
+    <select id="selectCubeDictionaries" resultType="cubeDictionary">
+        SELECT a.*
+        FROM kylin_cubedictionary a
+    </select>
+    <select id="selectCubeProperties" resultType="cubeProperty">
+        SELECT a.*
+        FROM kylin_cubeproperty a
+    </select>
+    <select id="selectCubeDimensions" resultType="dimension">
+        SELECT
+        a.model_id,
+        upper(a.`table`)                                          AS `table`,
+        upper(a.`column`)                                         AS `column`,
+        a.dimension_name,
+        a.dimension_type,
+        CASE WHEN a.dimension_type = 'derived' THEN concat(upper(b.fact_table), '.', upper(c.foreign_key))
+        ELSE concat(upper(a.`table`), '.', upper(a.`column`)) END AS rowkey_column
+        FROM vw_kylin_cubedimension a
+        JOIN kylin_model b ON a.model_id = b.id
+        LEFT JOIN kylin_modellookup c ON a.model_id = c.model_id AND a.`table` = c.`table`
+        <if test="modelId != null and modelId != ''">
+            WHERE a.model_id = ${modelId}
+        </if>
+        ORDER BY a.model_id, a.`table`
+    </select>
+
+</mapper>

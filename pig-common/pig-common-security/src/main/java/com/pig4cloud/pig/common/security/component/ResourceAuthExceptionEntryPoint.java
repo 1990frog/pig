@@ -18,6 +18,7 @@
 
 package com.pig4cloud.pig.common.security.component;
 
+import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.http.HttpStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
@@ -53,7 +54,7 @@ public class ResourceAuthExceptionEntryPoint implements AuthenticationEntryPoint
 		R<String> result = new R<>();
 		result.setStatus(HttpStatus.HTTP_UNAUTHORIZED);
 		if (authException != null) {
-			result.setMessage("error");
+			result.setMessage(ExceptionUtil.getRootCauseMessage(authException));
 			result.setData(authException.getMessage());
 		}
 		response.setStatus(HttpStatus.HTTP_UNAUTHORIZED);

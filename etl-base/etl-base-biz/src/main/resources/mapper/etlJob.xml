@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinbrain.dip.rest.mapper.DBETLLogSummaryMapper">
+
+    <select id="selectLogSummaryByJobId" resultType="etlLogSummary">
+        SELECT a.summary_id,a.etl_type,a.`status`,a.business_model,a.log_summary_start,a.log_summary_end,a.start_date,a.end_date,a.start_numeric,a.end_numeric,a.batch_id,em.module_name,em.module_code
+        FROM etl_logsummary a
+        INNER JOIN etl_job_module b on a.module_name = b.module_code
+        INNER JOIN etl_module em on b.module_code=em.module_code
+      <where>
+          <if test="jobId != null and jobId != ''">
+            and  b.job_id = #{jobId}
+          </if>
+          <if test="moduleCode !=null and moduleCode !=''">
+             and em.module_name LIKE CONCAT('%',#{moduleCode},'%') OR em.module_code LIKE CONCAT('%',#{moduleCode},'%')
+          </if>
+          <if test="status != 0 ">
+             and a.`status` = 0
+          </if>
+          <if test="hospital !=null and hospital !=''">
+              and em.hospital_code = #{hospital}
+          </if>
+      </where>
+      order by a.log_summary_start desc
+
+    </select>
+
+    <select id="selectJobModuleByJobId" resultType="Map" parameterType="int">
+        select
+          b.job_id,
+          c.module_priority,
+          group_concat(c.module_code) as module_ids,
+          group_concat(IFNULL(c.module_name,c.module_code)) as module_names
+        from etl_job a join etl_job_module b on a.id=b.job_id join etl_module c on b.module_code=c.module_code
+        where b.job_id = #{jobId} and a.enabled=1 and c.enabled=1
+        group by b.job_id,c.module_priority
+        order by b.job_id,c.module_priority
+    </select>
+
+
+
+</mapper>

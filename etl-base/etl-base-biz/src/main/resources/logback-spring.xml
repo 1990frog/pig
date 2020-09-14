@@ -70,6 +70,10 @@
 		<appender-ref ref="error"/>
 	</logger>
 
+	<logger name="com.clinbrain.dip" additivity="false" level="DEBUG">
+		<appender-ref ref="console" />
+	</logger>
+
 	<!-- Level: FATAL 0  ERROR 3  WARN 4  INFO 6  DEBUG 7 -->
 	<root level="INFO">
 		<appender-ref ref="console"/>

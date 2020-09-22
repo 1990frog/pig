@@ -29,7 +29,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
 		RedisCacheManager redisCacheManager = RedisCacheManager.builder(connectionFactory)
 			.cacheDefaults(config).build();
 
-		log.debug("自定义RedisCacheManager加载完成");
+		log.info("自定义RedisCacheManager加载完成");
 
 		return redisCacheManager;
 

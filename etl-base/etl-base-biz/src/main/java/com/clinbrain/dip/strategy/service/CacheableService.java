@@ -28,7 +28,6 @@ public class CacheableService {
 	public List<PackageInfo> packageInfos() {
 		log.debug("从本地["+config.getPackagePath()+"]加载策略包信息");
 		List<PackageInfo> packageInfos = PackageUtil.fetchPackageInfos(config.getPackagePath());
-		System.out.println(packageInfos.size());
 		return packageInfos;
 	}
 }

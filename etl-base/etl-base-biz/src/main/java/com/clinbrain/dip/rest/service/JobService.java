@@ -1,5 +1,6 @@
 package com.clinbrain.dip.rest.service;
 
+import cn.hutool.core.io.file.FileReader;
 import com.clinbrain.dip.common.DipConfig;
 import com.clinbrain.dip.metadata.azkaban.Project;
 import com.clinbrain.dip.pojo.ETLJob;
@@ -22,6 +23,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,9 +127,25 @@ public class JobService extends BaseService<ETLJob> {
         return new ResponseData.Page<ETLLogSummary>(pageData.getTotal(),pageData);
     }
 
-    public List<ETLLogDetail> selectLogDetailsBySummaryId(Integer summaryId) throws Exception{
-        return moduleMapper.getLogDetailBySummaryId(summaryId);
-    }
+	public List<ETLLogDetail> selectLogDetailsBySummaryId(Integer summaryId) throws Exception{
+		final ETLLogSummary etlLogSummary = logSummaryMapper.selectByPrimaryKey(Long.valueOf(summaryId));
+		String filePath = DipConfig.getConfigInstance().getProperty("logback.dir","") + File.separator
+			+ DateFormatUtils.format(etlLogSummary.getLogSummaryStart(), "yyyy-MM-dd")
+			+ File.separator + etlLogSummary.getBatchId()+".log";
+		File file = new File(filePath);
+		ETLLogDetail total = new ETLLogDetail();
+		total.setSubModuleName("总体");
+		total.setLogDetailStart(etlLogSummary.getLogSummaryStart());
+		total.setLogDetailEnd(etlLogSummary.getLogSummaryEnd());
+		total.setStatus(etlLogSummary.getStatus());
+		if(file.exists()) {
+			FileReader fileReader = new FileReader(file);
+			total.setLogContent(fileReader.readString());
+		}
+		final List<ETLLogDetail> detailList = moduleMapper.getLogDetailBySummaryId(summaryId);
+		detailList.add(0,total);
+		return detailList;
+	}
 
     public void deleteJobById(Integer id) throws SQLException {
         EtlJobModule module=new EtlJobModule();

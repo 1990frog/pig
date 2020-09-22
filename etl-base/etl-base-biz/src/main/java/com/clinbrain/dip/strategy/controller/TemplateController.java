@@ -4,22 +4,16 @@ package com.clinbrain.dip.strategy.controller;
 import cn.hutool.core.util.StrUtil;
 import com.clinbrain.dip.multirequestbody.MultiRequestBody;
 import com.clinbrain.dip.strategy.bean.PackageInfo;
-import com.clinbrain.dip.strategy.config.CommonConfig;
 import com.clinbrain.dip.strategy.entity.Template;
 import com.clinbrain.dip.strategy.service.TemplateService;
 import com.google.common.collect.Lists;
 import com.pig4cloud.pig.common.core.util.R;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,8 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -52,9 +49,6 @@ public class TemplateController extends ApiBaseController {
 	@Resource
 	private TemplateService templateService;
 
-	@Autowired
-	private CommonConfig commonConfig;
-
 	/**
 	 * 分页查询所有数据
 	 *
@@ -62,11 +56,21 @@ public class TemplateController extends ApiBaseController {
 	 * @param tTemplate 查询实体
 	 * @return 所有数据
 	 */
-	@ApiOperation(value = "分页展示模板数据", tags = "分页列表", notes = "分页参数{page:{pageNum,pageSize}, Template模板对象}")
+	@ApiOperation(value = "分页展示模板数据", tags = "模板列表", notes = "分页参数{page:{pageNum,pageSize}, Template模板对象}")
 	@PostMapping("list")
 	public R selectAll(@MultiRequestBody PageParam page, @MultiRequestBody(required = false) Template tTemplate) {
 		tTemplate = Optional.ofNullable(tTemplate).orElse(new Template());
 		return success(this.templateService.selectPageAll( page.getPage(), page.getSize(), tTemplate));
+	}
+
+	@ApiOperation(value = "分组展示模板数据", tags = "模板所有", notes = "选择模板 -> 系统选择")
+	@PostMapping("listAll")
+	public R selectAllTemplate() {
+		final Map<String, List<Template>> map = new HashMap<>();
+			Optional.ofNullable(this.templateService.selectAll()).ifPresent(s -> {
+				map.putAll(s.stream().collect(Collectors.groupingBy(e -> Optional.ofNullable(e.getSystem()).orElse("OTHER"))));
+			});
+		return success(map);
 	}
 
 	/**

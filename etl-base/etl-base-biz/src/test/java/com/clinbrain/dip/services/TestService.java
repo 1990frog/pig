@@ -15,7 +15,9 @@ import cn.hutool.extra.template.Template;
 import cn.hutool.extra.template.TemplateConfig;
 import cn.hutool.extra.template.TemplateEngine;
 import cn.hutool.extra.template.TemplateUtil;
+import com.clinbrain.dip.pojo.ETLLogSummary;
 import com.clinbrain.dip.pojo.ETLModule;
+import com.clinbrain.dip.rest.mapper.DBETLLogSummaryMapper;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.rest.service.ModuleService;
 import com.clinbrain.dip.strategy.bean.PackageInfo;
@@ -100,5 +102,14 @@ public class TestService {
 		System.out.println(R.ok(templateService.selectPageAll(0,5,null)));
 		System.out.println(objectMapper.writeValueAsString(templateService.selectPageAll(0,5,null)));
 		System.out.println(templateService.selectPageAll(0,5,null));
+	}
+
+	@Autowired
+	private DBETLLogSummaryMapper logSummaryMapper;
+
+	@Test
+	public void test233() {
+		final ETLLogSummary logSummary = logSummaryMapper.selectByPrimaryKey(105720);
+		System.out.println(logSummary);
 	}
 }

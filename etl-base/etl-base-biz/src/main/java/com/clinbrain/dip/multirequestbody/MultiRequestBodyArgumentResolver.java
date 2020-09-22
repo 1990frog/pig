@@ -3,6 +3,7 @@ package com.clinbrain.dip.multirequestbody;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +17,9 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -25,6 +28,18 @@ import java.util.Set;
 public class MultiRequestBodyArgumentResolver implements HandlerMethodArgumentResolver {
 
 	private static final String JSONBODY_ATTRIBUTE = "JSON_REQUEST_BODY";
+
+	private static final Set<Class> classSet = new HashSet<>();
+	static {
+		classSet.add(Integer.class);
+		classSet.add(Long.class);
+		classSet.add(Short.class);
+		classSet.add(Float.class);
+		classSet.add(Double.class);
+		classSet.add(Boolean.class);
+		classSet.add(Byte.class);
+		classSet.add(Character.class);
+	}
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
@@ -51,6 +66,7 @@ public class MultiRequestBodyArgumentResolver implements HandlerMethodArgumentRe
 		}
 
 		Class<?> parameterType = parameter.getParameterType();
+		final Type genericParameterType = parameter.getGenericParameterType();
 		// 通过注解的value或者参数名解析，能拿到value进行解析
 		if (value != null) {
 			//基本类型
@@ -65,7 +81,8 @@ public class MultiRequestBodyArgumentResolver implements HandlerMethodArgumentRe
 				return value.toString();
 			}
 			// 其他复杂对象
-			return JSON.parseObject(value.toString(), parameterType);
+
+			return JSON.parseObject(value.toString(), genericParameterType);
 		}
 
 		// 解析不到则将整个json串解析为当前参数类型
@@ -89,7 +106,7 @@ public class MultiRequestBodyArgumentResolver implements HandlerMethodArgumentRe
 		// 非基本类型，允许解析，将外层属性解析
 		Object result;
 		try {
-			result = JSON.parseObject(jsonObject.toString(), parameterType);
+			result = JSON.parseObject(jsonObject.toString(), genericParameterType);
 		} catch (JSONException jsonException) {
 			result = null;
 		}
@@ -184,15 +201,7 @@ public class MultiRequestBodyArgumentResolver implements HandlerMethodArgumentRe
 	 * 判断是否为基本数据类型包装类
 	 */
 	private boolean isBasicDataTypes(Class clazz) {
-		Set<Class> classSet = new HashSet<>();
-		classSet.add(Integer.class);
-		classSet.add(Long.class);
-		classSet.add(Short.class);
-		classSet.add(Float.class);
-		classSet.add(Double.class);
-		classSet.add(Boolean.class);
-		classSet.add(Byte.class);
-		classSet.add(Character.class);
+
 		return classSet.contains(clazz);
 	}
 

@@ -16,7 +16,4 @@ import org.springframework.stereotype.Repository;
 @Repository("templateMapper")
 public interface TemplateMapper extends tk.mybatis.mapper.common.Mapper<Template> {
 
-	@Select("select * from t_template where code = #{code}")
-	Template getByCode(@Param("code") String code);
-
 }

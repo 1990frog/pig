@@ -6,6 +6,7 @@ import com.clinbrain.dip.pojo.ETLConnection;
 import com.clinbrain.dip.rest.service.ConnectionService;
 import com.clinbrain.dip.strategy.bean.PackageInfo;
 import com.clinbrain.dip.strategy.config.CommonConfig;
+import com.clinbrain.dip.strategy.mapper.TemplateMapper;
 import com.clinbrain.dip.strategy.util.ServiceUtil;
 import com.pig4cloud.pig.common.core.util.R;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,8 @@ public class TacticsService {
 
 	private final CommonConfig config;
 
+	private final TemplateMapper templateMapper;
+
 	private final ConnectionService dataBaseService;
 
 	private final CacheableService cacheableService;
@@ -35,7 +38,7 @@ public class TacticsService {
 
 
 	public IPage<String> showFiles() {
-		log.debug("本地路径：" + config.getPackagePath());
+		log.debug("本地策略包存放路径：" + config.getPackagePath());
 		zipFileService.zip();
 		final List<PackageInfo> packageInfos = cacheableService.packageInfos();
 		List<ETLConnection> connections = dataBaseService.selectAll();
@@ -48,6 +51,5 @@ public class TacticsService {
 		return Optional.ofNullable(packageInfos).orElse(Collections.emptyList())
 			.stream().map(PackageInfo::getVendor).collect(Collectors.toList());
 	}
-
 
 }

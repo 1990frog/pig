@@ -29,6 +29,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import parquet.Preconditions;
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.weekend.Weekend;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -65,7 +67,7 @@ public class TemplateService extends BaseService<Template> {
 	private ObjectMapper objectMapper = new ObjectMapper();
 
 	public Template getByCode(String code) {
-		return mapper.getByCode(code);
+		return mapper.selectOneByExample(Weekend.of(Template.class).weekendCriteria().andEqualTo(Template::getCode, code));
 	}
 
 	/**
@@ -189,5 +191,14 @@ public class TemplateService extends BaseService<Template> {
 			tTemplate.setUpdatedAt(new Date());
 			return updateNonNull(tTemplate) > 0;
 		}
+	}
+
+	/**
+	 * 匹配模板
+	 * @throws Exception
+	 */
+	public void matchingTemplate(List<String> templateCodeList) throws Exception{
+
+
 	}
 }

@@ -1,5 +1,6 @@
 package com.clinbrain.dip.configuration;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.ehcache.EhCacheCacheManager;
@@ -12,12 +13,13 @@ import org.springframework.context.annotation.Primary;
  */
 @EnableCaching
 @Configuration
+@Slf4j
 public class EhcacheConfig {
 
 	@Bean
 	@Primary
 	public CacheManager ehcacheManager() {
-		System.out.println("加载ehcache...");
+		log.info("加载ehcache...");
 		return new EhCacheCacheManager(new net.sf.ehcache.CacheManager());
 	}
 }

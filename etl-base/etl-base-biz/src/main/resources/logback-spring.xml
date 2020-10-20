@@ -70,7 +70,10 @@
 		<appender-ref ref="error"/>
 	</logger>
 
-	<logger name="com.clinbrain.dip" additivity="false" level="DEBUG">
+	<logger name="com.clinbrain.dip.strategy.mapper" additivity="false" level="DEBUG">
+		<appender-ref ref="console" />
+	</logger>
+	<logger name="com.clinbrain.dip.rest.mapper" additivity="false" level="DEBUG">
 		<appender-ref ref="console" />
 	</logger>
 

@@ -1,5 +1,6 @@
 package com.clinbrain.dip.configuration;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.context.annotation.Configuration;
@@ -11,5 +12,6 @@ import org.springframework.context.annotation.Configuration;
 public class JacksonObjectMapper extends ObjectMapper {
 	public JacksonObjectMapper() {
 		this.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		this.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 }

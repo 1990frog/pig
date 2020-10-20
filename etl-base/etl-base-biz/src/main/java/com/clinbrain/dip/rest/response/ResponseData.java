@@ -1,15 +1,13 @@
 package com.clinbrain.dip.rest.response;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 import java.util.List;
 
 public class ResponseData<T> {
     public enum Status {
-        SUCCESS(0), ERROR(1);
+        SUCCESS(1), ERROR(0);
         private Integer code;
 
         Status(int i) {

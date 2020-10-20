@@ -64,7 +64,7 @@ public class TemplateController extends ApiBaseController {
 	}
 
 	@ApiOperation(value = "分组展示模板数据", tags = "模板所有", notes = "选择模板 -> 系统选择")
-	@PostMapping("listAll")
+	@GetMapping("listAll")
 	public R selectAllTemplate() {
 		final Map<String, List<Template>> map = new HashMap<>();
 			Optional.ofNullable(this.templateService.selectAll()).ifPresent(s -> {

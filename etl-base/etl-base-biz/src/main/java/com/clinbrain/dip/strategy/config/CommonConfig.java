@@ -25,4 +25,7 @@ public class CommonConfig {
 	 */
 	@Value("${package.code}")
 	private String zipPassword;
+
+	@Value("${hospital.code}")
+	private String hospitalCode;
 }

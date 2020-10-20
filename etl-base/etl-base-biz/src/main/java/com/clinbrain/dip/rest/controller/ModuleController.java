@@ -5,12 +5,16 @@ import com.clinbrain.dip.pojo.ETLHospital;
 import com.clinbrain.dip.pojo.ETLLogSummary;
 import com.clinbrain.dip.pojo.ETLModule;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
+import com.clinbrain.dip.rest.request.RequestJson;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.rest.service.ModuleService;
 import com.clinbrain.dip.workflow.ETLStart;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.google.common.collect.Lists;
+import com.pig4cloud.pig.common.core.util.R;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +41,8 @@ public class ModuleController {
     @Autowired
     private ModuleService moduleService;
 
+	private ObjectMapper jsonMapper = new ObjectMapper();
+
     @GetMapping("")
     public ResponseData selectAllModules() {
         return new ResponseData.Builder<>(moduleService.selectAll()).success();
@@ -52,30 +58,17 @@ public class ModuleController {
      *
      * @param topicId
      * @param jobId
-     * @param offset
-     * @param limit
      * @param hospital
      * @param rank 排序
      * @return
      */
     @GetMapping("/all")
-    public ResponseData selectAllModule(@RequestParam(value = "topicId",required = false) Integer topicId,
-                                        @RequestParam(value = "jobId" ,required = false) Integer jobId,
-                                        @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
-                                        @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
-                                        @RequestParam(value = "hospital",required = false) String hospital,
-                                        @RequestParam(value = "rank",required = false,defaultValue = "desc") String rank,
-                                        @RequestParam(value = "moduleName", required = false) String moduleName) {
-        PageHelper.offsetPage(offset,limit);
-        PageHelper.orderBy("em.created_at"+'\t'+ rank);
-        Page pageData = (Page) moduleService.queryModuleDetails(topicId, jobId, hospital,moduleName);
-        ResponseData.Page pages;
-        if (pageData == null){
-            pages = new ResponseData.Page(0,null);
-        }else {
-            pages = new ResponseData.Page(pageData.getTotal(),pageData.getResult());
-        }
-        return new ResponseData.Builder<ResponseData.Page>(pages).success();
+    public R selectAllModule(@RequestParam(value = "topicId",required = false) Integer topicId,
+							 @RequestParam(value = "jobId" ,required = false) Integer jobId,
+							 @RequestParam(value = "hospital",required = false) String hospital,
+							 @RequestParam(value = "rank",required = false,defaultValue = "desc") String rank,
+							 @RequestParam(value = "moduleName", required = false) String moduleName) {
+        return R.ok(moduleService.queryModuleDetails(topicId, jobId, hospital,moduleName));
     }
 
     /**
@@ -125,7 +118,7 @@ public class ModuleController {
     }
 
     @PostMapping("")
-    public ResponseData edit(@RequestBody ModuleTaskRequest moduleTask) {
+    public ResponseData edit(@RequestJson(value = "") ModuleTaskRequest moduleTask) {
         try {
             moduleService.editEtlModule(moduleTask);
         } catch (Exception e) {

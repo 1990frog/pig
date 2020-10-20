@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clinbrain.dip.pojo.ETLConnection;
 import com.clinbrain.dip.rest.service.ConnectionService;
 import com.clinbrain.dip.strategy.bean.PackageInfo;
+import com.clinbrain.dip.strategy.bean.SystemConnectionCodeVO;
 import com.clinbrain.dip.strategy.config.CommonConfig;
 import com.clinbrain.dip.strategy.mapper.TemplateMapper;
 import com.clinbrain.dip.strategy.util.ServiceUtil;
@@ -35,6 +36,8 @@ public class TacticsService {
 	private final CacheableService cacheableService;
 
 	private final ZipFileService zipFileService;
+
+	private final TemplateService templateService;
 
 
 	public IPage<String> showFiles() {

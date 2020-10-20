@@ -23,5 +23,5 @@ public interface TacticsConstant {
 	/**
 	 * 系统信息文件名称
 	 */
-	String PACKAGE_SYSTEM_INFO = "system.json";
+	String PACKAGE_SYSTEM_INFO = "system";
 }

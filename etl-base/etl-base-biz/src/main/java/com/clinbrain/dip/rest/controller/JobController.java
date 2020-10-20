@@ -11,6 +11,7 @@ import com.clinbrain.dip.rest.service.JobService;
 import com.clinbrain.dip.util.ProcessUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.pig4cloud.pig.common.core.util.R;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
@@ -61,26 +62,18 @@ public class JobController {
     /**
      * 任务组列表
      * @param id 业务类型id
-     * @param offset 分页
-     * @param limit 分页
      * @param rank 排序
      * @return
      */
     @RequestMapping(value = "/all", method = RequestMethod.GET)
-    public ResponseData getAllEngines(@RequestParam(value = "topId", required = false) Integer id,
-                                      @RequestParam(value = "jobName", required = false) String name,
-                                      @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
-                                      @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
-                                      @RequestParam(value = "rank",required = false, defaultValue = "DESC") String rank) {
+    public R getAllEngines(@RequestParam(value = "topId", required = false) Integer id,
+						   @RequestParam(value = "jobName", required = false) String name,
+						   @RequestParam(value = "rank",required = false, defaultValue = "DESC") String rank) {
         try {
-            PageHelper.offsetPage(offset,limit);
-            PageHelper.orderBy("updated_at "+rank);
-            Page pageData = (Page)jobService.getJobs(id,name);
-            ResponseData.Page<ETLJob> pages = new ResponseData.Page<ETLJob>(pageData.getTotal(), pageData.getResult());
-            return new ResponseData.Builder(pages).success();
+            return R.ok(jobService.getJobs(id,name));
         } catch (Exception e) {
             logger.error("查询job出错",e);
-            return new ResponseData.Builder().error("查询JOB失败");
+            return R.failed("查询JOB失败");
         }
 
     }

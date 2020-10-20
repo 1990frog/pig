@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * Created by Liaopan on 2018/3/12.
  */
+//@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data
 public class ModuleTaskRequest{
 

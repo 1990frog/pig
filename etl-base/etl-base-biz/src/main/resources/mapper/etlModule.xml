@@ -82,6 +82,7 @@
             ewts.source_column_expression_default         AS ew_ewts_source_column_expression_default,
             ewts.source_column_expression_customized      AS ew_ewts_source_column_expression_customized,
             ewts.target_column_alias_name                 AS ew_ewts_target_column_alias_name,
+            ewts.import_check                             AS ew_ewts_import_check,
             ewts.is_enable                                AS ew_ewts_is_enable,
             ewts.is_default                               AS ew_ewts_is_default,
             ewts.created_at                               AS ew_ewts_created_at,

@@ -40,27 +40,4 @@ public class TacticsPackageController extends ApiBaseController {
 		return R.ok(tacticsService.showFiles());
 	}
 
-	@ApiOperation("模板匹配")
-	@PostMapping("matching")
-	public R matchingTemplate(@MultiRequestBody(value = "codes") String templateCodes,
-							  @MultiRequestBody(value = "conns") List<SystemConnectionCodeVO> voList) {
-		// 选择的模板code
-		System.out.println(templateCodes);
-		// 本地的连接code, 和连接
-		System.out.println(voList.size());
-		voList.forEach(System.out::println);
-		return R.ok();
-	}
-
-	@ApiOperation("模板匹配")
-	@PostMapping("matching2")
-	public R matchingTemplate2(@MultiRequestBody(value = "codes") String templateCodes,
-							  @MultiRequestBody(value = "conns") List voList) {
-		// 选择的模板code
-		System.out.println(templateCodes);
-		// 本地的连接code, 和连接
-		System.out.println(voList.size());
-		voList.forEach(System.out::println);
-		return R.ok();
-	}
 }

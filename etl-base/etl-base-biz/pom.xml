@@ -161,12 +161,12 @@
 			<version>6.5.5</version>
 		</dependency>-->
 
-
 		<!--ETL本地配置-->
 		<dependency>
 			<groupId>com.clinbrain.dip</groupId>
 			<artifactId>dip-core-etl</artifactId>
 		</dependency>
+
 
 	</dependencies>
 

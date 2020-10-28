@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinbrain.dip.strategy.mapper.VersionMapper">
+
+
+  <!-- 查询视图获取sql -->
+  <select id="selectViewSql" resultType="java.lang.String">
+    SELECT execution_sql FROM view_union_sql WHERE workflow_code = #{code}
+  </select>
+
+
+  <!-- 修改版本状态-->
+  <update id="updateWorkflowCodeByVersionStatus">
+     UPDATE  kylin_job_module_version SET status = 1 WHERE workflow_code = #{workflowCode}
+  </update>
+</mapper>

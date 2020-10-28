@@ -13,6 +13,6 @@
 
   <!-- 修改版本状态-->
   <update id="updateWorkflowCodeByVersionStatus">
-     UPDATE  kylin_job_module_version SET status = 1 WHERE workflow_code = #{workflowCode}
+     UPDATE  t_job_module_version SET status = 1 WHERE workflow_code = #{workflowCode}
   </update>
 </mapper>

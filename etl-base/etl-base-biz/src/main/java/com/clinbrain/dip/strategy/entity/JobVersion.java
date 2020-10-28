@@ -19,7 +19,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "kylin_job_module_version")
+@Table(name = "t_job_module_version")
 public class JobVersion {
 	//模板编码，主键
 	@Id

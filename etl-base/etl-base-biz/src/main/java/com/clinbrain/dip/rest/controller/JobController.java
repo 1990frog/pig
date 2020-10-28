@@ -1,5 +1,7 @@
 package com.clinbrain.dip.rest.controller;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.alibaba.fastjson.JSON;
 import com.clinbrain.dip.connection.ClientOutput;
 import com.clinbrain.dip.pojo.ETLJob;
 import com.clinbrain.dip.pojo.ETLLogDetail;
@@ -8,10 +10,15 @@ import com.clinbrain.dip.pojo.ETLScheduler;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.rest.service.EtlSchedulerService;
 import com.clinbrain.dip.rest.service.JobService;
+import com.clinbrain.dip.strategy.bean.ETLSchedulerDto;
+import com.clinbrain.dip.strategy.util.CronUtil;
 import com.clinbrain.dip.util.ProcessUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.security.annotation.Inner;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
@@ -32,6 +39,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/etl/job")
+@Api("job类")
 public class JobController {
     private static final Logger logger = LoggerFactory.getLogger(JobController.class);
     @Autowired
@@ -192,11 +200,17 @@ public class JobController {
     }
 
     @PostMapping("/scheduler/save")
-    public ResponseData selectAllScheduler(@RequestBody ETLScheduler scheduler) {
+    public ResponseData selectAllScheduler(@RequestBody ETLSchedulerDto scheduler) {
+		scheduler.setSchedulerCron(CronUtil.createCronExpression(scheduler.getCromModel()));
+		scheduler.setSchedulerJson(JSON.toJSONString(scheduler.getCromModel()));
+		ETLScheduler newScheduler = new ETLScheduler();
+		BeanUtil.copyProperties(scheduler, newScheduler);
+
         if (scheduler.getSchedulerId()!=null) {
             try {
                 scheduler.setUpdatedAt(new Date());
-                schedulerService.updateByPrimaryKey(scheduler);
+
+                schedulerService.updateByPrimaryKey(newScheduler);
                 return new  ResponseData.Builder<Boolean>().success();
             }catch (Exception e){
                 logger.error(e.getMessage());
@@ -204,10 +218,10 @@ public class JobController {
             }
         }
         if (scheduler.getCreatedAt()==null || scheduler.getUpdatedAt()==null){
-            scheduler.setCreatedAt(new Date());
-            scheduler.setUpdatedAt(new Date());
+			newScheduler.setCreatedAt(new Date());
+			newScheduler.setUpdatedAt(new Date());
         }
-        int i = schedulerService.insert(scheduler);
+        int i = schedulerService.insert(newScheduler);
         return i > 0 ? new ResponseData.Builder<Boolean>().success() : new ResponseData.Builder<Boolean>().error("保存失败");
     }
 
@@ -240,4 +254,23 @@ public class JobController {
         }
         return new ResponseData.Builder<>(buffer).success();
     }
+
+
+
+	/**
+	 * 任务组列表数
+	 * @param topId 业务类型id
+	 * @return
+	 */
+	@ApiOperation("job查询任务树")
+	@RequestMapping(value = "/allTree", method = RequestMethod.GET)
+	public R selectJobTree(@RequestParam(value = "topId", required = false) Integer topId,  @RequestParam(value = "jobName", required = false) String name,@RequestParam(value = "moduleName", required = false) String moduleName) {
+		try {
+			return R.ok(jobService.selectJobTree(topId,name, moduleName));
+		} catch (Exception e) {
+			logger.error("查询job出错",e);
+			return R.failed("查询JOB失败");
+		}
+
+	}
 }

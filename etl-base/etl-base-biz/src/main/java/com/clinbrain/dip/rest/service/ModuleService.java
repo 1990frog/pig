@@ -25,10 +25,13 @@ import com.clinbrain.dip.rest.mapper.DBETLWorkflowTokenFullSqlMapper;
 import com.clinbrain.dip.rest.mapper.DBETLWorkflowTokenMapper;
 import com.clinbrain.dip.rest.mapper.DBETLWorkflowTokenSelectMapper;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
+import com.clinbrain.dip.strategy.entity.JobVersion;
+import com.clinbrain.dip.strategy.mapper.VersionMapper;
 import com.clinbrain.dip.workflow.ETLStart;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
@@ -41,12 +44,7 @@ import tk.mybatis.mapper.entity.Example;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -81,6 +79,9 @@ public class ModuleService extends BaseService<ETLModule> {
 
     @Autowired
     private DBETLWorkflowDataxflowMapper workflowDataxflowMapper;
+
+
+    private VersionMapper versionMapper;
 
     @Autowired
     @Qualifier("jobModuleMapper")
@@ -350,6 +351,7 @@ public class ModuleService extends BaseService<ETLModule> {
 
         etlModule.ifPresent(etlModuleItem -> {
 
+
             if (exist) {
                 DipConfig.getConfigInstance().clearConfigCache("module");
                 //修改module数据
@@ -390,9 +392,11 @@ public class ModuleService extends BaseService<ETLModule> {
 
             }
 
+
             Optional.ofNullable(workflows).ifPresent(wfs -> {
 
                 wfs.forEach(workflow -> {
+
                     workflow.setUpdatedAt(new Date());
                     workflow.setIsEnable(1);
                     workflow.setIsDefault(1);
@@ -622,7 +626,19 @@ public class ModuleService extends BaseService<ETLModule> {
                         }
                     });
 
+                    //修改状态
+					versionMapper.updateWorkflowCodeByVersionStatus(workflow.getWorkflowCode());
+                    //记录版本
+					JobVersion version = new JobVersion();
+					version.setVersionCode(UUID.randomUUID().toString());
+					version.setCreateDate(new Date());
+					version.setUserId(SecurityUtils.getUser().getId());
+					version.setWorkflowCode(workflow.getWorkflowCode());
+					version.setWorkflowSql(versionMapper.selectViewSql(workflow.getWorkflowCode()));
+					versionMapper.insert(version);
                 });
+
+
             });
         });
 

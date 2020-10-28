@@ -1,5 +1,6 @@
 package com.clinbrain.dip.rest.service;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.io.file.FileReader;
 import com.clinbrain.dip.common.DipConfig;
 import com.clinbrain.dip.metadata.azkaban.Project;
@@ -17,6 +18,7 @@ import com.clinbrain.dip.rest.mapper.DBETLSchedulerMapper;
 import com.clinbrain.dip.rest.mapper.DBETLTopicMapper;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.rest.util.CreateZipFile;
+import com.clinbrain.dip.rest.vo.ETLJobVo;
 import com.clinbrain.dip.util.FtpHelper;
 import com.clinbrain.dip.util.SftpHelper;
 import com.github.pagehelper.Page;
@@ -37,10 +39,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class JobService extends BaseService<ETLJob> {
@@ -239,4 +238,20 @@ public class JobService extends BaseService<ETLJob> {
             logSummaryMapper.updateLogDetailByUuid(detailId);
         }
     }
+
+
+    public List<ETLJobVo> selectJobTree(Integer topicId, String jobName, String moduleName){
+		List<ETLJobVo> jobVoList = new ArrayList<>();
+		List<ETLJob> etlJobList = moduleMapper.getJobs(topicId,jobName);
+		if(etlJobList != null && etlJobList.size() > 0){
+			etlJobList.forEach(j->{
+				ETLJobVo jobVo = new ETLJobVo();
+				BeanUtil.copyProperties(j, jobVo);
+				jobVo.setStatus(1);
+				jobVo.setModuleList(moduleMapper.selectModuleDetails(null, j.getId(), null,moduleName));
+				jobVoList.add(jobVo);
+			});
+		}
+		return jobVoList;
+	}
 }

@@ -28,10 +28,5 @@
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>com.clinbrain.dip</groupId>
-			<artifactId>dip-core-metadata</artifactId>
-		</dependency>
-
 	</dependencies>
 </project>

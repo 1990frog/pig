@@ -2,10 +2,10 @@ package com.clinbrain.dip.strategy.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.NumberUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.pinyin.PinyinUtil;
 import cn.hutool.extra.template.TemplateConfig;
 import cn.hutool.extra.template.TemplateEngine;
 import cn.hutool.extra.template.TemplateUtil;
@@ -13,6 +13,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.clinbrain.dip.connection.DatabaseMeta;
 import com.clinbrain.dip.pojo.ETLJob;
 import com.clinbrain.dip.pojo.ETLModule;
+import com.clinbrain.dip.pojo.ETLScheduler;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.rest.service.BaseService;
 import com.clinbrain.dip.rest.service.ConnectionService;
@@ -51,11 +52,15 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.clinbrain.dip.strategy.constant.TacticsConstant.PACKAGE_NAME_SUFFIX;
 import static com.clinbrain.dip.strategy.constant.TacticsConstant.PACKAGE_PASSWORD;
+import static com.clinbrain.dip.strategy.constant.TacticsConstant.TEMPLATE_DESC_DATA_SPLIT;
+import static com.clinbrain.dip.strategy.constant.TacticsConstant.TEMPLATE_DESC_SPLIT;
 
 /**
  * (TTemplet)表服务实现类
@@ -78,8 +83,6 @@ public class TemplateService extends BaseService<Template> {
 	private final JobService jobService;
 
 	private static final String SYSTEM_TEMPLAT_PATH = "/beetl/system.json.tmpl";
-
-	private static final String MODULE_TEMPLAT_PATH = "/beetl/module.json.tmpl";
 
 	private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -123,9 +126,22 @@ public class TemplateService extends BaseService<Template> {
 	 * @return
 	 * @throws Exception
 	 */
-	public boolean generateTempletFile(PackageInfo packageInfo, int jobId, List<String> moduleCodes) throws Exception {
+	public boolean generateTempletFile(PackageInfo packageInfo, Integer jobId, List<String> moduleCodes) throws Exception {
 
-		final ETLJob etlJob = jobService.selectOne(jobId);
+		final ETLJob etlJob = jobService.getJobs(null, null).stream().filter(s -> jobId.equals(s.getId()))
+			.findFirst().orElseThrow(NullPointerException::new);
+		if (StringUtils.isNotEmpty(etlJob.getTemplateCode())) {
+			final Template template = selectOne(etlJob.getTemplateCode());
+			Optional.ofNullable(template).ifPresent(template1 -> {
+				packageInfo.setDescription(DateUtil.now() + TEMPLATE_DESC_DATA_SPLIT + packageInfo.getDescription()
+					+ TEMPLATE_DESC_SPLIT + DateUtil.format(Optional.ofNullable(template1.getCreatedAt()).orElse(DateUtil.date()), DatePattern.NORM_DATETIME_FORMAT)
+					+ TEMPLATE_DESC_DATA_SPLIT + template1.getDescription());
+			});
+		}
+
+		packageInfo.setName(etlJob.getJobName());
+		packageInfo.setCron(Optional.ofNullable(etlJob.getScheduler()).map(ETLScheduler::getSchedulerCron).orElse(""));
+		packageInfo.setCronDesc(Optional.ofNullable(etlJob.getScheduler()).map(ETLScheduler::getSchedulerDesc).orElse(""));
 
 		final TemplateConfig templateConfig = new TemplateConfig();
 		templateConfig.setResourceMode(TemplateConfig.ResourceMode.CLASSPATH);
@@ -133,7 +149,10 @@ public class TemplateService extends BaseService<Template> {
 
 		cn.hutool.extra.template.Template systemTemplate = engine.getTemplate(SYSTEM_TEMPLAT_PATH);
 
-		final String systemInfo = systemTemplate.render(BeanUtil.beanToMap(packageInfo));
+		//根据模板产生包描述文本
+		final Map<String, Object> map = BeanUtil.beanToMap(packageInfo);
+		map.put("desc",packageInfo.getDescription());
+		final String systemInfo = systemTemplate.render(map);
 
 
 		String zipPath = commonConfig.getPackagePath() + File.separator + System.currentTimeMillis() + PACKAGE_NAME_SUFFIX;
@@ -184,13 +203,9 @@ public class TemplateService extends BaseService<Template> {
 	}
 
 	private boolean saveOrUpdateTemplate(PackageInfo packageInfo, String fileName, boolean custom) throws Exception {
-		String code = StrUtil.format("{}_{}{}_{}_{}", PinyinUtil.getFirstLetter(packageInfo.getVendor(), ""),
-			packageInfo.getSystem(), packageInfo.getEdition(), PinyinUtil.getFirstLetter(packageInfo.getName(), ""),
-			packageInfo.getSubVersion(), fileName);
-
 		Template tTemplate = new Template();
 
-		tTemplate.setCode(StringUtils.upperCase(code));
+		tTemplate.setCode(StringUtils.upperCase(packageInfo.getCode()));
 		tTemplate.setTmplName(packageInfo.getName());
 		tTemplate.setSystem(packageInfo.getSystem());
 		tTemplate.setVendor(packageInfo.getVendor());
@@ -287,7 +302,7 @@ public class TemplateService extends BaseService<Template> {
 			final long totalColumns = tableColumns.parallelStream().map(FromTableItem::getColumnItems).mapToLong(List::size).sum();
 
 			tableColumns.forEach(item -> {
-				dbs.add(StringUtils.defaultIfEmpty(item.getDatabaseName(),item.getTableSchema()));
+				dbs.add(StringUtils.defaultIfEmpty(item.getDatabaseName(), item.getTableSchema()));
 				tables.add(item.getTableName());
 			});
 
@@ -309,7 +324,7 @@ public class TemplateService extends BaseService<Template> {
 					final Set<String> tempTableSet = tableTemps.stream().map(DatabaseMeta::getTableMetas).flatMap(Collection::parallelStream)
 						.map(tableMeta -> tableMeta.tableName).collect(Collectors.toSet());
 					tableColumns.removeIf(t ->
-						dbName.equalsIgnoreCase(t.getDatabaseName()) && !CollUtil.contains(tempTableSet, s ->s.equalsIgnoreCase(t.getTableName()))
+						dbName.equalsIgnoreCase(t.getDatabaseName()) && !CollUtil.contains(tempTableSet, s -> s.equalsIgnoreCase(t.getTableName()))
 					);
 
 					// 根据表来删除不存在的列
@@ -336,15 +351,15 @@ public class TemplateService extends BaseService<Template> {
 		//totalColumns/validColumns
 	}
 
-	public boolean importSaveModule(Integer topicId, String templateCode) throws Exception{
+	public boolean importSaveModule(Integer topicId, String hospitalCode, String templateCode) throws Exception {
 		final Template template = selectOne(templateCode);
 		final List<PackageItem> packageItems
 			= ZipFileInfo.readZipFiles(commonConfig.getPackagePath() + File.separator + template.getTmplPath());
 		boolean result = true;
-		for(PackageItem item : packageItems) {
+		for (PackageItem item : packageItems) {
 			final ModuleTaskRequest moduleInfo = item.getModuleInfo();
 			moduleInfo.setModuleCode(null);
-			moduleInfo.setHospitalName(commonConfig.getHospitalCode());
+			moduleInfo.setHospitalName(hospitalCode);
 			moduleInfo.setCreatedAt(new Date());
 			result = moduleService.editEtlModule(moduleInfo);
 		}

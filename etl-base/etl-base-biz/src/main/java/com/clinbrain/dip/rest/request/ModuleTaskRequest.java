@@ -2,6 +2,8 @@ package com.clinbrain.dip.rest.request;
 
 import com.clinbrain.dip.jackson.DefaultDateNullValueDeserializer;
 import com.clinbrain.dip.metadata.WorkflowExtraData;
+import com.clinbrain.dip.pojo.ETLJob;
+import com.clinbrain.dip.pojo.EtlJobModule;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -35,6 +37,7 @@ public class ModuleTaskRequest{
     private Integer topicId;
     private Integer engineId;
     private Integer jobId;
+	private ETLJob etlJob;
     private String hospitalName;
     @JsonDeserialize(using = DefaultDateNullValueDeserializer.class)
     private Date createdAt;

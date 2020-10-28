@@ -1,14 +1,25 @@
 package com.clinbrain.dip.strategy.entity;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.clinbrain.dip.jackson.DefaultDateNullValueDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.clinbrain.dip.strategy.constant.TacticsConstant.TEMPLATE_DESC_DATA_SPLIT;
+import static com.clinbrain.dip.strategy.constant.TacticsConstant.TEMPLATE_DESC_SPLIT;
 
 /**
  * (TTemplet)表实体类
@@ -22,6 +33,9 @@ import java.util.Date;
 @Table(name = "t_template")
 @SuppressWarnings("serial")
 public class Template {
+
+	//private String uuid;
+
 	//模板编码，主键
 	@Id
 	private String code;
@@ -38,7 +52,7 @@ public class Template {
 	//本地版本，用来区别本地的修改
 	private String edition;
 	// 本地小版本
-	private String subVersion;
+	private Integer subVersion;
 
 	private String description;
 
@@ -70,5 +84,28 @@ public class Template {
 		this.dbtype = dbtype;
 		this.edition = edition;
 		this.tmplPath = tmplPath;
+	}
+
+	/**
+	 * 获取job编辑历史
+	 * @return
+	 */
+	public List<History> getEditHistory() {
+		if(StringUtils.isNotEmpty(this.description) && StrUtil.contains(this.description,TEMPLATE_DESC_SPLIT)) {
+			return Arrays.stream(StrUtil.split(this.description, TEMPLATE_DESC_SPLIT)).map(s -> {
+				String[] st = StrUtil.split(s, TEMPLATE_DESC_DATA_SPLIT);
+				return new History(DateUtil.parse(Optional.ofNullable(st[0]).orElse(DateUtil.now())), StringUtils.defaultIfEmpty(st[1], ""));
+			}).collect(Collectors.toList());
+		}
+
+		return Lists.newArrayList(new History(this.createdAt, this.description));
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class History {
+		private Date datetime;
+		private String desc;
 	}
 }

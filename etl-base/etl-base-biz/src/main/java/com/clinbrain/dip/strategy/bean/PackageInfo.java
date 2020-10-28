@@ -1,11 +1,14 @@
 package com.clinbrain.dip.strategy.bean;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.pinyin.PinyinUtil;
 import com.clinbrain.dip.strategy.constant.SystemConstant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Optional;
 
 /**
@@ -24,6 +27,16 @@ public class PackageInfo implements Serializable {
 		this.name = name;
 		this.vendor = vendor;
 		this.system = system;
+	}
+
+	public String getCode() {
+		return StrUtil.format("{}_{}{}_{}_{}", PinyinUtil.getFirstLetter(this.vendor, ""),
+			this.system, this.edition, PinyinUtil.getFirstLetter(this.name, ""),
+			this.subVersion);
+	}
+
+	public Integer addSubVersion() {
+		return BigDecimal.valueOf(this.subVersion).add(BigDecimal.ONE).intValue();
 	}
 
 	/**
@@ -49,10 +62,20 @@ public class PackageInfo implements Serializable {
 	/**
 	 * 小版本号，一般由我们自己定义
 	 */
-	private String subVersion;
+	private Integer subVersion = 1;
 
 	/**
 	 * 描述
 	 */
 	private String description;
+
+	/**
+	 * 调度时间
+	 */
+	private String cron;
+
+	/**
+	 * 调度时间描述
+	 */
+	private String cronDesc;
 }

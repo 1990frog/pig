@@ -8,6 +8,4 @@ public enum SystemConstant {
 	RIS,
 	LIS,
 	OTHER;
-
-
 }

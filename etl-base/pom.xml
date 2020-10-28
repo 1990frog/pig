@@ -37,7 +37,7 @@
 		<mybatis.mapper.version>2.1.5</mybatis.mapper.version>
 		<mybatis.pagehelper.version>1.2.3</mybatis.pagehelper.version>
 
-		<dip.etl.version>1.0.0</dip.etl.version>
+		<dip.etl.version>2.0.0</dip.etl.version>
 	</properties>
 
 	<!--项目子模块-->
@@ -80,6 +80,30 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.clinbrain.dip</groupId>
+			<artifactId>dip-core-metadata</artifactId>
+			<version>${dip.etl.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>com.clinbrain.dip</groupId>
+			<artifactId>dip-core-etl</artifactId>
+			<version>${dip.etl.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 	</dependencies>
@@ -182,30 +206,6 @@
 				<groupId>com.github.pagehelper</groupId>
 				<artifactId>pagehelper-spring-boot-starter</artifactId>
 				<version>${mybatis.pagehelper.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>com.clinbrain.dip</groupId>
-				<artifactId>dip-core-metadata</artifactId>
-				<version>${dip.etl.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>org.slf4j</groupId>
-						<artifactId>slf4j-log4j12</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-
-			<dependency>
-				<groupId>com.clinbrain.dip</groupId>
-				<artifactId>dip-core-etl</artifactId>
-				<version>${dip.etl.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>org.slf4j</groupId>
-						<artifactId>slf4j-log4j12</artifactId>
-					</exclusion>
-				</exclusions>
 			</dependency>
 
 		</dependencies>

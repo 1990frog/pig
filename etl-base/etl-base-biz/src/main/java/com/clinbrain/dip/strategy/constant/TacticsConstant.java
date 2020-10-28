@@ -24,4 +24,8 @@ public interface TacticsConstant {
 	 * 系统信息文件名称
 	 */
 	String PACKAGE_SYSTEM_INFO = "system";
+
+	String TEMPLATE_DESC_SPLIT = "|||";
+
+	String TEMPLATE_DESC_DATA_SPLIT = "|~|";
 }

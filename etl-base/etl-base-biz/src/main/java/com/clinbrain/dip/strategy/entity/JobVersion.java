@@ -19,26 +19,26 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "t_version")
+@Table(name = "kylin_job_module_version")
 public class JobVersion {
 	//模板编码，主键
 	@Id
 	private Integer id;
 	//任务唯一code
-	private String jobCode;
+	private String workflowCode;
 	//版本code
 	private String versionCode;
 
-	private String description;
+	private String workflowSql;
+
+	private Integer userId;
+
+	private Integer status = 0;
 
 	@JsonDeserialize(
 		using = DefaultDateNullValueDeserializer.class
 	)
-	private Date createdAt;
+	private Date createDate;
 
-	@JsonDeserialize(
-		using = DefaultDateNullValueDeserializer.class
-	)
-	private Date updatedAt;
 
 }

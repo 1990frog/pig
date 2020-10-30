@@ -395,4 +395,10 @@
         select target_schema as targetSchema,target_table as targetTable,GROUP_CONCAT(module_code) as moduleCode from etl_workflow where target_table is not null
         group by target_schema,target_table
     </select>
-</mapper>
+
+	<select id="selectWorkflowStatus" resultType="map">
+		select a.workflow_code as workflowCode, b.`status` from etl_workflow a left join etl_logdetail b on a.workflow_code = b.workflow_code
+		where  a.module_code = #{moduleCode} and b.summary_id =
+		( select summary_id from etl_logsummary where module_name = #{moduleCode} order by log_summary_start desc limit 1)
+	</select>
+ </mapper>

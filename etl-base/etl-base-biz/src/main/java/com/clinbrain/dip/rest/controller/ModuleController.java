@@ -217,10 +217,12 @@ public class ModuleController {
 	@GetMapping("/preCheck/{moduleCode:.+}")
 	public ResponseData startCheckData(@PathVariable(value = "moduleCode") String moduleCode,
 									   @RequestParam("workflowCode") @ApiParam("核查点对应的组件code") String workflowCode,
+									   @RequestParam("startTime") String startTime,
+									   @RequestParam("endTime") String endTime,
 									   @RequestParam("page") Integer pageSize, @RequestParam("num") Integer pageNumber) {
 		String uuid = UUID.randomUUID().toString();
 		try {
-			final PageResult<Entity> result = moduleService.execCheckDataModule(moduleCode,workflowCode, uuid, new cn.hutool.db.Page(pageNumber, pageSize));
+			final PageResult<Entity> result = moduleService.execCheckDataModule(moduleCode,workflowCode,startTime,endTime,uuid, new cn.hutool.db.Page(pageNumber, pageSize));
 			Map<String,Object> resultMap = new HashMap<>();
 			resultMap.put("total", result.getTotal());
 			resultMap.put("rows", result);
@@ -430,6 +432,17 @@ public class ModuleController {
 	@GetMapping("/tableEtl")
 	public ResponseData selectDetail() {
 		return new ResponseData.Builder<List>().data(moduleService.selectModuleCodeByWorkflowInfo()).success();
+	}
+
+	/**
+	 * 根据moduleCode查询下属 workflows 的运行状态
+	 * @param moduleCode
+	 * @return
+	 */
+	@ApiOperation("根据任务编码获取组件最近运行状态")
+	@GetMapping("/workflow/status")
+	public R moduleWorkflowStatus(@RequestParam("moduleCode") String moduleCode) {
+		return R.ok(moduleService.selectWorkflowStatus(moduleCode));
 	}
 
 }

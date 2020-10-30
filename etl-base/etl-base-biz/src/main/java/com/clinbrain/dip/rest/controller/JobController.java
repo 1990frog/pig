@@ -3,11 +3,13 @@ package com.clinbrain.dip.rest.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSON;
 import com.clinbrain.dip.connection.ClientOutput;
+import com.clinbrain.dip.metadata.azkaban.Project;
 import com.clinbrain.dip.pojo.ETLJob;
 import com.clinbrain.dip.pojo.ETLLogDetail;
 import com.clinbrain.dip.pojo.ETLLogSummary;
 import com.clinbrain.dip.pojo.ETLScheduler;
 import com.clinbrain.dip.rest.response.ResponseData;
+import com.clinbrain.dip.rest.service.AzkabanJobManageService;
 import com.clinbrain.dip.rest.service.EtlSchedulerService;
 import com.clinbrain.dip.rest.service.JobService;
 import com.clinbrain.dip.strategy.bean.ETLSchedulerDto;
@@ -36,6 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/etl/job")
@@ -44,6 +48,9 @@ public class JobController {
     private static final Logger logger = LoggerFactory.getLogger(JobController.class);
     @Autowired
     JobService jobService;
+
+    @Autowired
+    AzkabanJobManageService azkabanJobManageService;
 
     @Autowired
     EtlSchedulerService schedulerService;
@@ -69,6 +76,7 @@ public class JobController {
 
     /**
      * 任务组列表
+	 * 2020.10.28 修改。job中的enable字段现在用来标识是否发布到azkaban上
      * @param id 业务类型id
      * @param rank 排序
      * @return
@@ -78,7 +86,19 @@ public class JobController {
 						   @RequestParam(value = "jobName", required = false) String name,
 						   @RequestParam(value = "rank",required = false, defaultValue = "DESC") String rank) {
         try {
-            return R.ok(jobService.getJobs(id,name));
+			List<ETLJob> jobs = jobService.getJobs(id, name);
+			if(jobs != null && !jobs.isEmpty()) {
+				jobs = jobs.stream().peek(job -> {
+					try {
+						final Boolean existProject = azkabanJobManageService.isExistProject(new Project(job.getJobName(), "", ""));
+						job.setEnabled(existProject?1:0);
+					}catch (Exception e) {
+						job.setEnabled(0);
+					}
+				}).collect(Collectors.toList());
+			}
+
+			return R.ok(jobs);
         } catch (Exception e) {
             logger.error("查询job出错",e);
             return R.failed("查询JOB失败");

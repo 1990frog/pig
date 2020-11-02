@@ -247,7 +247,12 @@ public class JobService extends BaseService<ETLJob> {
 			etlJobList.forEach(j->{
 				ETLJobVo jobVo = new ETLJobVo();
 				BeanUtil.copyProperties(j, jobVo);
-				jobVo.setStatus(1);
+				try {
+					final Boolean existProject = azkabanJobManageService.isExistProject(new Project(j.getJobName(), "", ""));
+					jobVo.setStatus(existProject?1:0);
+				}catch (Exception e) {
+					jobVo.setStatus(0);
+				}
 				jobVo.setModuleList(moduleMapper.selectModuleDetails(null, j.getId(), null,moduleName));
 				jobVoList.add(jobVo);
 			});

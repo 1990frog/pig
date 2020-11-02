@@ -52,6 +52,8 @@ public class ModuleTaskRequest{
     @Data
     public static class InnerWorkflow{
 
+		@JsonProperty("workflowCode")
+    	private String workflowCodeOrigin;
         @JsonProperty("key")
         private String workflowCode;
         @JsonProperty("text")
@@ -91,6 +93,8 @@ public class ModuleTaskRequest{
         private WorkflowExtraData extraData;
         @JsonProperty("flowType")
         private Integer dataFlowType;
+
+        private String workflowSql;
 
     }
 

@@ -51,4 +51,6 @@ public interface DBETLModuleMapper extends tk.mybatis.mapper.common.Mapper<ETLMo
     int updateModuleByCode(ETLModule module);
 
     List<Map> selectModuleCodeByWorkflowInfo();
+
+    List<Map<String,Integer>> selectWorkflowStatus(@Param("moduleCode") String moduleCode);
 }

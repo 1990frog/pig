@@ -11,6 +11,7 @@ import com.clinbrain.dip.common.DipConfig;
 import com.clinbrain.dip.connection.DatabaseClientFactory;
 import com.clinbrain.dip.connection.IDatabaseClient;
 import com.clinbrain.dip.metadata.CommonConstant;
+import com.clinbrain.dip.metadata.DipConstants;
 import com.clinbrain.dip.metadata.WorkflowExtraData;
 import com.clinbrain.dip.pojo.ETLConnection;
 import com.clinbrain.dip.pojo.ETLHospital;
@@ -199,6 +200,7 @@ public class ModuleService extends BaseService<ETLModule> {
 				String lastBefore = StringUtils.substringBeforeLast(workflowCode, "_");
 				String tempCode = StringUtils.substringAfterLast(lastBefore, "_") + "_"
 					+ StringUtils.substringAfterLast(workflowCode, "_");
+				innerWorkflow.setWorkflowCodeOrigin(workflowCode);
 				innerWorkflow.setWorkflowCode(StringUtils.substringBefore(tempCode, "_"));
 				innerWorkflow.setWorkflowName(workflowItem.getWorkflowName());
 				innerWorkflow.setDesc(workflowItem.getWorkflowDesc());
@@ -214,6 +216,7 @@ public class ModuleService extends BaseService<ETLModule> {
 				innerWorkflow.setLoc(workflowItem.getLoc());
 				innerWorkflow.setRunnable(workflowItem.getRunnable());
 				innerWorkflow.setIncrementalMode(workflowItem.getIncrementalMode());
+				innerWorkflow.setWorkflowSql(workflowItem.getWorkflowSQL());
 				ObjectMapper objectMapper = new ObjectMapper();
 				try {
 					String workflowParam = StringUtils.isNotEmpty(workflowItem.getWorkflowParam()) ? workflowItem.getWorkflowParam() : "{}";
@@ -962,11 +965,19 @@ public class ModuleService extends BaseService<ETLModule> {
 		ETLStart.startByModule(moduleCode, uuid);
 	}
 
-	public PageResult<Entity> execCheckDataModule(String moduleCode, String workflowCode,
+	public PageResult<Entity> execCheckDataModule(String moduleCode, String workflowCode,String startTime, String endTime,
 												  String uuid, Page pageItem) throws Exception {
 		logger.info("数据预览，核查任务...");
-		Preconditions.checkNotNull(checkDataUrl, "核查系统的访问地址为空");
+		Preconditions.checkNotNull(checkDataUrl, "核查系统的访问地址为空,请先配置核查系统地址");
 		Map<String, Object> paramMap = new HashMap<>();
+		// 编辑module的任务执行时间，区间模式
+		ETLModule etlModule = new ETLModule();
+		etlModule.setModuleCode(moduleCode);
+		etlModule.setRangeStartDate(DateUtil.parseDate(startTime));
+		etlModule.setRangeEndDate(DateUtil.parseDate(endTime));
+		etlModule.setFullWhileMonths(1);
+		etlModule.setEtlType(DipConstants.ETLType.RANGE.getType());
+		moduleMapper.updateModuleByCode(etlModule);
 		// 先禁用任务
 		renovateModuleStatus(moduleCode, 1);
 		// 编辑核查点
@@ -1013,8 +1024,8 @@ public class ModuleService extends BaseService<ETLModule> {
 		}
 		paramMap.put("table", tableName); // 表
 		paramMap.put("url", etlConnection.getUrl()); // 表
-		paramMap.put("startTime", StringUtils.defaultIfEmpty(startTime, DateUtil.formatDateTime(DateUtil.lastMonth()))); // 表
-		paramMap.put("endTime", StringUtils.defaultIfEmpty(endTime, DateUtil.formatDateTime(DateUtil.date()))); // 表
+		paramMap.put("startTime",DateUtil.parse(StringUtils.defaultIfEmpty(startTime, DateUtil.formatDateTime(DateUtil.lastMonth())))); // 表
+		paramMap.put("endTime", DateUtil.parse(StringUtils.defaultIfEmpty(endTime, DateUtil.formatDateTime(DateUtil.date())))); // 表
 
 		String result = "";
 		String httpResult = "";
@@ -1040,6 +1051,15 @@ public class ModuleService extends BaseService<ETLModule> {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("batchno", uuid); // 表
 		return HttpUtil.get(checkDataUrl + "etl/scope/", paramMap);
+	}
+
+	public Map<String,Integer> selectWorkflowStatus(String moduleCode) {
+		final List<Map<String, Integer>> list = moduleMapper.selectWorkflowStatus(moduleCode);
+		Map<String, Integer> resultMap = new HashMap<>();
+		list.forEach(s -> {
+			resultMap.put(String.valueOf(s.get("workflowCode")),s.getOrDefault("status", 0));
+		});
+		return resultMap;
 	}
 
 	@Getter

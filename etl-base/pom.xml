@@ -23,7 +23,6 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<spring-boot-admin.version>2.2.3</spring-boot-admin.version>
-		<hutool.version>5.3.8</hutool.version>
 		<fastjson.version>1.2.69</fastjson.version>
 		<mybatis-plus.version>3.3.2</mybatis-plus.version>
 		<kaptcha.version>0.0.9</kaptcha.version>
@@ -91,6 +90,10 @@
 					<groupId>org.slf4j</groupId>
 					<artifactId>slf4j-log4j12</artifactId>
 				</exclusion>
+				<exclusion>
+					<artifactId>hutool-all</artifactId>
+					<groupId>cn.hutool</groupId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
@@ -102,6 +105,10 @@
 				<exclusion>
 					<groupId>org.slf4j</groupId>
 					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>cn.hutool</groupId>
+					<artifactId>hutool-all</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

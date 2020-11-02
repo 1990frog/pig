@@ -8,6 +8,7 @@ import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.rest.util.SSLUtil;
 import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
@@ -34,6 +35,7 @@ public class AzkabanJobManageService {
 
 	private String zipFilePath = System.getProperty("java.io.tmpdir");
 	@Autowired
+	@Qualifier("azkabanRestTemplate")
 	private RestTemplate restTemplate;
 
 	/**

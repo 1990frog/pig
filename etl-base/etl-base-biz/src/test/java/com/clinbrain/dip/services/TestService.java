@@ -2,8 +2,10 @@ package com.clinbrain.dip.services;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -21,9 +23,11 @@ import com.clinbrain.dip.rest.mapper.DBETLLogSummaryMapper;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.rest.service.ModuleService;
 import com.clinbrain.dip.strategy.bean.PackageInfo;
+import com.clinbrain.dip.strategy.bean.SystemConnectionCodeVO;
 import com.clinbrain.dip.strategy.mapper.TemplateMapper;
 import com.clinbrain.dip.strategy.service.TemplateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.pig4cloud.pig.common.core.util.R;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
@@ -59,7 +63,7 @@ public class TestService {
 	public void test() {
 		final ModuleTaskRequest etlModule = moduleService.selectModuleDetail("ETL_DIM_public.pa_op_registration_t-001_1591926533179");
 
-		final PackageInfo packageInfo = new PackageInfo("费用相关", "卫宁", "HIS", "4.5", "1", "公版第一版");
+		final PackageInfo packageInfo = new PackageInfo("","费用相关", "卫宁", "HIS", "4.5", 1, "公版第一版","","0 1 0 0 0 ?", "每天零时");
 		final TemplateConfig templateConfig = new TemplateConfig();
 		templateConfig.setResourceMode(TemplateConfig.ResourceMode.CLASSPATH);
 		TemplateEngine engine = TemplateUtil.createEngine(templateConfig);
@@ -108,8 +112,18 @@ public class TestService {
 	private DBETLLogSummaryMapper logSummaryMapper;
 
 	@Test
-	public void test233() {
-		final ETLLogSummary logSummary = logSummaryMapper.selectByPrimaryKey(105720);
-		System.out.println(logSummary);
+	public void test233() throws Exception {
+		final ArrayList<String> codes = Lists.newArrayList("123", "11", "12322a", "WN_HIS4.5_FYXG_1.0");
+	}
+
+	@Test
+	public void test3() {
+		List<SystemConnectionCodeVO> list = new ArrayList<>();
+		SystemConnectionCodeVO vo = new SystemConnectionCodeVO();
+		vo.setConnectionCode("oracledemo");
+		vo.setSystem("HIS");
+		vo.setTemplateCodeList(Lists.newArrayList("WN_HIS4.5_FYXG_1.0"));
+		list.add(vo);
+		System.out.println(templateService.matching(list));
 	}
 }

@@ -66,7 +66,7 @@ public class Template {
 	 */
 	private String tmplPath;
 
-	private Boolean custom;
+	private Boolean custom = false;
 
 	private String preTemplateId;
 

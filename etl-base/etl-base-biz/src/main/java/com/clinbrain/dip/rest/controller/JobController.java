@@ -84,21 +84,30 @@ public class JobController {
     @RequestMapping(value = "/all", method = RequestMethod.GET)
     public R getAllEngines(@RequestParam(value = "topId", required = false) Integer id,
 						   @RequestParam(value = "jobName", required = false) String name,
+						   @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+						   @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
 						   @RequestParam(value = "rank",required = false, defaultValue = "DESC") String rank) {
         try {
+			PageHelper.offsetPage(offset,limit);
+			PageHelper.offsetPage(offset,limit);
+			PageHelper.orderBy("updated_at "+rank);
+			Page pageData = (Page)jobService.getJobs(id,name);
+			ResponseData.Page<ETLJob> pages = new ResponseData.Page<ETLJob>(pageData.getTotal(), pageData.getResult());
+
+
 			List<ETLJob> jobs = jobService.getJobs(id, name);
-			if(jobs != null && !jobs.isEmpty()) {
-				jobs = jobs.stream().peek(job -> {
+			if(pages != null && !pages.getRows().isEmpty()) {
+				pages.getRows().stream().peek(job -> {
 					try {
 						final Boolean existProject = azkabanJobManageService.isExistProject(new Project(job.getJobName(), "", ""));
 						job.setEnabled(existProject?1:0);
 					}catch (Exception e) {
 						job.setEnabled(0);
 					}
-				}).collect(Collectors.toList());
+				});
 			}
 
-			return R.ok(jobs);
+			return R.ok(pages);
         } catch (Exception e) {
             logger.error("查询job出错",e);
             return R.failed("查询JOB失败");

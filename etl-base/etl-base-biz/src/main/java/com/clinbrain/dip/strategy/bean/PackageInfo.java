@@ -39,6 +39,7 @@ public class PackageInfo implements Serializable {
 		return BigDecimal.valueOf(this.subVersion).add(BigDecimal.ONE).intValue();
 	}
 
+	private String id;
 	/**
 	 * 名称
 	 */
@@ -67,7 +68,12 @@ public class PackageInfo implements Serializable {
 	/**
 	 * 描述
 	 */
-	private String description;
+	private String desc;
+
+	/**
+	 * 关联的模板ID
+	 */
+	private String preTemplateId;
 
 	/**
 	 * 调度时间

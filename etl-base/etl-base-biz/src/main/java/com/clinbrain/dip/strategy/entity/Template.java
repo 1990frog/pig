@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.Arrays;
@@ -34,10 +35,11 @@ import static com.clinbrain.dip.strategy.constant.TacticsConstant.TEMPLATE_DESC_
 @SuppressWarnings("serial")
 public class Template {
 
-	//private String uuid;
-
-	//模板编码，主键
+	// ，主键
 	@Id
+	private String id;
+
+	//模板编码
 	private String code;
 	//任务组名
 	private String tmplName;
@@ -54,7 +56,8 @@ public class Template {
 	// 本地小版本
 	private Integer subVersion;
 
-	private String description;
+	@Column(name = "`desc`")
+	private String desc;
 
 	private Boolean enable;
 
@@ -64,6 +67,8 @@ public class Template {
 	private String tmplPath;
 
 	private Boolean custom;
+
+	private String preTemplateId;
 
 	@JsonDeserialize(
 		using = DefaultDateNullValueDeserializer.class
@@ -90,7 +95,7 @@ public class Template {
 	 * 获取job编辑历史
 	 * @return
 	 */
-	public List<History> getEditHistory() {
+	/*public List<History> getEditHistory() {
 		if(StringUtils.isNotEmpty(this.description) && StrUtil.contains(this.description,TEMPLATE_DESC_SPLIT)) {
 			return Arrays.stream(StrUtil.split(this.description, TEMPLATE_DESC_SPLIT)).map(s -> {
 				String[] st = StrUtil.split(s, TEMPLATE_DESC_DATA_SPLIT);
@@ -99,7 +104,7 @@ public class Template {
 		}
 
 		return Lists.newArrayList(new History(this.createdAt, this.description));
-	}
+	}*/
 
 	@Data
 	@AllArgsConstructor

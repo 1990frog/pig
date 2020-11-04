@@ -2,9 +2,9 @@ package com.clinbrain.dip.strategy.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.extra.template.TemplateConfig;
 import cn.hutool.extra.template.TemplateEngine;
@@ -59,8 +59,6 @@ import java.util.stream.Collectors;
 
 import static com.clinbrain.dip.strategy.constant.TacticsConstant.PACKAGE_NAME_SUFFIX;
 import static com.clinbrain.dip.strategy.constant.TacticsConstant.PACKAGE_PASSWORD;
-import static com.clinbrain.dip.strategy.constant.TacticsConstant.TEMPLATE_DESC_DATA_SPLIT;
-import static com.clinbrain.dip.strategy.constant.TacticsConstant.TEMPLATE_DESC_SPLIT;
 
 /**
  * (TTemplet)表服务实现类
@@ -72,7 +70,7 @@ import static com.clinbrain.dip.strategy.constant.TacticsConstant.TEMPLATE_DESC_
 @RequiredArgsConstructor
 public class TemplateService extends BaseService<Template> {
 
-	private final TemplateMapper mapper;
+	private final TemplateMapper templateMapper;
 
 	private final CommonConfig commonConfig;
 
@@ -87,7 +85,7 @@ public class TemplateService extends BaseService<Template> {
 	private ObjectMapper objectMapper = new ObjectMapper();
 
 	public Template getByCode(String code) {
-		return mapper.selectOneByExample(Weekend.of(Template.class).weekendCriteria().andEqualTo(Template::getCode, code));
+		return templateMapper.selectOneByExample(Weekend.of(Template.class).weekendCriteria().andEqualTo(Template::getCode, code));
 	}
 
 	/**
@@ -111,7 +109,7 @@ public class TemplateService extends BaseService<Template> {
 
 			final PackageInfo packageInfo = ZipFileInfo.readZipSystemInfo(zipFile);
 
-			saveOrUpdateTemplate(packageInfo, fileName + PACKAGE_NAME_SUFFIX, false);
+			saveTemplate(packageInfo, fileName + PACKAGE_NAME_SUFFIX, false);
 		} catch (Exception e) {
 			destFile.delete();
 			throw e;
@@ -128,17 +126,12 @@ public class TemplateService extends BaseService<Template> {
 	 */
 	public boolean generateTempletFile(PackageInfo packageInfo, Integer jobId, List<String> moduleCodes) throws Exception {
 
+		// 根据jobId查找任务组名称和任务组关联的公用模板
 		final ETLJob etlJob = jobService.getJobs(null, null).stream().filter(s -> jobId.equals(s.getId()))
 			.findFirst().orElseThrow(NullPointerException::new);
-		if (StringUtils.isNotEmpty(etlJob.getTemplateCode())) {
-			final Template template = selectOne(etlJob.getTemplateCode());
-			Optional.ofNullable(template).ifPresent(template1 -> {
-				packageInfo.setDescription(DateUtil.now() + TEMPLATE_DESC_DATA_SPLIT + packageInfo.getDescription()
-					+ TEMPLATE_DESC_SPLIT + DateUtil.format(Optional.ofNullable(template1.getCreatedAt()).orElse(DateUtil.date()), DatePattern.NORM_DATETIME_FORMAT)
-					+ TEMPLATE_DESC_DATA_SPLIT + template1.getDescription());
-			});
-		}
 
+		packageInfo.setPreTemplateId(etlJob.getTemplateId());
+		packageInfo.setId(IdUtil.simpleUUID());
 		packageInfo.setName(etlJob.getJobName());
 		packageInfo.setCron(Optional.ofNullable(etlJob.getScheduler()).map(ETLScheduler::getSchedulerCron).orElse(""));
 		packageInfo.setCronDesc(Optional.ofNullable(etlJob.getScheduler()).map(ETLScheduler::getSchedulerDesc).orElse(""));
@@ -151,7 +144,6 @@ public class TemplateService extends BaseService<Template> {
 
 		//根据模板产生包描述文本
 		final Map<String, Object> map = BeanUtil.beanToMap(packageInfo);
-		map.put("desc",packageInfo.getDescription());
 		final String systemInfo = systemTemplate.render(map);
 
 
@@ -192,7 +184,7 @@ public class TemplateService extends BaseService<Template> {
 				zipFile.addStream(is, zipParameters);
 			}
 
-			return saveOrUpdateTemplate(packageInfo, zipFile.getFile().getName(), true);
+			return saveTemplate(packageInfo, zipFile.getFile().getName(), true);
 		} catch (Exception e) {
 			logger.error("写入module信息出错", e);
 			zipFile.getFile().delete();
@@ -202,28 +194,23 @@ public class TemplateService extends BaseService<Template> {
 		}
 	}
 
-	private boolean saveOrUpdateTemplate(PackageInfo packageInfo, String fileName, boolean custom) throws Exception {
+	private boolean saveTemplate(PackageInfo packageInfo, String fileName, boolean custom) throws Exception {
 		Template tTemplate = new Template();
-
+		tTemplate.setId(packageInfo.getId());
 		tTemplate.setCode(StringUtils.upperCase(packageInfo.getCode()));
 		tTemplate.setTmplName(packageInfo.getName());
 		tTemplate.setSystem(packageInfo.getSystem());
 		tTemplate.setVendor(packageInfo.getVendor());
 		tTemplate.setEdition(packageInfo.getEdition());
 		tTemplate.setSubVersion(packageInfo.getSubVersion());
-		tTemplate.setDescription(packageInfo.getDescription());
+		tTemplate.setDesc(packageInfo.getDesc());
 		tTemplate.setEnable(true);
 		tTemplate.setCustom(custom);
 		tTemplate.setTmplPath(fileName);
-		final Template one = selectOne(tTemplate.getCode());
-		if (one == null) {
-			tTemplate.setCreatedAt(new Date());
-			tTemplate.setUpdatedAt(new Date());
-			return insert(tTemplate) > 0;
-		} else {
-			tTemplate.setUpdatedAt(new Date());
-			return updateNonNull(tTemplate) > 0;
-		}
+		tTemplate.setCreatedAt(new Date());
+		tTemplate.setUpdatedAt(new Date());
+		return insert(tTemplate) > 0;
+
 	}
 
 	/**
@@ -364,5 +351,18 @@ public class TemplateService extends BaseService<Template> {
 			result = moduleService.editEtlModule(moduleInfo);
 		}
 		return result;
+	}
+
+	public Template templateFilePath(String id) {
+		final Template template = selectOne(id);
+		if(template != null) {
+			String filePath = commonConfig.getPackagePath() + File.separator+ template.getTmplPath();
+			if(FileUtil.exist(filePath)) {
+				template.setTmplPath(filePath);
+			}else  {
+				template.setTmplPath(null);
+			}
+		}
+		return template;
 	}
 }

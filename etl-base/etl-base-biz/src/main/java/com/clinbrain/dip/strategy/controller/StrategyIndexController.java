@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = {"etl策略"})
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/validate")
+@RequestMapping("/strategy")
 public class StrategyIndexController {
 
 	private final CommonConfig config;

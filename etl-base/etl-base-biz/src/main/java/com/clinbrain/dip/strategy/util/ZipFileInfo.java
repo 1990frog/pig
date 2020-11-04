@@ -52,9 +52,7 @@ public class ZipFileInfo {
 	// 获取文件中的内容
 	public static List<PackageItem> readZipFiles(String path) throws Exception {
 
-		System.out.println(path);
 		ZipFile zipFile = new ZipFile(path);
-		zipFile.setCharset(Charset.forName("GBK"));
 		InputStream is = null;
 		InputStream mStream = null;
 		List<PackageItem> packageItems = new ArrayList<>();

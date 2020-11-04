@@ -2,6 +2,7 @@ package com.clinbrain.dip.strategy.controller;
 
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.server.HttpServerResponse;
 import com.clinbrain.dip.multirequestbody.MultiRequestBody;
 import com.clinbrain.dip.strategy.bean.PackageInfo;
 import com.clinbrain.dip.strategy.bean.SystemConnectionCodeVO;
@@ -15,6 +16,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,6 +31,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +139,44 @@ public class TemplateController extends ApiBaseController {
 			return failed(results, "文件上传出错");
 		}
 		return success(results);
+	}
+
+	@ApiOperation("模板下载")
+	@GetMapping("export")
+	public ResponseEntity<Object> exportTemplate(@RequestParam("id") String id) {
+		final Template template = templateService.templateFilePath(id);
+		if(StringUtils.isEmpty(template.getTmplPath())) {
+			return ResponseEntity.notFound().build();
+		}
+		File file = new File(template.getTmplPath());
+
+		String fileName = template.getTmplName();
+		try{
+			fileName = URLEncoder.encode(template.getTmplName(), "UTF-8");
+		}catch (Exception e) {
+			log.error("文件名称"+template.getTmplName()+"转换异常", e);
+		}
+		InputStreamResource resource = null;
+		try {
+			resource = new InputStreamResource( new FileInputStream( file ) );
+		} catch (FileNotFoundException e) {
+			log.error("文件名称"+template.getTmplName()+"转换异常", e);
+			return ResponseEntity.notFound().build();
+		}
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add ( "Content-Disposition",String.format("attachment;filename=\"%s",fileName));
+		headers.add ( "Cache-Control","no-cache,no-store,must-revalidate" );
+		headers.add ( "Pragma","no-cache" );
+		headers.add ( "Expires","0" );
+
+		ResponseEntity<Object> responseEntity = ResponseEntity.ok()
+			.headers ( headers )
+			.contentLength ( file.length ())
+			.contentType(MediaType.parseMediaType("application/octet-stream" ))
+			.body(resource);
+
+		return responseEntity;
 	}
 
 	@ApiOperation("模板匹配")

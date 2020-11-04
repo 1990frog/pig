@@ -38,7 +38,7 @@ import com.clinbrain.dip.rest.mapper.DBETLWorkflowTokenMapper;
 import com.clinbrain.dip.rest.mapper.DBETLWorkflowTokenSelectMapper;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.strategy.entity.JobVersion;
-import com.clinbrain.dip.strategy.mapper.VersionMapper;
+import com.clinbrain.dip.strategy.service.VersionService;
 import com.clinbrain.dip.workflow.ETLStart;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -97,8 +97,8 @@ public class ModuleService extends BaseService<ETLModule> {
 	@Autowired
 	private DBETLWorkflowDataxflowMapper workflowDataxflowMapper;
 
-
-    private VersionMapper versionMapper;
+	@Autowired
+    private VersionService versionService;
 
     @Autowired
     @Qualifier("jobModuleMapper")
@@ -470,6 +470,15 @@ public class ModuleService extends BaseService<ETLModule> {
 						}
 					}
 
+					//修改状态
+					versionService.updateWorkflowCodeByVersionStatus(workflow.getWorkflowCode());
+					//记录版本
+					JobVersion version = new JobVersion();
+					version.setVersionCode(UUID.randomUUID().toString());
+					version.setCreateDate(new Date());
+					version.setUserId(SecurityUtils.getUser().getId());
+					version.setWorkflowCode(workflow.getWorkflowCode());
+
 					// full_sql 如果有，就不用SQL拼接的那种
 					if (StringUtils.isNotEmpty(workflow.getFullSql())) {
 						String fullSqlTokenCode = "ETL_FULL_SQL";
@@ -509,6 +518,8 @@ public class ModuleService extends BaseService<ETLModule> {
 						if (needCreate) {
 							fullSqlToken.setCreatedAt(new Date());
 							fullSqlMapper.insert(fullSqlToken);
+
+							version.setWorkflowSql(Optional.ofNullable(fullSqlToken.getFullSqlCustomized()).orElse(fullSqlToken.getFullSqlDefault()));
 						}
 					} else {
 
@@ -610,6 +621,9 @@ public class ModuleService extends BaseService<ETLModule> {
 								}
 							});
 						});
+
+						version.setWorkflowSql(versionService.selectWorkFlowSql(workflow));
+
 					}
 
 					// where
@@ -654,16 +668,7 @@ public class ModuleService extends BaseService<ETLModule> {
 						}
 					});
 
-                    //修改状态
-					versionMapper.updateWorkflowCodeByVersionStatus(workflow.getWorkflowCode());
-                    //记录版本
-					JobVersion version = new JobVersion();
-					version.setVersionCode(UUID.randomUUID().toString());
-					version.setCreateDate(new Date());
-					version.setUserId(SecurityUtils.getUser().getId());
-					version.setWorkflowCode(workflow.getWorkflowCode());
-					version.setWorkflowSql(versionMapper.selectViewSql(workflow.getWorkflowCode()));
-					versionMapper.insert(version);
+					versionService.insert(version);
                 });
 
 

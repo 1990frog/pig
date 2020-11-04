@@ -36,9 +36,12 @@ public class VersionController extends ApiBaseController {
 	 * @return 所有数据
 	 */
 	@ApiOperation(value = "查询最近几次的版本信息", notes = "分页查询最近几次的版本信息")
-	@PostMapping("/page")
+	@GetMapping("/page")
 	public R selectAll(Page page, String workflowCode) {
 		return success(this.versionService.selectVersionList(page, workflowCode));
 	}
+
+
+
 
 }

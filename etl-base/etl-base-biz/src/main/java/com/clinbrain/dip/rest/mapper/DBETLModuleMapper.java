@@ -1,10 +1,6 @@
 package com.clinbrain.dip.rest.mapper;
 
-import com.clinbrain.dip.pojo.ETLHospital;
-import com.clinbrain.dip.pojo.ETLJob;
-import com.clinbrain.dip.pojo.ETLLogDetail;
-import com.clinbrain.dip.pojo.ETLLogSummary;
-import com.clinbrain.dip.pojo.ETLModule;
+import com.clinbrain.dip.pojo.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -53,4 +49,7 @@ public interface DBETLModuleMapper extends tk.mybatis.mapper.common.Mapper<ETLMo
     List<Map> selectModuleCodeByWorkflowInfo();
 
     List<Map<String,Integer>> selectWorkflowStatus(@Param("moduleCode") String moduleCode);
+
+
+	ETLConnection selectTargetConnection(@Param("workflowCode") String workflowCode);
 }

@@ -198,7 +198,7 @@ public class CronExpParser {
 	//测试方法
 	public static void main(String[] args)
 	{
-		String CRON_EXPRESSION = "0 */30 0/1 * * ?";
+		String CRON_EXPRESSION = "0 0 0 2-1,3,4,11 * ? ";
 		// 生成指定日期的CRON时间序列
 		String CRON_DATE = "2016-04-26";
 		System.out.println(CRON_EXPRESSION);

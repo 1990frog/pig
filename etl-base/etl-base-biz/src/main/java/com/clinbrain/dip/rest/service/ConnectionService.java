@@ -115,6 +115,9 @@ public class ConnectionService extends BaseService<ETLConnection> {
         return null;
     }
 
+
+
+
     public boolean putConnection(ETLConnection connection) {
         ETLConnection conn = connectionMapper.selectByPrimaryKey(connection.getConnectionCode());
         if (conn.getUrl() != connection.getUrl() || conn.getUser() != conn.getUser() || conn.getPassword() != conn.getPassword()) {

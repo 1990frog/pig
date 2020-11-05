@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import tk.mybatis.mapper.weekend.Weekend;
+import tk.mybatis.mapper.weekend.WeekendCriteria;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -111,6 +113,12 @@ public class TemplateController extends ApiBaseController {
 			return failed(e.getMessage(), "模板生成出错");
 		}
 		return failed("未知错误");
+	}
+
+	@ApiOperation("删除自定义模板")
+	@PostMapping("/remove")
+	public R removeCustomTemplate(@RequestBody List<String> ids) {
+		return templateService.removeTemplate(ids) ? success(): failed("删除文件失败。请稍后重试");
 	}
 
 	/**

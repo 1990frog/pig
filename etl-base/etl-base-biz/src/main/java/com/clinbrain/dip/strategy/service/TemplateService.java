@@ -37,7 +37,10 @@ import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.web.multipart.MultipartFile;
 import parquet.Preconditions;
 import tk.mybatis.mapper.weekend.Weekend;
@@ -117,6 +120,30 @@ public class TemplateService extends BaseService<Template> {
 
 	}
 
+	@Autowired
+	DataSourceTransactionManager dataSourceTransactionManager;
+	@Autowired
+	TransactionDefinition transactionDefinition;
+
+
+	public boolean removeTemplate(List<String> ids) {
+
+		Weekend<Template> weekend = new Weekend<>(Template.class);
+		final WeekendCriteria<Template, Object> criteria = weekend.weekendCriteria();
+		criteria.andIn(Template::getId, ids).andEqualTo(Template::getCustom, true);
+		final List<Template> templates = templateMapper.selectByExample(weekend);
+		boolean result = true;
+		for (Template t : templates) {
+			if (FileUtil.del(commonConfig.getPackagePath() + t.getTmplPath())) {
+				templateMapper.deleteByPrimaryKey(t);
+			} else {
+				result = false;
+			}
+		}
+		return result;
+	}
+
+
 	/**
 	 * 生成自定义模板文件, 根据jobId, 任务code
 	 *
@@ -148,10 +175,9 @@ public class TemplateService extends BaseService<Template> {
 
 
 		String zipPath = commonConfig.getPackagePath() + File.separator + System.currentTimeMillis() + PACKAGE_NAME_SUFFIX;
+
 		File file = new File(zipPath);
-		if (file.exists()) {
-			file.delete();
-		}
+		FileUtil.mkParentDirs(file);
 
 		ZipFile zipFile = new ZipFile(zipPath);
 
@@ -235,10 +261,10 @@ public class TemplateService extends BaseService<Template> {
 		List<TemplateMatchVO> resultList = new ArrayList<>();
 		if (list != null && !list.isEmpty()) {
 			list.forEach(template -> {
-				final List<String> codeList = template.getTemplateCodeList();
+				final List<String> ids = template.getTemplateIdList();
 				Weekend<Template> weekend = new Weekend<>(Template.class);
 				final WeekendCriteria<Template, Object> criteria = weekend.weekendCriteria();
-				criteria.andIn(Template::getCode, codeList);
+				criteria.andIn(Template::getId, ids);
 				final List<Template> templates = selectByExample(weekend);
 				if (templates != null && !templates.isEmpty()) {
 					templates.forEach(t -> {
@@ -355,11 +381,11 @@ public class TemplateService extends BaseService<Template> {
 
 	public Template templateFilePath(String id) {
 		final Template template = selectOne(id);
-		if(template != null) {
-			String filePath = commonConfig.getPackagePath() + File.separator+ template.getTmplPath();
-			if(FileUtil.exist(filePath)) {
+		if (template != null) {
+			String filePath = commonConfig.getPackagePath() + File.separator + template.getTmplPath();
+			if (FileUtil.exist(filePath)) {
 				template.setTmplPath(filePath);
-			}else  {
+			} else {
 				template.setTmplPath(null);
 			}
 		}

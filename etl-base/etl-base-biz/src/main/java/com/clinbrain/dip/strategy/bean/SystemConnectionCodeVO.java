@@ -21,5 +21,5 @@ public class SystemConnectionCodeVO {
 	private String system;
 	private String connectionCode;
 
-	private List<String> templateCodeList;
+	private List<String> templateIdList;
 }

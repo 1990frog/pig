@@ -89,22 +89,20 @@ public class JobController {
 						   @RequestParam(value = "rank",required = false, defaultValue = "DESC") String rank) {
         try {
 			PageHelper.offsetPage(offset,limit);
-			PageHelper.offsetPage(offset,limit);
+
 			PageHelper.orderBy("updated_at "+rank);
-			Page pageData = (Page)jobService.getJobs(id,name);
-			ResponseData.Page<ETLJob> pages = new ResponseData.Page<ETLJob>(pageData.getTotal(), pageData.getResult());
-
-
-			List<ETLJob> jobs = jobService.getJobs(id, name);
-			if(pages != null && !pages.getRows().isEmpty()) {
-				pages.getRows().stream().peek(job -> {
+			Page<ETLJob> pageData = (Page<ETLJob>)jobService.getJobs(id,name);
+			ResponseData.Page<ETLJob> pages = new ResponseData.Page<>(pageData.getTotal(), pageData.getResult());
+			if(pageData.getResult() != null && !pageData.getResult().isEmpty()) {
+				List<ETLJob> jobs = pageData.getResult().stream().peek(job -> {
 					try {
 						final Boolean existProject = azkabanJobManageService.isExistProject(new Project(job.getJobName(), "", ""));
 						job.setEnabled(existProject?1:0);
 					}catch (Exception e) {
 						job.setEnabled(0);
 					}
-				});
+				}).collect(Collectors.toList());
+				pages = new ResponseData.Page<>(pageData.getTotal(), jobs);
 			}
 
 			return R.ok(pages);

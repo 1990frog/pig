@@ -8,11 +8,13 @@ import com.clinbrain.dip.pojo.ETLJob;
 import com.clinbrain.dip.pojo.ETLLogDetail;
 import com.clinbrain.dip.pojo.ETLLogSummary;
 import com.clinbrain.dip.pojo.ETLScheduler;
+import com.clinbrain.dip.rest.bean.EtlJobVersion;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.rest.service.AzkabanJobManageService;
 import com.clinbrain.dip.rest.service.EtlSchedulerService;
 import com.clinbrain.dip.rest.service.JobService;
 import com.clinbrain.dip.strategy.bean.ETLSchedulerDto;
+import com.clinbrain.dip.strategy.entity.Template;
 import com.clinbrain.dip.strategy.util.CronUtil;
 import com.clinbrain.dip.util.ProcessUtil;
 import com.github.pagehelper.Page;
@@ -25,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -92,15 +95,20 @@ public class JobController {
 
 			PageHelper.orderBy("updated_at "+rank);
 			Page<ETLJob> pageData = (Page<ETLJob>)jobService.getJobs(id,name);
-			ResponseData.Page<ETLJob> pages = new ResponseData.Page<>(pageData.getTotal(), pageData.getResult());
+			final List<Template> templates = jobService.selectTemplates();
+			ResponseData.Page pages = new ResponseData.Page<>(pageData.getTotal(), pageData.getResult());
 			if(pageData.getResult() != null && !pageData.getResult().isEmpty()) {
-				List<ETLJob> jobs = pageData.getResult().stream().peek(job -> {
+				List<EtlJobVersion> jobs = pageData.getResult().stream().map(job -> {
+					EtlJobVersion jobVersion = new EtlJobVersion();
+					BeanUtil.copyProperties(job,jobVersion);
 					try {
 						final Boolean existProject = azkabanJobManageService.isExistProject(new Project(job.getJobName(), "", ""));
-						job.setEnabled(existProject?1:0);
+						jobVersion.setEnabled(existProject?1:0);
+						jobVersion.setJobVersion(jobService.getTemplateDescById(templates, job.getTemplateId()));
 					}catch (Exception e) {
-						job.setEnabled(0);
+						jobVersion.setEnabled(0);
 					}
+					return jobVersion;
 				}).collect(Collectors.toList());
 				pages = new ResponseData.Page<>(pageData.getTotal(), jobs);
 			}

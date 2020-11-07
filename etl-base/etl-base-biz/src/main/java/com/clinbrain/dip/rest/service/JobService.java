@@ -10,6 +10,7 @@ import com.clinbrain.dip.pojo.ETLLogSummary;
 import com.clinbrain.dip.pojo.ETLScheduler;
 import com.clinbrain.dip.pojo.ETLTopic;
 import com.clinbrain.dip.pojo.EtlJobModule;
+import com.clinbrain.dip.rest.bean.EtlJobVersion;
 import com.clinbrain.dip.rest.mapper.DBETLJobMapper;
 import com.clinbrain.dip.rest.mapper.DBETLJobModuleMapper;
 import com.clinbrain.dip.rest.mapper.DBETLLogSummaryMapper;
@@ -19,6 +20,8 @@ import com.clinbrain.dip.rest.mapper.DBETLTopicMapper;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.rest.util.CreateZipFile;
 import com.clinbrain.dip.rest.vo.ETLJobVo;
+import com.clinbrain.dip.strategy.entity.Template;
+import com.clinbrain.dip.strategy.mapper.TemplateMapper;
 import com.clinbrain.dip.util.FtpHelper;
 import com.clinbrain.dip.util.SftpHelper;
 import com.github.pagehelper.Page;
@@ -40,6 +43,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class JobService extends BaseService<ETLJob> {
@@ -171,6 +175,35 @@ public class JobService extends BaseService<ETLJob> {
     public List<ETLJob> getJobs(Integer topicId, String jobName) throws Exception{
        return moduleMapper.getJobs(topicId,jobName);
     }
+
+    @Autowired
+    TemplateMapper templateMapper;
+
+    public List<Template> selectTemplates() {
+		return templateMapper.selectAllPublic();
+	}
+
+    public List<EtlJobVersion.JobHistory> getTemplateDescById(List<Template> templates , String id) {
+		List<Template> resultList = new ArrayList<>();
+		Optional<Template> template = templates.stream().filter(t -> t.getId().equalsIgnoreCase(id)).findFirst();
+		if(template.isPresent()) {
+			resultList.add(template.get());
+			findTemplateById(resultList,templates, template.get().getId());
+		}
+		return resultList.stream()
+			.map(s -> new EtlJobVersion.JobHistory(s.getCreatedAt(),s.getDesc())).collect(Collectors.toList());
+	}
+
+	void findTemplateById(List<Template> resultList, List<Template> list, String id) {
+    	if(StringUtils.isEmpty(id)) {
+    		return;
+		}
+    	if(list != null && !list.isEmpty()) {
+    		Optional<Template> template = list.stream().filter(t -> id.equalsIgnoreCase(t.getPreTemplateId())).findFirst();
+			template.ifPresent(resultList::add);
+    		findTemplateById(resultList,list, template.map(Template::getId).orElse(""));
+		}
+	}
 
     public ETLJob checkJobName(String jobName) {
         return jobMapper.checkJobName(jobName);

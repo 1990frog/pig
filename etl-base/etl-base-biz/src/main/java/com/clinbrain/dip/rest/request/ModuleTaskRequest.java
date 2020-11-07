@@ -56,7 +56,7 @@ public class ModuleTaskRequest{
     	private String workflowCodeOrigin;
         @JsonProperty("key")
         private String workflowCode;
-        @JsonProperty("text")
+        @JsonProperty("name")
         private String workflowName;
         @JsonProperty("code")
         private String workflowSequenceDefault;
@@ -77,10 +77,7 @@ public class ModuleTaskRequest{
         @JsonProperty("category") // Group /  GroupNode
         @JsonInclude(JsonInclude.Include.NON_NULL)
         private String groupCategory;
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        private String group; //  设置成父级的key
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        private Boolean isGroup; // true 父级设置为true
+
         private String color;
 
         private String targetSchema;

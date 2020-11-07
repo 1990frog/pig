@@ -211,6 +211,7 @@ public class ModuleService extends BaseService<ETLModule> {
 						workflowItem.getWorkflowSequenceCustomized())); // workflow_code
 				innerWorkflow.setSequenceCustomized(workflowItem.getWorkflowSequenceCustomized());
 				innerWorkflow.setCategory(workflowItem.getWorkflowCategory());
+				innerWorkflow.setGroupCategory("iconspan");
 				innerWorkflow.setTargetSchema(workflowItem.getTargetSchema());
 				innerWorkflow.setTargetTable(workflowItem.getTargetTable());
 				innerWorkflow.setLoc(workflowItem.getLoc());
@@ -253,8 +254,7 @@ public class ModuleService extends BaseService<ETLModule> {
 				// 添加reader 和 writer
 				List<ETLWorkflowDataxflow> dataxflows = workflowItem.getDataxflows();
 				if (dataxflows != null && !dataxflows.isEmpty() || "datax".equalsIgnoreCase(workflowItem.getWorkflowCategory())) {
-					innerWorkflow.setIsGroup(true);
-					innerWorkflow.setGroupCategory("Group");
+					innerWorkflow.setGroupCategory("iconspan");
 					Optional<ETLWorkflowDataxflow> readerItem = dataxflows.stream().filter(d -> d.getDataflowType() == CommonConstant.DataXType.READER.getValue()).findFirst();
 					Optional<ETLWorkflowDataxflow> writerItem = dataxflows.stream().filter(d -> d.getDataflowType() == CommonConstant.DataXType.WRITER.getValue()).findFirst();
 					readerItem.ifPresent(reader -> {
@@ -273,7 +273,7 @@ public class ModuleService extends BaseService<ETLModule> {
 						}
 						extraData.setReader(readerFlow);
 
-						ModuleTaskRequest.InnerWorkflow readerWorkflow = new ModuleTaskRequest.InnerWorkflow();
+						/*ModuleTaskRequest.InnerWorkflow readerWorkflow = new ModuleTaskRequest.InnerWorkflow();
 						readerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
 						readerWorkflow.setGroupCategory("GroupNode");
 						readerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_" + readerFlow.getDataflowCode());
@@ -283,10 +283,10 @@ public class ModuleService extends BaseService<ETLModule> {
 						readerWorkflow.setParamDefine(workflowItem.getParamDefine());
 						readerWorkflow.setCategory(workflowItem.getWorkflowCategory());
 						readerWorkflow.setDataFlowType(CommonConstant.DataXType.READER.getValue());
-						workflows.add(readerWorkflow);
+						workflows.add(readerWorkflow);*/
 
 					});
-					// 如果没有，设置为默认
+					/*// 如果没有，设置为默认
 					if (!readerItem.isPresent()) {
 						ModuleTaskRequest.InnerWorkflow readerWorkflow = new ModuleTaskRequest.InnerWorkflow();
 						readerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
@@ -299,7 +299,7 @@ public class ModuleService extends BaseService<ETLModule> {
 						readerWorkflow.setCategory(workflowItem.getWorkflowCategory());
 						readerWorkflow.setDataFlowType(CommonConstant.DataXType.READER.getValue());
 						workflows.add(readerWorkflow);
-					}
+					}*/
 					writerItem.ifPresent(writer -> {
 						WorkflowExtraData.DataFlow writerFlow = new WorkflowExtraData.DataFlow();
 						writerFlow.setDataflowCode(writer.getDataflowCode());
@@ -316,7 +316,7 @@ public class ModuleService extends BaseService<ETLModule> {
 						}
 						extraData.setWriter(writerFlow);
 
-						ModuleTaskRequest.InnerWorkflow writerWorkflow = new ModuleTaskRequest.InnerWorkflow();
+						/*ModuleTaskRequest.InnerWorkflow writerWorkflow = new ModuleTaskRequest.InnerWorkflow();
 						writerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
 						writerWorkflow.setGroupCategory("GroupNode");
 						writerWorkflow.setWorkflowCode(innerWorkflow.getWorkflowCode() + "_" + writerFlow.getDataflowCode());
@@ -326,9 +326,9 @@ public class ModuleService extends BaseService<ETLModule> {
 						writerWorkflow.setParamDefine(workflowItem.getParamDefine());
 						writerWorkflow.setCategory(workflowItem.getWorkflowCategory());
 						writerWorkflow.setDataFlowType(CommonConstant.DataXType.WRITER.getValue());
-						workflows.add(writerWorkflow);
+						workflows.add(writerWorkflow);*/
 					});
-					if (!writerItem.isPresent()) {
+					/*if (!writerItem.isPresent()) {
 						ModuleTaskRequest.InnerWorkflow writerWorkflow = new ModuleTaskRequest.InnerWorkflow();
 						writerWorkflow.setGroup(innerWorkflow.getWorkflowCode());
 						writerWorkflow.setGroupCategory("GroupNode");
@@ -340,7 +340,7 @@ public class ModuleService extends BaseService<ETLModule> {
 						writerWorkflow.setCategory(workflowItem.getWorkflowCategory());
 						writerWorkflow.setDataFlowType(CommonConstant.DataXType.WRITER.getValue());
 						workflows.add(writerWorkflow);
-					}
+					}*/
 				}
 
 				WorkflowExtraData.DisassembleFrom from = new WorkflowExtraData.DisassembleFrom();
@@ -724,8 +724,8 @@ public class ModuleService extends BaseService<ETLModule> {
 	private List<ETLWorkflow> transformWorkflow(ModuleTaskRequest moduleTaskRequest, boolean exist) {
 		List<ModuleTaskRequest.InnerWorkflow> innerWorkflowList = moduleTaskRequest.getWorkflows();
 		// 过滤掉组合元素中的reader 和 writer
-		innerWorkflowList = innerWorkflowList.stream()
-			.filter(workflowItem -> StringUtils.isEmpty(workflowItem.getGroup())).collect(Collectors.toList());
+		//innerWorkflowList = innerWorkflowList.stream()
+		//	.filter(workflowItem -> StringUtils.isEmpty(workflowItem.getGroup())).collect(Collectors.toList());
 		int innerWorkflowListSize = innerWorkflowList.size();
 		List<ETLWorkflow> workflows = new ArrayList<>(innerWorkflowListSize);
 		for (int i = 0; i < innerWorkflowListSize; i++) {

@@ -6,6 +6,8 @@ import com.clinbrain.dip.strategy.entity.JobVersion;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * (TTemplet)表数据库访问层
  *
@@ -20,6 +22,6 @@ public interface VersionMapper extends tk.mybatis.mapper.common.Mapper<JobVersio
 	void updateWorkflowCodeByVersionStatus(@Param("workflowCode") String workflowCode);
 
 
-	IPage<JobVersion> selectVersionPage(Page page, @Param("workflowCode") String workflowCode);
+	List<JobVersion> selectVersionPage(@Param("workflowCode") String workflowCode);
 
 }

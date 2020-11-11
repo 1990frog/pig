@@ -12,6 +12,7 @@ import com.clinbrain.dip.rest.service.BaseService;
 import com.clinbrain.dip.rest.service.ConnectionService;
 import com.clinbrain.dip.strategy.entity.JobVersion;
 import com.clinbrain.dip.strategy.mapper.VersionMapper;
+import com.github.pagehelper.PageHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -38,8 +39,9 @@ public class VersionService extends BaseService<JobVersion> {
 
 	private final ConnectionService connectionService;
 
-	public IPage selectVersionList(Page page, String workCode) {
-		return mapper.selectVersionPage(page, workCode);
+	public List<JobVersion> selectVersionList(Page page, String workCode) {
+		PageHelper.startPage(Integer.valueOf(page.getCurrent() + ""),Integer.valueOf(page.getSize() + ""));
+		return mapper.selectVersionPage(workCode);
 	}
 
 

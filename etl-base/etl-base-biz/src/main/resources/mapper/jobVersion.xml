@@ -12,12 +12,12 @@
 
  <!--根据code查询版本 -->
   <select id="selectVersionPage" resultType="com.clinbrain.dip.strategy.entity.JobVersion">
-    SELECT * FROM t_job_module_version WHERE workflow_code = #{workflowCode} order BY create_date desc
+    SELECT * FROM t_workflow_sql_version WHERE workflow_code = #{workflowCode} order BY create_date desc
   </select>
 
 
   <!-- 修改版本状态-->
   <update id="updateWorkflowCodeByVersionStatus">
-     UPDATE  t_job_module_version SET status = 0 WHERE workflow_code = #{workflowCode}
+     UPDATE  t_workflow_sql_version SET status = 0 WHERE workflow_code = #{workflowCode}
   </update>
 </mapper>

@@ -21,6 +21,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -116,9 +117,9 @@ public class TemplateController extends ApiBaseController {
 	}
 
 	@ApiOperation("删除自定义模板")
-	@PostMapping("/remove")
+	@DeleteMapping("")
 	public R removeCustomTemplate(@RequestBody List<String> ids) {
-		return templateService.removeTemplate(ids) ? success(): failed("删除文件失败。请稍后重试");
+		return templateService.removeTemplate(ids) ? success(): failed("删除自定义模板失败");
 	}
 
 	/**

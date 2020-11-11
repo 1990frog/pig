@@ -20,6 +20,7 @@ import com.pig4cloud.pig.common.core.util.R;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -259,8 +260,8 @@ public class ModuleController {
 								   @RequestParam("uuid") String uuid) {
 
 		try {
-			final String checkId = moduleService.startCheck(moduleCode,startTime,endTime, uuid);
-			return new ResponseData.Builder<>(checkId).success();
+			final Pair<ETLLogSummary, String> pair = moduleService.startCheck(moduleCode, startTime, endTime, uuid);
+			return new ResponseData.Builder<>(pair.getLeft()).success(pair.getRight());
 		} catch (Exception e) {
 			logger.error("核查失败");
 			return new ResponseData.Builder<>().error("调用数据核查服务出错!" + e.getMessage());

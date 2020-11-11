@@ -276,6 +276,7 @@ public class JobService extends BaseService<ETLJob> {
     public List<ETLJobVo> selectJobTree(Integer topicId, String jobName, String moduleName){
 		List<ETLJobVo> jobVoList = new ArrayList<>();
 		List<ETLJob> etlJobList = moduleMapper.getJobs(topicId,jobName);
+		final List<Template> templates = selectTemplates();
 		if(etlJobList != null && etlJobList.size() > 0){
 			etlJobList.forEach(j->{
 				ETLJobVo jobVo = new ETLJobVo();
@@ -283,6 +284,7 @@ public class JobService extends BaseService<ETLJob> {
 				try {
 					final Boolean existProject = azkabanJobManageService.isExistProject(new Project(j.getJobName(), "", ""));
 					jobVo.setStatus(existProject?1:0);
+					jobVo.setJobVersion(getTemplateDescById(templates, j.getTemplateId()));
 				}catch (Exception e) {
 					jobVo.setStatus(0);
 				}

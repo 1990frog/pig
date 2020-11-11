@@ -48,6 +48,8 @@ import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1013,7 +1015,7 @@ public class ModuleService extends BaseService<ETLModule> {
 		return pageList;
 	}
 
-	public String startCheck(String moduleCode,String startTime, String endTime, String uuid) throws Exception {
+	public Pair<ETLLogSummary,String> startCheck(String moduleCode,String startTime, String endTime, String uuid) throws Exception {
 
 		final ETLModule module = moduleMapper.selectByPrimaryKey(moduleCode);
 
@@ -1032,6 +1034,7 @@ public class ModuleService extends BaseService<ETLModule> {
 		paramMap.put("startTime",DateUtil.parse(StringUtils.defaultIfEmpty(startTime, DateUtil.formatDateTime(DateUtil.lastMonth())))); // 表
 		paramMap.put("endTime", DateUtil.parse(StringUtils.defaultIfEmpty(endTime, DateUtil.formatDateTime(DateUtil.date())))); // 表
 
+		Pair<ETLLogSummary,String> resultPair = new MutablePair<>();
 		String result = "";
 		String httpResult = "";
 		try {
@@ -1048,7 +1051,7 @@ public class ModuleService extends BaseService<ETLModule> {
 			throw new RuntimeException(e.getMessage() + httpResult);
 		}
 
-		return result;
+		return new MutablePair<>(logSummary, result);
 	}
 
 	public String checkResult(String uuid) {

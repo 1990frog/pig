@@ -930,6 +930,22 @@ public class ModuleService extends BaseService<ETLModule> {
 		return moduleMapper.updateByPrimaryKeySelective(etlModule);
 	}
 
+	/**
+	 * 编辑 任务的依赖项
+	 * @param moduleCode
+	 * @param dependencyCode
+	 * @return
+	 */
+	public int editPriorityByModuleCode(String moduleCode, String dependencyCode) {
+		ETLModule etlModule = new ETLModule();
+		etlModule.setModuleCode(moduleCode);
+		etlModule.setDependencyCode(dependencyCode);
+		etlModule.setEtlType(null);
+		etlModule.setEnabled(null);
+		etlModule.setFullWhileMonths(null); // 设置null是为了不往表里面插入数据
+		return moduleMapper.updateByPrimaryKeySelective(etlModule);
+	}
+
 	public void moveModuleByJob(String moduleCode, Integer JobId) throws SQLException {
 		Example example = new Example(EtlJobModule.class);
 		example.createCriteria().andEqualTo("moduleCode", moduleCode);

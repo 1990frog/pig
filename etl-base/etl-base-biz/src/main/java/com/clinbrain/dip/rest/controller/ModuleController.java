@@ -173,6 +173,25 @@ public class ModuleController {
 			new ResponseData.Builder<>().error("编辑优先级失败");
 	}
 
+	/**
+	 * 修改任务依赖（新的优先级编辑）
+	 *
+	 * @param moduleCode 当前任务编码
+	 * @param dependencyCode 依赖的任务编码
+	 * @return
+	 */
+	@ApiOperation("设置当前任务的依赖任务")
+	@PutMapping("/dependency")
+	public ResponseData updatePriorityByModuleCode(@ApiParam("当前任务code")@RequestParam("moduleCode") String moduleCode,
+												   @ApiParam("依赖任务code")@RequestParam(value = "dependencyCode") String dependencyCode) {
+		if(StringUtils.equalsIgnoreCase(moduleCode, dependencyCode)) {
+			return new ResponseData.Builder<>().error("任务不能循环依赖");
+		}
+		return moduleService.editPriorityByModuleCode(moduleCode, dependencyCode) > 0 ?
+			new ResponseData.Builder<>().success() :
+			new ResponseData.Builder<>().error("编辑任务依赖失败");
+	}
+
 	@PostMapping("/start")
 	public ResponseData startModule(@RequestBody ModuleTaskRequest etlModule) {
 		try {

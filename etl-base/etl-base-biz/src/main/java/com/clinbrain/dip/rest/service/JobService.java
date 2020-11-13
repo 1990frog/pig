@@ -109,7 +109,8 @@ public class JobService extends BaseService<ETLJob> {
             return new ResponseData.Builder("").error("该任务还未设置执行计划！");
         }
         project.setCronExpression(cronExp);
-        String filePath = createZipFile.createJobFileByJobId(job.getId());
+        //String filePath = createZipFile.createJobFileByJobId(job.getId());
+        String filePath = createZipFile.createJobFileById(job.getId());
         String zipName = createZipFile.createZipByJobName(filePath, UUID.randomUUID().toString());
         if(StringUtils.isEmpty(zipName)){
             return new ResponseData.Builder("").error("未生成zip包，请查看该job下有无启用任务！");

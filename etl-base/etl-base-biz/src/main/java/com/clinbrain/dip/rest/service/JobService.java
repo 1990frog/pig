@@ -97,9 +97,9 @@ public class JobService extends BaseService<ETLJob> {
      * @return
      * @throws Exception
      */
-    public ResponseData<String> upload(ETLJob job) throws Exception{
+    public ResponseData<String> upload(Integer jobId) throws Exception{
         // 重新查找job信息
-        job = jobMapper.selectByPrimaryKey(job.getId());
+        ETLJob job = jobMapper.selectByPrimaryKey(jobId);
         ETLTopic etlTopic = topicMapper.selectByPrimaryKey(Integer.valueOf(job.getTopicId()));
         job.setScheduler(schedulerMapper.selectByPrimaryKey(job.getSchedulerId()));
         Project project = new Project(job.getJobName(),job.getJobName(),
@@ -113,7 +113,7 @@ public class JobService extends BaseService<ETLJob> {
         String filePath = createZipFile.createJobFileById(job.getId());
         String zipName = createZipFile.createZipByJobName(filePath, UUID.randomUUID().toString());
         if(StringUtils.isEmpty(zipName)){
-            return new ResponseData.Builder("").error("未生成zip包，请查看该job下有无启用任务！");
+            return new ResponseData.Builder("").error("任务上传失败，请检查该job下任务是否启用或者任务的依赖配置错误！");
         }else {
             project.setZipFileName(zipName);
             ResponseData<String> responseData = azkabanJobManageService.createOrUpdateProject(project);

@@ -23,6 +23,7 @@ import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.security.annotation.Inner;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
@@ -132,12 +133,12 @@ public class JobController {
      * @return
      */
     @PostMapping("/upload")
-    public ResponseData upload(@RequestBody ETLJob jobInfo) {
+    public ResponseData upload(@ApiParam(value = "任务组 id")@RequestParam("id") Integer jobId) {
         try {
-            return jobService.upload(jobInfo);
+            return jobService.upload(jobId);
         } catch (Exception e) {
-            logger.error("upload jobInfo Name :" + jobInfo.getJobName() + " failed.\nError message: \n" + e);
-            return new ResponseData.Builder<>().data("").error("创建失败:" + e.getMessage());
+            logger.error("任务组JOb上传到Azkaban出错：", e);
+            return new ResponseData.Builder<>().data("").error("上传失败:" + e.getMessage());
         }
     }
 

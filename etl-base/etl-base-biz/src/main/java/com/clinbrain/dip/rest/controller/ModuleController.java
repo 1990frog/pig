@@ -272,15 +272,15 @@ public class ModuleController {
 	}
 
 	@ApiOperation("数据核查")
-	@GetMapping("/startCheck/{moduleCode:.+}")
-	public ResponseData startCheck(@PathVariable(value = "moduleCode") @ApiParam("任务Code") String moduleCode,
+	@GetMapping("/startCheck")
+	public ResponseData startCheck(@RequestParam("moduleCode") @ApiParam("任务Code") String moduleCode,
 								   @RequestParam("startTime") @ApiParam("核查开始时间")  String startTime,
 								   @RequestParam("endTime")  @ApiParam("核查结束时间") String endTime,
 								   @RequestParam("uuid") String uuid) {
 
 		try {
-			final Pair<ETLLogSummary, String> pair = moduleService.startCheck(moduleCode, startTime, endTime, uuid);
-			return new ResponseData.Builder<>(pair.getLeft()).success(pair.getRight());
+			final ETLLogSummary logSummary = moduleService.startCheck(moduleCode, startTime, endTime, uuid);
+			return new ResponseData.Builder<>(logSummary).success();
 		} catch (Exception e) {
 			logger.error("核查失败");
 			return new ResponseData.Builder<>().error("调用数据核查服务出错!" + e.getMessage());
@@ -297,6 +297,12 @@ public class ModuleController {
 			logger.error("获取核查结果失败");
 			return new ResponseData.Builder<>().error("获取核查结果失败!" + e.getMessage());
 		}
+	}
+
+	@ApiOperation("核查结果明细")
+	@GetMapping("/checkReport")
+	public ResponseData getCheckResult(@RequestParam("batchno") String batchno) {
+			return new ResponseData.Builder<>(moduleService.checkReport(batchno)).success();
 	}
 
 	@GetMapping("/taskType")

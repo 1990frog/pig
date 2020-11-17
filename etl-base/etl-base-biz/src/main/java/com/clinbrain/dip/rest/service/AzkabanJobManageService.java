@@ -138,7 +138,11 @@ public class AzkabanJobManageService {
 			}
 			success++;
 		}
-		return new ResponseData.Builder(error==0?"操作成功!":"成功"+success+"个flow，失败"+error+"个flow!"+message).success();
+		if(error == 0) {
+			return new ResponseData.Builder<>("操作成功!").success();
+		}else {
+			return new ResponseData.Builder<>().error("成功"+success+"个flow，失败"+error+"个flow!"+message);
+		}
 
 	}
 	/**

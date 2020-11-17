@@ -55,7 +55,9 @@ public class VersionService extends BaseService<JobVersion> {
 		//获取connect
 		ETLConnection connection = dbmapper.selectTargetConnection(workflow.getWorkflowCode());
 		Map<String, String> colMap = new HashMap<>();
-		if (connection == null) {
+		if (connection == null ||
+			workflow.getSelectList() == null || workflow.getSelectList().isEmpty()
+		|| workflow.getFromOrJoinList() == null || workflow.getFromOrJoinList().isEmpty()) {
 			return workflow.getFullSql();
 		}
 		//获取元数据字段
@@ -67,6 +69,7 @@ public class VersionService extends BaseService<JobVersion> {
 				}));
 			}));
 		}));
+
 
 
 		StringBuilder sb = new StringBuilder("select ");

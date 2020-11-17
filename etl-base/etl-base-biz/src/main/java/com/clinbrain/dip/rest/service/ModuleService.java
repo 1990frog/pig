@@ -1031,7 +1031,7 @@ public class ModuleService extends BaseService<ETLModule> {
 		return pageList;
 	}
 
-	public Pair<ETLLogSummary,String> startCheck(String moduleCode,String startTime, String endTime, String uuid) throws Exception {
+	public ETLLogSummary startCheck(String moduleCode,String startTime, String endTime, String uuid) throws Exception {
 
 		final ETLModule module = moduleMapper.selectByPrimaryKey(moduleCode);
 
@@ -1050,7 +1050,6 @@ public class ModuleService extends BaseService<ETLModule> {
 		paramMap.put("startTime",DateUtil.parse(StringUtils.defaultIfEmpty(startTime, DateUtil.formatDateTime(DateUtil.lastMonth())))); // 表
 		paramMap.put("endTime", DateUtil.parse(StringUtils.defaultIfEmpty(endTime, DateUtil.formatDateTime(DateUtil.date())))); // 表
 
-		Pair<ETLLogSummary,String> resultPair = new MutablePair<>();
 		String result = "";
 		String httpResult = "";
 		try {
@@ -1062,12 +1061,15 @@ public class ModuleService extends BaseService<ETLModule> {
 			result = checkResult.getMsg();
 
 			logSummaryMapper.updateByExample(logSummary, weekend);
+
+			logSummary.setModuleCode(logSummary.getModuleName());
+			logSummary.setModuleName(module.getModuleName());
 		} catch (Exception e) {
 			logger.error("调用数据核查服务出错", e);
 			throw new RuntimeException(e.getMessage() + httpResult);
 		}
 
-		return new MutablePair<>(logSummary, result);
+		return logSummary;
 	}
 
 	public String checkResult(String uuid) {
@@ -1075,6 +1077,12 @@ public class ModuleService extends BaseService<ETLModule> {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("batchno", uuid); // 表
 		return HttpUtil.get(checkDataUrl + "etl/scope/", paramMap);
+	}
+
+	public String checkReport(String batchno) {
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("batchno", batchno);
+		return HttpUtil.get(checkDataUrl + "etl/report", paramMap);
 	}
 
 	public Map<String,Integer> selectWorkflowStatus(String moduleCode) {

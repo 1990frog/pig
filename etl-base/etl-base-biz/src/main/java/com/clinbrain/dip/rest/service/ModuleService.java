@@ -37,19 +37,20 @@ import com.clinbrain.dip.rest.mapper.DBETLWorkflowTokenFullSqlMapper;
 import com.clinbrain.dip.rest.mapper.DBETLWorkflowTokenMapper;
 import com.clinbrain.dip.rest.mapper.DBETLWorkflowTokenSelectMapper;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
+import com.clinbrain.dip.rest.vo.ModuleWorkflowStatus;
+import com.clinbrain.dip.strategy.bean.ModuleDependencyVO;
 import com.clinbrain.dip.strategy.entity.JobVersion;
 import com.clinbrain.dip.strategy.service.VersionService;
 import com.clinbrain.dip.workflow.ETLStart;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,9 +62,20 @@ import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 import tk.mybatis.mapper.weekend.Weekend;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -100,11 +112,11 @@ public class ModuleService extends BaseService<ETLModule> {
 	private DBETLWorkflowDataxflowMapper workflowDataxflowMapper;
 
 	@Autowired
-    private VersionService versionService;
+	private VersionService versionService;
 
-    @Autowired
-    @Qualifier("jobModuleMapper")
-    private DBETLJobModuleMapper jobModuleMapper;
+	@Autowired
+	@Qualifier("jobModuleMapper")
+	private DBETLJobModuleMapper jobModuleMapper;
 
 	@Autowired
 	private ConnectionService connectionService;
@@ -145,7 +157,7 @@ public class ModuleService extends BaseService<ETLModule> {
 				return null;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("queryAllModules error!", e);
 			return null;
 		}
 	}
@@ -382,11 +394,11 @@ public class ModuleService extends BaseService<ETLModule> {
 		etlModule.ifPresent(etlModuleItem -> {
 
 
-            if (exist) {
-                DipConfig.getConfigInstance().clearConfigCache("module");
-                //修改module数据
-                etlModuleItem.setCreatedAt(null);
-                mapper.updateByPrimaryKeySelective(etlModuleItem);
+			if (exist) {
+				DipConfig.getConfigInstance().clearConfigCache("module");
+				//修改module数据
+				etlModuleItem.setCreatedAt(null);
+				mapper.updateByPrimaryKeySelective(etlModuleItem);
 
 				// 修改module 对应job
 				jobModuleMapper.updateJobIdByModuleCode(etlModuleItem.getJobId(), moduleCode);
@@ -423,28 +435,28 @@ public class ModuleService extends BaseService<ETLModule> {
 			}
 
 
-            Optional.ofNullable(workflows).ifPresent(wfs -> {
+			Optional.ofNullable(workflows).ifPresent(wfs -> {
 
-                wfs.forEach(workflow -> {
+				wfs.forEach(workflow -> {
 
-                    workflow.setUpdatedAt(new Date());
-                    workflow.setIsEnable(1);
-                    workflow.setIsDefault(1);
-                    workflow.setModuleCode(moduleCode);
-                    if (exist) {
-                        int i = workflowMapper.updateByPrimaryKeySelective(workflow); // 修改。如果没有修改的数据，那就是新增的
-                        if (i == 0) {
-                            workflow.setCreatedAt(new Date());
-                            workflowMapper.insert(workflow);
-                        }
-                        //修改workflow_token 状态
-                        workflowTokenMapper.updateEnableStatusByWorkflowCode(0, workflow.getWorkflowCode());
-                    } else {
-                        //保存workflow
-                        workflow.setCreatedAt(new Date());
-                        workflow.setIsDefault(1);
-                        workflowMapper.insert(workflow);
-                    }
+					workflow.setUpdatedAt(new Date());
+					workflow.setIsEnable(1);
+					workflow.setIsDefault(1);
+					workflow.setModuleCode(moduleCode);
+					if (exist) {
+						int i = workflowMapper.updateByPrimaryKeySelective(workflow); // 修改。如果没有修改的数据，那就是新增的
+						if (i == 0) {
+							workflow.setCreatedAt(new Date());
+							workflowMapper.insert(workflow);
+						}
+						//修改workflow_token 状态
+						workflowTokenMapper.updateEnableStatusByWorkflowCode(0, workflow.getWorkflowCode());
+					} else {
+						//保存workflow
+						workflow.setCreatedAt(new Date());
+						workflow.setIsDefault(1);
+						workflowMapper.insert(workflow);
+					}
 
 					// 保存workflow_connection: 源 或者 目标
 					if (workflow.getConnection() != null
@@ -671,11 +683,11 @@ public class ModuleService extends BaseService<ETLModule> {
 					});
 
 					versionService.insert(version);
-                });
+				});
 
 
-            });
-        });
+			});
+		});
 
 
 		return true;
@@ -867,7 +879,11 @@ public class ModuleService extends BaseService<ETLModule> {
 		workflowTokenMapper.removeEtlWorkflowTokenByModuleCode(moduleCode);
 		workflowConnectionMapper.removeEtlWorkflowConnectionByModuleCode(moduleCode);
 		workflowMapper.removeEtlWorkflowByModuleCode(moduleCode);
+		// 删除module 后重置依赖关系
+		final ETLModule etlModule = selectOne(moduleCode);
+		moduleMapper.updateDependencyByModuleCode(moduleCode, etlModule.getDependencyCode());
 		moduleMapper.deleteByPrimaryKey(moduleCode);
+
 	}
 
 	public ETLModule checkModuleCode(String moduleCode) {
@@ -932,6 +948,7 @@ public class ModuleService extends BaseService<ETLModule> {
 
 	/**
 	 * 编辑 任务的依赖项
+	 *
 	 * @param moduleCode
 	 * @param dependencyCode
 	 * @return
@@ -944,6 +961,48 @@ public class ModuleService extends BaseService<ETLModule> {
 		etlModule.setEnabled(null);
 		etlModule.setFullWhileMonths(null); // 设置null是为了不往表里面插入数据
 		return moduleMapper.updateByPrimaryKeySelective(etlModule);
+	}
+
+
+
+	/**
+	 * 查找任务依赖列表
+	 *
+	 * @return
+	 */
+	public List<ModuleDependencyVO> dependencyList(Integer jobId) {
+		//先查找本身
+		final List<ETLModule> jobModules = moduleMapper.selectModulesByJobId(jobId);
+
+		//1. 先找到所有的头部任务
+		final List<ETLModule> firstModules = jobModules.stream()
+			.filter(m -> StringUtils.isEmpty(m.getDependencyCode())).collect(Collectors.toList());
+
+		List<ModuleDependencyVO> resultList = new ArrayList<>();
+
+		for (ETLModule first : firstModules) {
+			final ModuleDependencyVO moduleDependencyItem = new ModuleDependencyVO(first, new ArrayList<>());
+			resultList.add(moduleDependencyItem);
+			findModules(jobModules, moduleDependencyItem);
+		}
+
+		return resultList;
+	}
+
+	void findModules(List<ETLModule> dataList, ModuleDependencyVO dataItem) {
+		final List<ETLModule> collect = dataList.stream()
+			.filter(m -> StringUtils.equalsIgnoreCase(m.getDependencyCode(), dataItem.getModule().getModuleCode()))
+			.collect(Collectors.toList());
+
+		if (!collect.isEmpty()) {
+			collect.forEach(module -> {
+				final ModuleDependencyVO moduleDependencyItem = new ModuleDependencyVO(module, new ArrayList<>());
+				dataItem.getSubModules().add(moduleDependencyItem);
+				findModules(dataList, moduleDependencyItem);
+			});
+		}
+
+
 	}
 
 	public void moveModuleByJob(String moduleCode, Integer JobId) throws SQLException {
@@ -988,7 +1047,8 @@ public class ModuleService extends BaseService<ETLModule> {
 		ETLStart.startByModule(moduleCode, uuid);
 	}
 
-	public PageResult<Entity> execCheckDataModule(String moduleCode, String workflowCode,String startTime, String endTime,
+	public PageResult<Entity> execCheckDataModule(String moduleCode, String workflowCode, String startTime, String
+		endTime,
 												  String uuid, Page pageItem) throws Exception {
 		logger.info("数据预览，核查任务...");
 		Preconditions.checkNotNull(checkDataUrl, "核查系统的访问地址为空,请先配置核查系统地址");
@@ -1004,7 +1064,7 @@ public class ModuleService extends BaseService<ETLModule> {
 		// 先禁用任务
 		renovateModuleStatus(moduleCode, 1);
 		// 编辑核查点
-		if(editWorkflowPoint(workflowCode) > 0) {
+		if (editWorkflowPoint(workflowCode) > 0) {
 			ETLStart.startCheckDataByModule(moduleCode, uuid, paramMap);
 		}
 		// 执行完没有问题就查询module目标表
@@ -1015,7 +1075,7 @@ public class ModuleService extends BaseService<ETLModule> {
 		return workflowMapper.editWorkflowCheckPoint(workflowCode);
 	}
 
-	public PageResult<Entity> getList(String moduleCode, Page pageItem) throws Exception{
+	public PageResult<Entity> getList(String moduleCode, Page pageItem) throws Exception {
 		PageResult<Entity> pageList = new PageResult<>();
 		final ETLModule etlModule = moduleMapper.selectByPrimaryKey(moduleCode);
 
@@ -1031,7 +1091,8 @@ public class ModuleService extends BaseService<ETLModule> {
 		return pageList;
 	}
 
-	public ETLLogSummary startCheck(String moduleCode,String startTime, String endTime, String uuid) throws Exception {
+	public ETLLogSummary startCheck(String moduleCode, String startTime, String endTime, String uuid) throws
+		Exception {
 
 		final ETLModule module = moduleMapper.selectByPrimaryKey(moduleCode);
 
@@ -1042,12 +1103,12 @@ public class ModuleService extends BaseService<ETLModule> {
 		final ETLConnection etlConnection = connectionService.selectOne(module.getConnectionCode());
 		Map<String, Object> paramMap = new HashMap<>();
 		String tableName = module.getTargetTable();
-		if(tableName.contains(".")) {
-			tableName = StringUtils.substringAfter(tableName,".");
+		if (tableName.contains(".")) {
+			tableName = StringUtils.substringAfter(tableName, ".");
 		}
 		paramMap.put("table", tableName); // 表
 		paramMap.put("url", etlConnection.getUrl()); // 表
-		paramMap.put("startTime",DateUtil.parse(StringUtils.defaultIfEmpty(startTime, DateUtil.formatDateTime(DateUtil.lastMonth())))); // 表
+		paramMap.put("startTime", DateUtil.parse(StringUtils.defaultIfEmpty(startTime, DateUtil.formatDateTime(DateUtil.lastMonth())))); // 表
 		paramMap.put("endTime", DateUtil.parse(StringUtils.defaultIfEmpty(endTime, DateUtil.formatDateTime(DateUtil.date())))); // 表
 
 		String result = "";
@@ -1085,13 +1146,8 @@ public class ModuleService extends BaseService<ETLModule> {
 		return HttpUtil.get(checkDataUrl + "etl/report", paramMap);
 	}
 
-	public Map<String,Integer> selectWorkflowStatus(String moduleCode) {
-		final List<Map<String, Integer>> list = moduleMapper.selectWorkflowStatus(moduleCode);
-		Map<String, Integer> resultMap = new HashMap<>();
-		list.forEach(s -> {
-			resultMap.put(String.valueOf(s.get("workflowCode")),s.getOrDefault("status", 0));
-		});
-		return resultMap;
+	public List<ModuleWorkflowStatus> selectWorkflowStatus(String moduleCode, String uuid) {
+		return moduleMapper.selectWorkflowStatus(moduleCode, uuid);
 	}
 
 	@Getter

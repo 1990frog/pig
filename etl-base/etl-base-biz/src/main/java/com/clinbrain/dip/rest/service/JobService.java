@@ -180,7 +180,7 @@ public class JobService extends BaseService<ETLJob> {
     @Autowired
     TemplateMapper templateMapper;
 
-    public List<Template> selectTemplates() {
+    public List<Template> selectPublicTemplates() {
 		return templateMapper.selectAllPublic();
 	}
 
@@ -277,7 +277,7 @@ public class JobService extends BaseService<ETLJob> {
     public List<ETLJobVo> selectJobTree(Integer topicId, String jobName, String moduleName){
 		List<ETLJobVo> jobVoList = new ArrayList<>();
 		List<ETLJob> etlJobList = moduleMapper.getJobs(topicId,jobName);
-		final List<Template> templates = selectTemplates();
+		final List<Template> templates = selectPublicTemplates();
 		if(etlJobList != null && etlJobList.size() > 0){
 			etlJobList.forEach(j->{
 				ETLJobVo jobVo = new ETLJobVo();

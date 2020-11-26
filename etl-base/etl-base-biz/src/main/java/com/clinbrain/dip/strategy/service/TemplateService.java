@@ -2,6 +2,7 @@ package com.clinbrain.dip.strategy.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
@@ -14,6 +15,9 @@ import com.clinbrain.dip.connection.DatabaseMeta;
 import com.clinbrain.dip.pojo.ETLJob;
 import com.clinbrain.dip.pojo.ETLModule;
 import com.clinbrain.dip.pojo.ETLScheduler;
+import com.clinbrain.dip.rest.mapper.DBETLJobMapper;
+import com.clinbrain.dip.rest.mapper.DBETLJobModuleMapper;
+import com.clinbrain.dip.rest.mapper.DBETLSchedulerMapper;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.rest.service.BaseService;
 import com.clinbrain.dip.rest.service.ConnectionService;
@@ -31,18 +35,17 @@ import com.clinbrain.dip.strategy.sqlparse.FromTableItem;
 import com.clinbrain.dip.strategy.util.CCJSqlParseUtil;
 import com.clinbrain.dip.strategy.util.ZipFileInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import parquet.Preconditions;
+import tk.mybatis.mapper.entity.Example;
 import tk.mybatis.mapper.weekend.Weekend;
 import tk.mybatis.mapper.weekend.WeekendCriteria;
 
@@ -50,6 +53,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -81,7 +85,11 @@ public class TemplateService extends BaseService<Template> {
 
 	private final ConnectionService connectionService;
 
+	private final DBETLSchedulerMapper schedulerMapper;
+
 	private final JobService jobService;
+
+	private final DBETLJobMapper jobMapper;
 
 	private static final String SYSTEM_TEMPLAT_PATH = "/beetl/system.json.tmpl";
 
@@ -111,6 +119,9 @@ public class TemplateService extends BaseService<Template> {
 			Preconditions.checkArgument(zipFile.isValidZipFile(), "不是有效的模板文件");
 
 			final PackageInfo packageInfo = ZipFileInfo.readZipSystemInfo(zipFile);
+			final Template template = templateMapper.selectPublicTemplate(packageInfo.getId());
+
+			Preconditions.checkArgument(template == null, "文件已经存在");
 
 			saveTemplate(packageInfo, fileName + PACKAGE_NAME_SUFFIX, false);
 		} catch (Exception e) {
@@ -119,12 +130,6 @@ public class TemplateService extends BaseService<Template> {
 		}
 
 	}
-
-	@Autowired
-	DataSourceTransactionManager dataSourceTransactionManager;
-	@Autowired
-	TransactionDefinition transactionDefinition;
-
 
 	public boolean removeTemplate(List<String> ids) {
 
@@ -195,7 +200,6 @@ public class TemplateService extends BaseService<Template> {
 			for (String moduleCode : moduleCodes) {
 				final ETLModule etlModule = moduleService.selectModuleDetailByCode(moduleCode);
 				final ModuleTaskRequest moduleTaskRequest = moduleService.transformModule(etlModule);
-				moduleTaskRequest.setHospitalName("");
 				zipParameters.setFileNameInZip(moduleTaskRequest.getModuleCode() + "_m");
 				String moduleInfo = objectMapper.writeValueAsString(moduleTaskRequest);
 				is = new ByteArrayInputStream(moduleInfo.getBytes(StandardCharsets.UTF_8));
@@ -264,7 +268,7 @@ public class TemplateService extends BaseService<Template> {
 				final List<String> ids = template.getTemplateIdList();
 				Weekend<Template> weekend = new Weekend<>(Template.class);
 				final WeekendCriteria<Template, Object> criteria = weekend.weekendCriteria();
-				criteria.andIn(Template::getId, ids);
+				criteria.andIn(Template::getId, ids).andNotEqualTo(Template::getCustom, 1);
 				final List<Template> templates = selectByExample(weekend);
 				if (templates != null && !templates.isEmpty()) {
 					templates.forEach(t -> {
@@ -308,15 +312,19 @@ public class TemplateService extends BaseService<Template> {
 					logger.error("解析sql:{} 出错", sql, e);
 				}
 			}
+			if(tableColumns.isEmpty()) {
+				return 0d;
+			}
 
 			Set<String> dbs = new HashSet<>();
 			Set<String> tables = new HashSet<>();
 			// 列总数
 			final long totalColumns = tableColumns.parallelStream().map(FromTableItem::getColumnItems).mapToLong(List::size).sum();
 
+
 			tableColumns.forEach(item -> {
-				dbs.add(StringUtils.defaultIfEmpty(item.getDatabaseName(), item.getTableSchema()));
-				tables.add(item.getTableName());
+				dbs.add(StringUtils.defaultIfEmpty(item.getDatabaseName(), item.getTableSchema()).toLowerCase());
+				tables.add(StringUtils.lowerCase(item.getTableName()));
 			});
 
 			final List<DatabaseMeta> dbTemps = connectionService.getDataBases(connectionCode, "", "");
@@ -327,7 +335,7 @@ public class TemplateService extends BaseService<Template> {
 			dbs.removeAll(subDBs);
 			logger.info("有这几个数据库在本地没有找到 {}", CollUtil.join(subDBs, ","));
 			// 查找所有这个db下的内容, 去掉db 不存在的记录
-			tableColumns.removeIf(t -> subDBs.contains(t.getDatabaseName()));
+			tableColumns.removeIf(t -> subDBs.contains(StringUtils.lowerCase(t.getDatabaseName())));
 			logger.info("删除元素后继续查找 {}", tableColumns.size());
 
 			// 循环判断db中的表：，去掉db中的表不存在的记录
@@ -337,7 +345,8 @@ public class TemplateService extends BaseService<Template> {
 					final Set<String> tempTableSet = tableTemps.stream().map(DatabaseMeta::getTableMetas).flatMap(Collection::parallelStream)
 						.map(tableMeta -> tableMeta.tableName).collect(Collectors.toSet());
 					tableColumns.removeIf(t ->
-						dbName.equalsIgnoreCase(t.getDatabaseName()) && !CollUtil.contains(tempTableSet, s -> s.equalsIgnoreCase(t.getTableName()))
+						dbName.equalsIgnoreCase(t.getDatabaseName()) &&
+							!CollUtil.contains(tempTableSet, s -> s.equalsIgnoreCase(StringUtils.isEmpty(t.getTableSchema())?t.getTableName():t.getTableSchema()+"."+t.getTableName()))
 					);
 
 					// 根据表来删除不存在的列
@@ -364,23 +373,79 @@ public class TemplateService extends BaseService<Template> {
 		//totalColumns/validColumns
 	}
 
-	public boolean importSaveModule(Integer topicId, String hospitalCode, String templateCode) throws Exception {
-		final Template template = selectOne(templateCode);
+	/**
+	 * 根据cron 表达式查询
+	 * @param cron
+	 * @return
+	 */
+	private ETLScheduler getSchedulerByCron(String cron) {
+		Weekend<ETLScheduler> weekend = new Weekend<>(ETLScheduler.class);
+		final WeekendCriteria<ETLScheduler, Object> criteria = weekend.weekendCriteria();
+		criteria.andEqualTo(ETLScheduler::getSchedulerCron, cron);
+		final List<ETLScheduler> schedulers = schedulerMapper.selectByExample(weekend);
+		if(schedulers.size() > 0) {
+			return schedulers.get(0);
+		}
+		return null;
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	public boolean importSaveModule(Integer topicId, String hospitalCode, String templateId) throws Exception {
+		final Template template = templateMapper.selectPublicTemplate(templateId);
+		String zipFilePath = commonConfig.getPackagePath() + File.separator + template.getTmplPath();
 		final List<PackageItem> packageItems
-			= ZipFileInfo.readZipFiles(commonConfig.getPackagePath() + File.separator + template.getTmplPath());
+			= ZipFileInfo.readZipFiles(zipFilePath);
+		if(packageItems == null || packageItems.isEmpty()) {
+			throw new RuntimeException("没有找到模板对应的任务信息，请确认模板文件正确！");
+		}
+		final PackageInfo packageInfo = ZipFileInfo.readZipSystemInfo(zipFilePath);
+		if(packageInfo == null) {
+			throw new RuntimeException("模板文件读取失败，请确认文件正确！");
+		}
+
+		ETLScheduler scheduler = getSchedulerByCron(packageInfo.getCron());
+		if(scheduler == null) {
+			scheduler = new ETLScheduler();
+			scheduler.setSchedulerDesc(packageInfo.getCronDesc());
+			scheduler.setSchedulerCron(packageInfo.getCron());
+			scheduler.setCreatedAt(new Date());
+			scheduler.setUpdatedAt(new Date());
+			schedulerMapper.insertSelective(scheduler);
+		}
+
+		// 保存job信息和任务关联信息,查找已经存在的job供使用
+
+		ETLJob etlJob = new ETLJob();
+		etlJob.setJobName(template.getTmplName());
+		etlJob.setTopicId(""+topicId);
+		etlJob.setSchedulerId(scheduler.getSchedulerId());
+		etlJob.setEnabled(0);
+		etlJob.setTemplateId(template.getId());
+		etlJob.setCreatedAt(new Date());
+		etlJob.setUpdatedAt(new Date());
+		final ETLJob job = jobService.checkJobName(etlJob.getJobName());
+		int jobId = 0;
+		if(job == null) {
+			jobService.insert(etlJob);
+			jobId = etlJob.getId();
+		}else {
+			jobId = job.getId();
+		}
+
 		boolean result = true;
 		for (PackageItem item : packageItems) {
 			final ModuleTaskRequest moduleInfo = item.getModuleInfo();
 			moduleInfo.setModuleCode(null);
 			moduleInfo.setHospitalName(hospitalCode);
 			moduleInfo.setCreatedAt(new Date());
+			moduleInfo.setJobId(jobId);
 			result = moduleService.editEtlModule(moduleInfo);
 		}
 		return result;
 	}
 
 	public Template templateFilePath(String id) {
-		final Template template = selectOne(id);
+		final Template template = templateMapper.selectCustomTemplate(id);
 		if (template != null) {
 			String filePath = commonConfig.getPackagePath() + File.separator + template.getTmplPath();
 			if (FileUtil.exist(filePath)) {

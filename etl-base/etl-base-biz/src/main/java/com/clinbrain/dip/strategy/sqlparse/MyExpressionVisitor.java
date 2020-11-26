@@ -1,12 +1,12 @@
 package com.clinbrain.dip.strategy.sqlparse;
 
-import net.sf.jsqlparser.expression.CaseExpression;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
-import net.sf.jsqlparser.expression.UserVariable;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Database;
-import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser3.expression.CaseExpression;
+import net.sf.jsqlparser3.expression.Expression;
+import net.sf.jsqlparser3.expression.ExpressionVisitorAdapter;
+import net.sf.jsqlparser3.expression.UserVariable;
+import net.sf.jsqlparser3.schema.Column;
+import net.sf.jsqlparser3.schema.Database;
+import net.sf.jsqlparser3.schema.Table;
 
 import java.util.Optional;
 import java.util.Set;

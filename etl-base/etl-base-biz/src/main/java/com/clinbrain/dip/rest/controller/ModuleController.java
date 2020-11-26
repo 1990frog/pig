@@ -10,6 +10,7 @@ import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.rest.request.RequestJson;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.rest.service.ModuleService;
+import com.clinbrain.dip.strategy.controller.ApiBaseController;
 import com.clinbrain.dip.workflow.ETLStart;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +18,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.google.common.collect.Lists;
 import com.pig4cloud.pig.common.core.util.R;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.StringUtils;
@@ -41,9 +43,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+
+@Api(tags = {"etl具体任务（Module）"})
 @RequestMapping("/etl/module")
 @RestController
-public class ModuleController {
+public class ModuleController extends ApiBaseController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
@@ -192,12 +196,26 @@ public class ModuleController {
 			new ResponseData.Builder<>().error("编辑任务依赖失败");
 	}
 
+	/**
+	 * 查找任务依赖节点列表
+	 *
+	 * @param jobId 当前任务所属任务组ID
+	 * @return
+	 */
+	@ApiOperation("查询当前任务的依赖列表")
+	@GetMapping("/dependencyList")
+	public ResponseData dependencyList(@ApiParam("任务组ID") @RequestParam("jobId") Integer jobId) {
+			return new ResponseData.Builder<>(moduleService.dependencyList(jobId)).success();
+	}
+
+	@ApiOperation("运行任务，同时保存任务参数，如区间/增量模式，区间时间设置")
 	@PostMapping("/start")
 	public ResponseData startModule(@RequestBody ModuleTaskRequest etlModule) {
 		try {
 			if (moduleService.updateModuleByCode(etlModule) > 0) {
 				String uuid = UUID.randomUUID().toString();
-				ETLStart.startByModule(etlModule.getModuleCode(), uuid);
+				moduleService.execModule(etlModule.getModuleCode(), uuid);
+				return new ResponseData.Builder<>(uuid).success();
 			} else {
 				return new ResponseData.Builder<>().error("提交数据失败");
 			}
@@ -205,7 +223,6 @@ public class ModuleController {
 			logger.error("module 执行失败", e);
 			return new ResponseData.Builder<>().error("任务失败,具体请查看系统日志!");
 		}
-		return new ResponseData.Builder<>().success();
 	}
 
 	/**
@@ -467,8 +484,8 @@ public class ModuleController {
 	 */
 	@ApiOperation("根据任务编码获取组件最近运行状态")
 	@GetMapping("/workflow/status")
-	public R moduleWorkflowStatus(@RequestParam("moduleCode") String moduleCode) {
-		return R.ok(moduleService.selectWorkflowStatus(moduleCode));
+	public R moduleWorkflowStatus(@RequestParam("moduleCode") String moduleCode,@RequestParam("uuid") String uuid) {
+		return success(moduleService.selectWorkflowStatus(moduleCode, uuid));
 	}
 
 }

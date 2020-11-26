@@ -4,10 +4,10 @@ import com.clinbrain.dip.strategy.sqlparse.FromTableItem;
 import com.clinbrain.dip.strategy.sqlparse.MySelectVisitor;
 import com.clinbrain.dip.strategy.sqlparse.MyTableFromVisitor;
 import com.clinbrain.dip.strategy.sqlparse.TableColumnItem;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser3.JSQLParserException;
+import net.sf.jsqlparser3.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser3.statement.Statement;
+import net.sf.jsqlparser3.statement.select.Select;
 
 import java.util.HashSet;
 import java.util.Set;

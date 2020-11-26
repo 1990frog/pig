@@ -1,8 +1,11 @@
 package com.clinbrain.dip.rest.mapper;
 
 import com.clinbrain.dip.pojo.*;
+import com.clinbrain.dip.rest.vo.ModuleWorkflowStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -48,8 +51,14 @@ public interface DBETLModuleMapper extends tk.mybatis.mapper.common.Mapper<ETLMo
 
     List<Map> selectModuleCodeByWorkflowInfo();
 
-    List<Map<String,Integer>> selectWorkflowStatus(@Param("moduleCode") String moduleCode);
+    List<ModuleWorkflowStatus> selectWorkflowStatus(@Param("moduleCode") String moduleCode, @Param("uuid") String uuid);
 
 
 	ETLConnection selectTargetConnection(@Param("workflowCode") String workflowCode);
+
+	@Select("select a.* from etl_module a left join etl_job_module b on a.module_code = b.module_code where b.job_id = #{jobId}")
+	List<ETLModule> selectModulesByJobId(@Param("jobId") Integer jobId);
+
+	@Update("update etl_module set dependency_code = #{dependencyCode} where dependency_code = #{moduleCode}")
+	int updateDependencyByModuleCode(@Param("moduleCode") String moduleCode, @Param("dependencyCode") String dependencyCode);
 }

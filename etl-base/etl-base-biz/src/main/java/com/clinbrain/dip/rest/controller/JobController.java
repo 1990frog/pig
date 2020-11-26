@@ -20,7 +20,6 @@ import com.clinbrain.dip.util.ProcessUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.common.security.annotation.Inner;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -28,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -96,16 +95,19 @@ public class JobController {
 
 			PageHelper.orderBy("updated_at "+rank);
 			Page<ETLJob> pageData = (Page<ETLJob>)jobService.getJobs(id,name);
-			final List<Template> templates = jobService.selectTemplates();
+			final List<Template> templates = Optional.ofNullable(jobService.selectPublicTemplates()).orElse(new ArrayList<>());
+
 			ResponseData.Page pages = new ResponseData.Page<>(pageData.getTotal(), pageData.getResult());
 			if(pageData.getResult() != null && !pageData.getResult().isEmpty()) {
 				List<EtlJobVersion> jobs = pageData.getResult().stream().map(job -> {
 					EtlJobVersion jobVersion = new EtlJobVersion();
 					BeanUtil.copyProperties(job,jobVersion);
 					try {
+						jobVersion.setJobVersion(jobService.getTemplateDescById(templates, job.getTemplateId()));
+						jobVersion.setTemplate(templates.stream().filter(s-> StringUtils.equalsIgnoreCase(s.getId(), job.getTemplateId())).findFirst().orElse(null));
 						final Boolean existProject = azkabanJobManageService.isExistProject(new Project(job.getJobName(), "", ""));
 						jobVersion.setEnabled(existProject?1:0);
-						jobVersion.setJobVersion(jobService.getTemplateDescById(templates, job.getTemplateId()));
+
 					}catch (Exception e) {
 						jobVersion.setEnabled(0);
 					}

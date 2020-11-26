@@ -174,7 +174,7 @@ public class TemplateController extends ApiBaseController {
 		}
 
 		HttpHeaders headers = new HttpHeaders();
-		headers.add ( "Content-Disposition",String.format("attachment;filename=\"%s",fileName));
+		headers.add ( "Content-Disposition",String.format("attachment;filename=%s",fileName));
 		headers.add ( "Cache-Control","no-cache,no-store,must-revalidate" );
 		headers.add ( "Pragma","no-cache" );
 		headers.add ( "Expires","0" );
@@ -195,14 +195,14 @@ public class TemplateController extends ApiBaseController {
 		return R.ok(templateService.matching(templateConnList));
 	}
 
-	@ApiOperation("模板选择后导入")
+	@ApiOperation("模板选择后导入任务")
 	@PostMapping("importSave")
 	public R importByTemplate(@MultiRequestBody("topicId") Integer topicId,
 							  @MultiRequestBody("hospitalCode") String hospitalCode,
-							  @MultiRequestBody("templateCode") String templateCode) {
+							  @MultiRequestBody("templateId") String templateId) {
 		try {
-			final boolean saveModule = templateService.importSaveModule(topicId, hospitalCode, templateCode);
-			return saveModule ? R.ok() : R.failed("导入模板任务出错");
+			final boolean saveModule = templateService.importSaveModule(topicId, hospitalCode, templateId);
+			return saveModule ? R.ok(saveModule) : R.failed("导入模板任务出错");
 		} catch (Exception e) {
 			log.error("导入出错", e);
 			return R.failed(e.getMessage());

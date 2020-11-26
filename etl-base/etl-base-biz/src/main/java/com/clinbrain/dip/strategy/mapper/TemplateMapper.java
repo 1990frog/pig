@@ -20,4 +20,10 @@ public interface TemplateMapper extends tk.mybatis.mapper.common.Mapper<Template
 
 	@Select("select * from t_template where custom != 1")
 	List<Template> selectAllPublic();
+
+	@Select("select * from t_template where id = #{id} and custom != 1")
+	Template selectPublicTemplate(@Param("id") String id);
+
+	@Select("select * from t_template where id = #{id} and custom = 1")
+	Template selectCustomTemplate(@Param("id") String id);
 }

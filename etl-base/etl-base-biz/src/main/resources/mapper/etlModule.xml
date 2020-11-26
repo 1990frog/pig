@@ -396,9 +396,16 @@
         group by target_schema,target_table
     </select>
 
-	<select id="selectWorkflowStatus" resultType="map">
-		select a.workflow_code as workflowCode, b.`status` from etl_workflow a left join etl_logdetail b on a.workflow_code = b.workflow_code
-		where  a.module_code = #{moduleCode} and b.summary_id =
-		( select summary_id from etl_logsummary where module_name = #{moduleCode} order by log_summary_start desc limit 1)
+	<resultMap id="workflowStatusMap" type="com.clinbrain.dip.rest.vo.ModuleWorkflowStatus">
+		<result column="workflowCode" property="workflowCode"/>
+		<result column="status" property="status"/>
+	</resultMap>
+
+	<select id="selectWorkflowStatus" resultMap="workflowStatusMap">
+		select a.workflow_code as workflowCode, b.`status` from etl_workflow a
+		    left join etl_logdetail b on a.workflow_code = b.workflow_code
+			and b.summary_id =
+				( select summary_id from etl_logsummary where batch_id = #{uuid} order by log_summary_start desc limit 1)
+	  	where  a.runnable = 1 and  a.module_code = #{moduleCode}  order by a.workflow_sequence_customized
 	</select>
  </mapper>

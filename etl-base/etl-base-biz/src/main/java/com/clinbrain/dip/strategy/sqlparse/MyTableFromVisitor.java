@@ -1,17 +1,17 @@
 package com.clinbrain.dip.strategy.sqlparse;
 
-import net.sf.jsqlparser.expression.Alias;
-import net.sf.jsqlparser.expression.CaseExpression;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.WhenClause;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Database;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.Join;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.SelectItem;
-import net.sf.jsqlparser.util.TablesNamesFinder;
+import net.sf.jsqlparser3.expression.Alias;
+import net.sf.jsqlparser3.expression.CaseExpression;
+import net.sf.jsqlparser3.expression.Expression;
+import net.sf.jsqlparser3.expression.WhenClause;
+import net.sf.jsqlparser3.schema.Column;
+import net.sf.jsqlparser3.schema.Database;
+import net.sf.jsqlparser3.schema.Table;
+import net.sf.jsqlparser3.statement.Statement;
+import net.sf.jsqlparser3.statement.select.Join;
+import net.sf.jsqlparser3.statement.select.PlainSelect;
+import net.sf.jsqlparser3.statement.select.SelectItem;
+import net.sf.jsqlparser3.util.TablesNamesFinder;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashSet;
@@ -40,9 +40,8 @@ public class MyTableFromVisitor extends TablesNamesFinder {
 		return tableItems;
 	}
 
-	@Override
 	protected void init() {
-		super.init();
+		super.init(true);
 		this.tableItems = new HashSet<>();
 		this.tableColumnItemSet = new HashSet<>();
 	}

@@ -1,8 +1,8 @@
 package com.clinbrain.dip.strategy.sqlparse;
 
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
-import net.sf.jsqlparser.statement.select.SelectItemVisitorAdapter;
-import net.sf.jsqlparser.util.TablesNamesFinder;
+import net.sf.jsqlparser3.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser3.statement.select.SelectItemVisitorAdapter;
+import net.sf.jsqlparser3.util.TablesNamesFinder;
 
 import java.util.Set;
 

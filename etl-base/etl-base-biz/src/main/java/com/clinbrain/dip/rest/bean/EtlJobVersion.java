@@ -18,6 +18,10 @@ public class EtlJobVersion extends ETLJob {
 
 	@Getter
 	@Setter
+	private Template template;
+
+	@Getter
+	@Setter
 	private List<JobHistory> jobVersion;
 
 	@Data

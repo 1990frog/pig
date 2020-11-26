@@ -32,6 +32,7 @@ public class ModuleTaskRequest{
     private Integer etlType = 1; // 0: incremental, 1: full, 2: range
     private Integer enabled = 0;
     private Integer fullWhileMonths;
+    private String dependencyCode;
     private Long rangeStartDate;
     private Long rangeEndDate;
     private Integer topicId;

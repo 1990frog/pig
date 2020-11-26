@@ -1,5 +1,6 @@
 package com.clinbrain.dip.strategy.util;
 
+import cn.hutool.core.io.IoUtil;
 import com.clinbrain.dip.pojo.ETLModule;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.strategy.bean.PackageInfo;
@@ -28,6 +29,12 @@ import static com.clinbrain.dip.strategy.constant.TacticsConstant.PACKAGE_SYSTEM
 public class ZipFileInfo {
 
 	private static ObjectMapper objectMapper = new ObjectMapper();
+
+	public static PackageInfo readZipSystemInfo(String zipFilePath) throws Exception {
+
+		ZipFile zipFile = new ZipFile(zipFilePath);
+		return readZipSystemInfo(zipFile);
+	}
 
 	public static PackageInfo readZipSystemInfo(ZipFile zipFile) throws Exception {
 
@@ -85,9 +92,8 @@ public class ZipFileInfo {
 
 			return packageItems;
 		} finally {
-			if (is != null) {
-				is.close();
-			}
+			IoUtil.close(is);
+			IoUtil.close(mStream);
 		}
 	}
 }

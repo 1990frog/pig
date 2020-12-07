@@ -1,6 +1,7 @@
 package com.clinbrain.dip.rest.service;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.file.FileReader;
 import cn.hutool.db.Db;
 import cn.hutool.db.Entity;
 import cn.hutool.db.Page;
@@ -51,6 +52,9 @@ import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -484,15 +488,6 @@ public class ModuleService extends BaseService<ETLModule> {
 						}
 					}
 
-					//修改状态
-					versionService.updateWorkflowCodeByVersionStatus(workflow.getWorkflowCode());
-					//记录版本
-					JobVersion version = new JobVersion();
-					version.setVersionCode(UUID.randomUUID().toString());
-					version.setCreateDate(new Date());
-					version.setUserId(SecurityUtils.getUser().getId());
-					version.setWorkflowCode(workflow.getWorkflowCode());
-
 					// full_sql 如果有，就不用SQL拼接的那种
 					if (StringUtils.isNotEmpty(workflow.getFullSql())) {
 						String fullSqlTokenCode = "ETL_FULL_SQL";
@@ -532,8 +527,6 @@ public class ModuleService extends BaseService<ETLModule> {
 						if (needCreate) {
 							fullSqlToken.setCreatedAt(new Date());
 							fullSqlMapper.insert(fullSqlToken);
-
-							version.setWorkflowSql(Optional.ofNullable(fullSqlToken.getFullSqlCustomized()).orElse(fullSqlToken.getFullSqlDefault()));
 						}
 					} else {
 
@@ -635,9 +628,6 @@ public class ModuleService extends BaseService<ETLModule> {
 								}
 							});
 						});
-
-						version.setWorkflowSql(versionService.selectWorkFlowSql(workflow));
-
 					}
 
 					// where
@@ -682,7 +672,30 @@ public class ModuleService extends BaseService<ETLModule> {
 						}
 					});
 
-					versionService.insert(version);
+					// 保存版本
+
+					//修改状态
+					final JobVersion jobVersion = versionService.selectLastVersion(workflow.getWorkflowCode());
+
+					//记录版本
+					JobVersion version = new JobVersion();
+					version.setVersionCode(UUID.randomUUID().toString());
+					version.setCreateDate(new Date());
+					version.setUserId(SecurityUtils.getUser().getId());
+					version.setWorkflowCode(workflow.getWorkflowCode());
+					version.setWorkflowSql(workflow.getWorkflowSQL());
+
+					if(jobVersion != null) {
+						String lastVersionSql = jobVersion.getWorkflowSql();
+						if(!workflowSqlEquals(lastVersionSql, workflow.getWorkflowSQL())) { // 不相同则保存
+							versionService.updateWorkflowCodeByVersionStatus(workflow.getWorkflowCode());
+							versionService.insert(version);
+						}
+					}else if(StringUtils.isNotEmpty(workflow.getWorkflowSQL())) {
+						versionService.insert(version);
+					}
+
+
 				});
 
 
@@ -691,6 +704,11 @@ public class ModuleService extends BaseService<ETLModule> {
 
 
 		return true;
+	}
+
+
+	private boolean workflowSqlEquals(String sql, String sql2) {
+		return StringUtils.equalsIgnoreCase(sql,sql2);
 	}
 
 	private Optional<ETLModule> transform(ModuleTaskRequest moduleTaskRequest) {
@@ -762,6 +780,7 @@ public class ModuleService extends BaseService<ETLModule> {
 			workflow.setLoc(iwf.getLoc());
 			workflow.setRunnable(iwf.getRunnable());
 			workflow.setIncrementalMode(iwf.getIncrementalMode());
+			workflow.setWorkflowSQL(iwf.getWorkflowSql());
 			if (iwf.getParameterJson() != null) {
 				// 设置workflow 参数：
 				try {
@@ -1148,6 +1167,24 @@ public class ModuleService extends BaseService<ETLModule> {
 
 	public List<ModuleWorkflowStatus> selectWorkflowStatus(String moduleCode, String uuid) {
 		return moduleMapper.selectWorkflowStatus(moduleCode, uuid);
+	}
+
+	public Pair<ETLLogSummary, String> tailLog(String batchId) {
+		final ETLLogSummary etlLogSummary = logSummaryMapper.selectLogSummaryByBatchId(batchId);
+		if(etlLogSummary == null) {
+			return new MutablePair<>(etlLogSummary, "没有日志");
+		}
+		String filePath = DipConfig.getConfigInstance().getProperty("logback.dir","") + File.separator
+			+ DateFormatUtils.format(etlLogSummary.getLogSummaryStart(), "yyyy-MM-dd")
+			+ File.separator + etlLogSummary.getBatchId()+".log";
+		File file = new File(filePath);
+		String fileLog = "";
+		if(file.exists()) {
+			FileReader fileReader = new FileReader(file);
+			fileLog = fileReader.readString();
+		}
+
+		return new MutablePair<>(etlLogSummary, fileLog);
 	}
 
 	@Getter

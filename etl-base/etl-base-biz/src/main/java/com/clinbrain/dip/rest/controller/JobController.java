@@ -104,6 +104,7 @@ public class JobController {
 					BeanUtil.copyProperties(job,jobVersion);
 					try {
 						jobVersion.setJobVersion(jobService.getTemplateDescById(templates, job.getTemplateId()));
+						jobService.selectCheckStatusByJobId(job.getId(), jobVersion);
 						jobVersion.setTemplate(templates.stream().filter(s-> StringUtils.equalsIgnoreCase(s.getId(), job.getTemplateId())).findFirst().orElse(null));
 						final Boolean existProject = azkabanJobManageService.isExistProject(new Project(job.getJobName(), "", ""));
 						jobVersion.setEnabled(existProject?1:0);
@@ -131,7 +132,7 @@ public class JobController {
 
     /**
      * 任务上传到调度系统
-     * @param jobInfo 任务信息
+     * @param jobId
      * @return
      */
     @PostMapping("/upload")

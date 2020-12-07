@@ -2,6 +2,7 @@ package com.clinbrain.dip.rest.mapper;
 
 import com.clinbrain.dip.pojo.ETLLogSummary;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.stereotype.Repository;
 import tk.mybatis.mapper.common.Mapper;
@@ -29,5 +30,8 @@ public interface DBETLLogSummaryMapper extends Mapper<ETLLogSummary> {
 
     @Update("UPDATE etl_logdetail SET status=0 WHERE detail_id=#{detailId}")
     void updateLogDetailByUuid(@Param("detailId") Integer detailId);
+
+    @Select("select * from etl_logsummary where batch_id = #{batchId}")
+    ETLLogSummary selectLogSummaryByBatchId(@Param("batchId") String batchId);
 }
 

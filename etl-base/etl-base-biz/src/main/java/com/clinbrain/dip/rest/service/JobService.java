@@ -20,6 +20,7 @@ import com.clinbrain.dip.rest.mapper.DBETLTopicMapper;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.rest.util.CreateZipFile;
 import com.clinbrain.dip.rest.vo.ETLJobVo;
+import com.clinbrain.dip.rest.vo.ModuleCheckStatus;
 import com.clinbrain.dip.strategy.entity.Template;
 import com.clinbrain.dip.strategy.mapper.TemplateMapper;
 import com.clinbrain.dip.util.FtpHelper;
@@ -210,6 +211,10 @@ public class JobService extends BaseService<ETLJob> {
         return jobMapper.checkJobName(jobName);
     }
 
+	public ETLJob checkJobName(Integer topicId, String jobName) {
+		return jobMapper.checkJobNameUnderTopicId(jobName, topicId);
+	}
+
     public List<ETLJob> listJobByName(String jobName) {
         if (StringUtils.isNotEmpty(jobName)){
             Example example = new Example(ETLJob.class);
@@ -294,5 +299,23 @@ public class JobService extends BaseService<ETLJob> {
 			});
 		}
 		return jobVoList;
+	}
+
+	public void selectCheckStatusByJobId(Integer jobId, EtlJobVersion jobVersion) {
+		final List<ModuleCheckStatus> list = jobMapper.selectModuleCheckStatusByJobId(jobId);
+		List<String> checkStatus = new ArrayList<>();
+		List<String> notCheckStatus = new ArrayList<>();
+		Optional.ofNullable(list).ifPresent(l -> {
+			l.forEach(s -> {
+				if(s.getCount() == 0) {
+					notCheckStatus.add(s.getModuleCode());
+				}else {
+					checkStatus.add(s.getModuleCode());
+				}
+			});
+		});
+
+		jobVersion.setCheckedModules(checkStatus);
+		jobVersion.setNotCheckedModules(notCheckStatus);
 	}
 }

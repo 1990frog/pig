@@ -53,8 +53,6 @@ public class ModuleController extends ApiBaseController {
 	@Autowired
 	private ModuleService moduleService;
 
-	private ObjectMapper jsonMapper = new ObjectMapper();
-
     @GetMapping("")
     public ResponseData selectAllModules() {
         return new ResponseData.Builder<>(moduleService.selectAll()).success();
@@ -486,6 +484,18 @@ public class ModuleController extends ApiBaseController {
 	@GetMapping("/workflow/status")
 	public R moduleWorkflowStatus(@RequestParam("moduleCode") String moduleCode,@RequestParam("uuid") String uuid) {
 		return success(moduleService.selectWorkflowStatus(moduleCode, uuid));
+	}
+
+	@ApiOperation("根据任务运行的uuid 获取运行日志")
+	@GetMapping("/tailLog")
+	public R tailLogs(@RequestParam("uid") String uuid) {
+		try {
+			final Pair<ETLLogSummary, String> etlLogSummaryStringPair = moduleService.tailLog(uuid);
+			return success(etlLogSummaryStringPair.getLeft(), etlLogSummaryStringPair.getRight());
+		}catch (Exception e) {
+			logger.error("获取运行记录出错！", e);
+			return failed(e.getMessage());
+		}
 	}
 
 }

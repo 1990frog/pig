@@ -154,7 +154,7 @@
     </select>
 
 	<select id="selectViewSql" resultType="string">
-		select execution_sql as workflow_sql from view_union_sql where workflow_code = #{workflowCode}
+		select workflow_sql from t_workflow_sql_version where workflow_code = #{workflowCode} order by create_date desc limit 1
 	</select>
 
     <select id="selectDataxflowByWorkflowCode" resultMap="etlWorkflowDataxflowMap">

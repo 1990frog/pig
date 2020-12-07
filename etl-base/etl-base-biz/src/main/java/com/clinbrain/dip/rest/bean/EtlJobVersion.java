@@ -24,6 +24,14 @@ public class EtlJobVersion extends ETLJob {
 	@Setter
 	private List<JobHistory> jobVersion;
 
+	@Getter
+	@Setter
+	private List<String> checkedModules;
+
+	@Getter
+	@Setter
+	private List<String> notCheckedModules;
+
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clinbrain.dip.strategy.entity.JobVersion;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -21,6 +22,8 @@ public interface VersionMapper extends tk.mybatis.mapper.common.Mapper<JobVersio
 
 	void updateWorkflowCodeByVersionStatus(@Param("workflowCode") String workflowCode);
 
+	@Select("select * from t_workflow_sql_version where workflow_code = #{workflowCode} order by create_date desc limit 1")
+	JobVersion selectLastVersion(@Param("workflowCode") String workflowCode);
 
 	List<JobVersion> selectVersionPage(@Param("workflowCode") String workflowCode);
 

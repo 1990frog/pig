@@ -2,7 +2,6 @@ package com.clinbrain.dip.strategy.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
@@ -16,7 +15,6 @@ import com.clinbrain.dip.pojo.ETLJob;
 import com.clinbrain.dip.pojo.ETLModule;
 import com.clinbrain.dip.pojo.ETLScheduler;
 import com.clinbrain.dip.rest.mapper.DBETLJobMapper;
-import com.clinbrain.dip.rest.mapper.DBETLJobModuleMapper;
 import com.clinbrain.dip.rest.mapper.DBETLSchedulerMapper;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.rest.service.BaseService;
@@ -36,6 +34,7 @@ import com.clinbrain.dip.strategy.util.CCJSqlParseUtil;
 import com.clinbrain.dip.strategy.util.ZipFileInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import lombok.RequiredArgsConstructor;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
@@ -45,7 +44,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import tk.mybatis.mapper.entity.Example;
 import tk.mybatis.mapper.weekend.Weekend;
 import tk.mybatis.mapper.weekend.WeekendCriteria;
 
@@ -53,7 +51,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -62,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.clinbrain.dip.strategy.constant.TacticsConstant.PACKAGE_NAME_SUFFIX;
@@ -344,9 +342,11 @@ public class TemplateService extends BaseService<Template> {
 				if (tableTemps != null && !tableTemps.isEmpty()) {
 					final Set<String> tempTableSet = tableTemps.stream().map(DatabaseMeta::getTableMetas).flatMap(Collection::parallelStream)
 						.map(tableMeta -> tableMeta.tableName).collect(Collectors.toSet());
-					tableColumns.removeIf(t ->
-						dbName.equalsIgnoreCase(t.getDatabaseName()) &&
-							!CollUtil.contains(tempTableSet, s -> s.equalsIgnoreCase(StringUtils.isEmpty(t.getTableSchema())?t.getTableName():t.getTableSchema()+"."+t.getTableName()))
+					tableColumns.removeIf(t -> {
+							String tempName = StringUtils.isEmpty(t.getTableSchema()) ? t.getTableName() : t.getTableSchema() + "." + t.getTableName();
+							return dbName.equalsIgnoreCase(t.getDatabaseName()) &&
+								!CollUtil.contains(tempTableSet,(Predicate<String>) str -> str.equalsIgnoreCase(tempName));
+						}
 					);
 
 					// 根据表来删除不存在的列
@@ -358,7 +358,7 @@ public class TemplateService extends BaseService<Template> {
 							.map(t -> t.name).collect(Collectors.toSet());
 
 						//单个表的列与本地比对
-						cc.getColumnItems().removeIf(c -> !CollUtil.contains(columnTemps, s -> s.equalsIgnoreCase(c.getColumnName())));
+						cc.getColumnItems().removeIf(c -> !CollUtil.contains(columnTemps, (Predicate<String>)s -> s.equalsIgnoreCase(c.getColumnName())));
 					});
 				}
 			}
@@ -423,7 +423,7 @@ public class TemplateService extends BaseService<Template> {
 		etlJob.setTemplateId(template.getId());
 		etlJob.setCreatedAt(new Date());
 		etlJob.setUpdatedAt(new Date());
-		final ETLJob job = jobService.checkJobName(etlJob.getJobName());
+		final ETLJob job = jobService.checkJobName(topicId, etlJob.getJobName());
 		int jobId = 0;
 		if(job == null) {
 			jobService.insert(etlJob);

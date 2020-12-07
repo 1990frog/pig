@@ -44,6 +44,10 @@ public class VersionService extends BaseService<JobVersion> {
 		return mapper.selectVersionPage(workCode);
 	}
 
+	public JobVersion selectLastVersion(String workflowCode) {
+		return mapper.selectLastVersion(workflowCode);
+	}
+
 
 	public void updateWorkflowCodeByVersionStatus(String workCode) {
 		mapper.updateWorkflowCodeByVersionStatus(workCode);

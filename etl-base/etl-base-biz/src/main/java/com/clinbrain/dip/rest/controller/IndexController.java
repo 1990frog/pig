@@ -1,5 +1,6 @@
 package com.clinbrain.dip.rest.controller;
 
+import ch.qos.logback.classic.LoggerContext;
 import com.clinbrain.dip.connection.DatabaseClientFactory;
 import com.clinbrain.dip.connection.IDatabaseClient;
 import com.clinbrain.dip.metadata.Sql;
@@ -119,38 +120,23 @@ public class IndexController {
     @GetMapping("/logs")
     @ResponseBody
     public ResponseData showLog(@RequestParam(value = "fileName",required = false) String fileName) {
-        List<String> messages = null;
-        List<String> files = new ArrayList<>();
-        try {
-            Properties log4jProp = new Properties();
-            URL resource = Thread.currentThread().getContextClassLoader().getResource("log4j.properties");
-            log4jProp.load(resource.openStream());
-            String filePath = log4jProp.getProperty("log4j.appender.file.File");
+		List<String> messages = null;
+		List<String> files = new ArrayList<>();
+		try {
+			LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+			String filePath = context.getProperty("log.path");
 
-            Path folderName = Paths.get(filePath).getParent();
-            String originalFileName = new File(filePath).getName();
-            if(StringUtils.isNotEmpty(fileName)){
-                filePath = String.valueOf(folderName) + File.separator + fileName;
-            }
-            try (Stream<Path> stream = Files.find(folderName, 1, (path, attr) ->
-                    String.valueOf(path).matches(".*"+originalFileName + "\\.\\d$"))) {
-                files = stream
-                        .sorted()
-                        .map(f -> new File(String.valueOf(f)).getName())
-                        .limit(10)
-                        .collect(Collectors.toList());
-            }
-            if(StringUtils.isNotEmpty(filePath)){
-                messages = Files.readAllLines(Paths.get(filePath));
-            }
-        } catch (Exception e) {
-            return new ResponseData.Builder<>().error(e.getMessage());
-        }
+			if(StringUtils.isNotEmpty(filePath)){
+				messages = Files.readAllLines(Paths.get(filePath + File.separator + "error.log"));
+			}
+		} catch (Exception e) {
+			return new ResponseData.Builder<>().error(e.getMessage());
+		}
 
-        Map dataMap = new HashMap();
-        dataMap.put("files",files);
-        dataMap.put("content",StringUtils.join(messages,"<br/>"));
-        return new ResponseData.Builder<>().data(dataMap).success();
+		Map dataMap = new HashMap();
+		dataMap.put("files",files);
+		dataMap.put("content",StringUtils.join(messages,"<br/>"));
+		return new ResponseData.Builder<>().data(dataMap).success();
     }
 
 }

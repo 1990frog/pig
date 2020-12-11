@@ -43,11 +43,8 @@ public class THospitalSystemController extends ApiBaseController {
      * @return 所有数据
      */
     @GetMapping("all")
-    public R selectAll(@RequestParam("hospitalCode") String hospitalCode) {
-		Weekend<HospitalSystem> weekend = new Weekend<>(HospitalSystem.class);
-		final WeekendCriteria<HospitalSystem, Object> weekendCriteria = weekend.weekendCriteria();
-		weekendCriteria.andEqualTo(HospitalSystem::getHospitalCode, hospitalCode);
-		return success(this.tHospitalSystemService.selectByExample(weekend));
+    public R selectAll() {
+		return success(this.tHospitalSystemService.selectAll());
     }
 
     /**

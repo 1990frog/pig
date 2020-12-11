@@ -168,6 +168,11 @@
 			<artifactId>dip-core-etl</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+			<version>${snakeyaml.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>

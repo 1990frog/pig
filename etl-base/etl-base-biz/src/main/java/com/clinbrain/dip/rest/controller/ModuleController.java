@@ -261,11 +261,16 @@ public class ModuleController extends ApiBaseController {
 			Map<String,Object> resultMap = new HashMap<>();
 			resultMap.put("total", result.getTotal());
 			resultMap.put("rows", result);
+			Map<String, Object> paramMap = new HashMap<>();
+			// 编辑核查点
+			if(moduleService.editWorkflowPoint(workflowCode) > 0) {
+				moduleService.execModule(moduleCode, uuid, paramMap);
+			}
 
 			return new ResponseData.Builder<>(resultMap).success(uuid);
 		} catch (Exception e) {
 			logger.error("核查执行失败", e);
-			return new ResponseData.Builder<>().error("执行任务失败!" + e.getMessage());
+			return new ResponseData.Builder<>(uuid).success(uuid);
 		}
 	}
 

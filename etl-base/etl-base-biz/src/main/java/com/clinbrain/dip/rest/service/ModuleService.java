@@ -1066,7 +1066,7 @@ public class ModuleService extends BaseService<ETLModule> {
 		ETLStart.startByModule(moduleCode, uuid);
 	}
 
-	public PageResult<Entity> execCheckDataModule(String moduleCode, String workflowCode, String startTime, String
+	public void execCheckDataModule(String moduleCode, String workflowCode, String startTime, String
 		endTime,
 												  String uuid, Page pageItem) throws Exception {
 		logger.info("数据预览，核查任务...");
@@ -1083,7 +1083,7 @@ public class ModuleService extends BaseService<ETLModule> {
 		renovateModuleStatus(moduleCode, 1);
 
 		// 执行完没有问题就查询module目标表
-		return getList(moduleCode, pageItem);
+//		return getList(moduleCode, pageItem);
 	}
 
 	@Async("taskExecutor")

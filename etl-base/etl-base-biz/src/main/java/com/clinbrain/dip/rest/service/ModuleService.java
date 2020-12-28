@@ -1066,12 +1066,11 @@ public class ModuleService extends BaseService<ETLModule> {
 		ETLStart.startByModule(moduleCode, uuid);
 	}
 
-	public PageResult<Entity> execCheckDataModule(String moduleCode, String workflowCode, String startTime, String
+	public void execCheckDataModule(String moduleCode, String workflowCode, String startTime, String
 		endTime,
 												  String uuid, Page pageItem) throws Exception {
 		logger.info("数据预览，核查任务...");
 		Preconditions.checkNotNull(checkDataUrl, "核查系统的访问地址为空,请先配置核查系统地址");
-		Map<String, Object> paramMap = new HashMap<>();
 		// 编辑module的任务执行时间，区间模式
 		ETLModule etlModule = new ETLModule();
 		etlModule.setModuleCode(moduleCode);
@@ -1082,15 +1081,18 @@ public class ModuleService extends BaseService<ETLModule> {
 		moduleMapper.updateModuleByCode(etlModule);
 		// 先禁用任务
 		renovateModuleStatus(moduleCode, 1);
-		// 编辑核查点
-		if (editWorkflowPoint(workflowCode) > 0) {
-			ETLStart.startCheckDataByModule(moduleCode, uuid, paramMap);
-		}
+
 		// 执行完没有问题就查询module目标表
-		return getList(moduleCode, pageItem);
+//		return getList(moduleCode, pageItem);
 	}
 
-	private int editWorkflowPoint(String workflowCode) {
+	@Async("taskExecutor")
+	public void execModule(String moduleCode, String uuid, Map<String, Object> map) throws Exception {
+		logger.info("execModule. exec。。。");
+		ETLStart.startCheckDataByModule(moduleCode, uuid, map);
+	}
+
+	public int editWorkflowPoint(String workflowCode) {
 		return workflowMapper.editWorkflowCheckPoint(workflowCode);
 	}
 

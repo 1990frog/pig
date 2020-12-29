@@ -392,15 +392,30 @@
 	</select>
 
 	<resultMap id="workflowStatusMap" type="com.clinbrain.dip.rest.vo.ModuleWorkflowStatus">
-		<result column="workflowCode" property="workflowCode"/>
+		<result column="module_name" property="moduleCode"/>
 		<result column="status" property="status"/>
+		<collection property="workflowStatusList" column="{moduleCode=module_name,uuid=batch_id}"
+					autoMapping="true" select="subDetailStatus"/>
 	</resultMap>
 
 	<select id="selectWorkflowStatus" resultMap="workflowStatusMap">
+		select * from etl_logsummary where summary_id =
+		      (select max(summary_id) from etl_logsummary
+				<where>
+				  <if test="moduleCode != null and moduleCode != ''">
+					  module_name = #{moduleCode}
+					  </if>
+				<if test="uuid != null and uuid != ''">
+					and batch_id = #{uuid}
+				</if>
+		      </where>
+		     limit 1)
+	</select>
+
+	<select id="subDetailStatus" resultType="com.clinbrain.dip.rest.vo.WorkflowStatus">
 		select a.workflow_code as workflowCode, b.`status` from etl_workflow a
-		    left join etl_logdetail b on a.workflow_code = b.workflow_code
-			and b.summary_id =
-				( select summary_id from etl_logsummary where batch_id = #{uuid} order by log_summary_start desc limit 1)
-	  	where  a.runnable = 1 and  a.module_code = #{moduleCode}  order by a.workflow_sequence_customized
+			left join etl_logdetail b on a.workflow_code = b.workflow_code
+			and b.summary_id = ( select summary_id from etl_logsummary where batch_id = #{uuid} order by log_summary_start desc limit 1)
+		where  a.runnable = 1 and  a.module_code = #{moduleCode}  order by a.workflow_sequence_customized
 	</select>
 </mapper>

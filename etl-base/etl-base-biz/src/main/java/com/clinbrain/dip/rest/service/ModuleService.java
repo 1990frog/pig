@@ -1088,7 +1088,7 @@ public class ModuleService extends BaseService<ETLModule> {
 
 	@Async("taskExecutor")
 	public void execModule(String moduleCode, String uuid, Map<String, Object> map) throws Exception {
-		logger.info("execModule. exec。。。");
+		logger.info("exec check data Module. exec。。。");
 		ETLStart.startCheckDataByModule(moduleCode, uuid, map);
 	}
 
@@ -1167,7 +1167,7 @@ public class ModuleService extends BaseService<ETLModule> {
 		return HttpUtil.get(checkDataUrl + "etl/report", paramMap);
 	}
 
-	public List<ModuleWorkflowStatus> selectWorkflowStatus(String moduleCode, String uuid) {
+	public ModuleWorkflowStatus selectWorkflowStatus(String moduleCode, String uuid) {
 		return moduleMapper.selectWorkflowStatus(moduleCode, uuid);
 	}
 

@@ -51,7 +51,7 @@ public interface DBETLModuleMapper extends tk.mybatis.mapper.common.Mapper<ETLMo
 
     List<Map> selectModuleCodeByWorkflowInfo();
 
-    List<ModuleWorkflowStatus> selectWorkflowStatus(@Param("moduleCode") String moduleCode, @Param("uuid") String uuid);
+    ModuleWorkflowStatus selectWorkflowStatus(@Param("moduleCode") String moduleCode, @Param("uuid") String uuid);
 
 
 	ETLConnection selectTargetConnection(@Param("workflowCode") String workflowCode);

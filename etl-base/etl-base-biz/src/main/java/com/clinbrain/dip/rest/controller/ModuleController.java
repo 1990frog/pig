@@ -487,7 +487,8 @@ public class ModuleController extends ApiBaseController {
 	 */
 	@ApiOperation("根据任务编码获取组件最近运行状态")
 	@GetMapping("/workflow/status")
-	public R moduleWorkflowStatus(@RequestParam("moduleCode") String moduleCode,@RequestParam("uuid") String uuid) {
+	public R moduleWorkflowStatus(@RequestParam("moduleCode") String moduleCode,
+								  @RequestParam(value = "uuid",required = false) String uuid) {
 		return success(moduleService.selectWorkflowStatus(moduleCode, uuid));
 	}
 

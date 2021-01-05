@@ -239,17 +239,17 @@ public class JobController {
     }
 
     @PostMapping("/scheduler/save")
-    public ResponseData selectAllScheduler(@RequestBody ETLSchedulerDto scheduler) {
-		scheduler.setSchedulerCron(CronUtil.createCronExpression(scheduler.getCromModel()));
-		scheduler.setSchedulerJson(JSON.toJSONString(scheduler.getCromModel()));
-		ETLScheduler newScheduler = new ETLScheduler();
-		BeanUtil.copyProperties(scheduler, newScheduler);
+    public ResponseData selectAllScheduler(@RequestBody ETLScheduler scheduler) {
+//		scheduler.setSchedulerCron(CronUtil.createCronExpression(scheduler.getCronModel()));
+//		scheduler.setSchedulerJson(JSON.toJSONString(scheduler.getCronModel()));
+//		ETLScheduler newScheduler = new ETLScheduler();
+//		BeanUtil.copyProperties(scheduler, newScheduler);
 
         if (scheduler.getSchedulerId()!=null) {
             try {
                 scheduler.setUpdatedAt(new Date());
 
-                schedulerService.updateByPrimaryKey(newScheduler);
+                schedulerService.updateByPrimaryKey(scheduler);
                 return new  ResponseData.Builder<Boolean>().success();
             }catch (Exception e){
                 logger.error(e.getMessage());
@@ -257,10 +257,10 @@ public class JobController {
             }
         }
         if (scheduler.getCreatedAt()==null || scheduler.getUpdatedAt()==null){
-			newScheduler.setCreatedAt(new Date());
-			newScheduler.setUpdatedAt(new Date());
+			scheduler.setCreatedAt(new Date());
+			scheduler.setUpdatedAt(new Date());
         }
-        int i = schedulerService.insert(newScheduler);
+        int i = schedulerService.insert(scheduler);
         return i > 0 ? new ResponseData.Builder<Boolean>().success() : new ResponseData.Builder<Boolean>().error("保存失败");
     }
 

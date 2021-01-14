@@ -3,6 +3,8 @@ package com.clinbrain.dip.rest.request;
 import com.clinbrain.dip.jackson.DefaultDateNullValueDeserializer;
 import com.clinbrain.dip.metadata.WorkflowExtraData;
 import com.clinbrain.dip.pojo.ETLJob;
+import com.clinbrain.dip.pojo.ETLWorkflowSelectRegex;
+import com.clinbrain.dip.pojo.EtlCommonExpression;
 import com.clinbrain.dip.pojo.EtlJobModule;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -93,6 +95,12 @@ public class ModuleTaskRequest{
         private Integer dataFlowType;
 
         private String workflowSql;
+
+		/**
+		 * 2021-01-11 新增加字段列的正则表达式匹配
+		 */
+		@JsonProperty("columnRegex")
+		private List<ETLWorkflowSelectRegex> selectColumnRegex;
 
     }
 

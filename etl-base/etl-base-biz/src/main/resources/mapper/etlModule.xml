@@ -24,6 +24,7 @@
 						 select="selectFullSql" fetchType="lazy"/>
 			<association property="workflowSQL" javaType="string" column="{workflowCode=workflow_code}"
 						 select="selectViewSql" fetchType="lazy"/>
+			<collection property="selectRegexes" ofType="etlWorkflowSelectRegex" columnPrefix="ewsr_" autoMapping="true"/>
 			<collection property="dataxflows" ofType="etlWorkflowDataxflow" fetchType="lazy"
 						column="{workflowCode=workflow_code}" select="selectDataxflowByWorkflowCode"/>
 			<collection property="selectList" ofType="etlWorkflowTokenSelect" columnPrefix="ewts_" autoMapping="true">
@@ -76,6 +77,12 @@
 			ec.dataflow_writer                            AS ew_ec_dataflowWriter,
 			ec.created_at                                 AS ew_ec_created_at,
 			ec.updated_at                                 AS ew_ec_updated_at,
+			ewsr.workflow_code                            AS ew_ewsr_workflow_code,
+			ewsr.column_name                              AS ew_ewsr_column_name,
+			ewsr.column_type                              AS ew_ewsr_column_type,
+			ewsr.common_expression                         AS ew_ewsr_common_expression,
+			ewsr.join_mark                                AS ew_ewsr_join_mark,
+			ewsr.sort                                     AS ew_ewsr_sort,
 			ewts.workflow_token_code                      AS ew_ewts_workflow_token_code,
 			ewts.source_table_alias_name                  AS ew_ewts_source_table_alias_name,
 			ewts.source_column_name                       AS ew_ewts_source_column_name,
@@ -123,6 +130,8 @@
 				 LEFT JOIN etl_workflow_token ewt ON ew.workflow_code = ewt.workflow_code AND ewt.is_enable = 1
 				 LEFT JOIN etl_workflow_token_select ewts
 						   ON ewt.workflow_token_code = ewts.workflow_token_code AND ewts.is_enable = 1
+				 LEFT JOIN etl_workflow_select_regex ewsr on ew.workflow_code = ewsr.workflow_code
+							and ewts.target_column_alias_name = ewsr.column_name
 				 LEFT JOIN etl_workflow_token_from_or_join ewtfj
 						   ON ewt.workflow_token_code = ewtfj.workflow_token_code AND ewtfj.is_enable = 1
 				 LEFT JOIN etl_workflow_token_filter ewtf

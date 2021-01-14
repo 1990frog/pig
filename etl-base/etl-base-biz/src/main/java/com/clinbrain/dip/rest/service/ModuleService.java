@@ -21,6 +21,7 @@ import com.clinbrain.dip.pojo.ETLModule;
 import com.clinbrain.dip.pojo.ETLWorkflow;
 import com.clinbrain.dip.pojo.ETLWorkflowConnection;
 import com.clinbrain.dip.pojo.ETLWorkflowDataxflow;
+import com.clinbrain.dip.pojo.ETLWorkflowSelectRegex;
 import com.clinbrain.dip.pojo.ETLWorkflowToken;
 import com.clinbrain.dip.pojo.ETLWorkflowTokenFilter;
 import com.clinbrain.dip.pojo.ETLWorkflowTokenFromOrJoin;
@@ -41,6 +42,7 @@ import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.rest.vo.ModuleWorkflowStatus;
 import com.clinbrain.dip.strategy.bean.ModuleDependencyVO;
 import com.clinbrain.dip.strategy.entity.JobVersion;
+import com.clinbrain.dip.strategy.service.EtlWorkflowSelectRegexService;
 import com.clinbrain.dip.strategy.service.VersionService;
 import com.clinbrain.dip.workflow.ETLStart;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -51,6 +53,7 @@ import com.google.common.collect.Lists;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -130,6 +133,9 @@ public class ModuleService extends BaseService<ETLModule> {
 
 	@Autowired
 	private DBETLLogSummaryMapper logSummaryMapper;
+
+	@Autowired
+	private EtlWorkflowSelectRegexService regexService;
 
 	public ETLModule selectModuleDetailByCode(String moduleCode) {
 		if (StringUtils.isNotEmpty(moduleCode)) {
@@ -236,6 +242,10 @@ public class ModuleService extends BaseService<ETLModule> {
 				innerWorkflow.setRunnable(workflowItem.getRunnable());
 				innerWorkflow.setIncrementalMode(workflowItem.getIncrementalMode());
 				innerWorkflow.setWorkflowSql(workflowItem.getWorkflowSQL());
+				if(workflowItem.getSelectRegexes() != null) {
+					innerWorkflow.setSelectColumnRegex(workflowItem.getSelectRegexes()
+						.stream().sorted(Comparator.comparingInt(ETLWorkflowSelectRegex::getSort)).collect(Collectors.toList()));
+				}
 				ObjectMapper objectMapper = new ObjectMapper();
 				try {
 					String workflowParam = StringUtils.isNotEmpty(workflowItem.getWorkflowParam()) ? workflowItem.getWorkflowParam() : "{}";
@@ -397,7 +407,6 @@ public class ModuleService extends BaseService<ETLModule> {
 
 		etlModule.ifPresent(etlModuleItem -> {
 
-
 			if (exist) {
 				DipConfig.getConfigInstance().clearConfigCache("module");
 				//修改module数据
@@ -407,7 +416,6 @@ public class ModuleService extends BaseService<ETLModule> {
 				// 修改module 对应job
 				jobModuleMapper.updateJobIdByModuleCode(etlModuleItem.getJobId(), moduleCode);
 
-
 				fullSqlMapper.removeWorkflowTokenFullSqlByModuleCode(moduleCode);
 				fromOrJoinMapper.removeWorkflowTokenFromByModuleCode(moduleCode);
 				filterMapper.removeWorkflowTokenFilter(moduleCode);
@@ -415,6 +423,8 @@ public class ModuleService extends BaseService<ETLModule> {
 				workflowTokenMapper.removeEtlWorkflowTokenByModuleCode(moduleCode);
 				workflowConnectionMapper.removeEtlWorkflowConnectionByModuleCode(moduleCode);
 				workflowMapper.removeEtlWorkflowByModuleCode(moduleCode);
+				// 删除正则配置
+				regexService.deleteByWorkflowCode(workflows);
 
 				List<String> workflowCodeList = workflows.stream()
 					.map(ETLWorkflow::getWorkflowCode).collect(Collectors.toList());
@@ -442,7 +452,6 @@ public class ModuleService extends BaseService<ETLModule> {
 			Optional.ofNullable(workflows).ifPresent(wfs -> {
 
 				wfs.forEach(workflow -> {
-
 					workflow.setUpdatedAt(new Date());
 					workflow.setIsEnable(1);
 					workflow.setIsDefault(1);
@@ -477,6 +486,16 @@ public class ModuleService extends BaseService<ETLModule> {
 								workflow.getTargetConnection().getConnectionCode(), "target"));
 						}
 					}
+
+					// 新增保存正则配置
+					if(CollectionUtils.isNotEmpty(workflow.getSelectRegexes())) {
+						final List<ETLWorkflowSelectRegex> regexes = workflow.getSelectRegexes().stream().peek(s -> {
+							s.setWorkflowCode(workflow.getWorkflowCode());
+						}).collect(Collectors.toList());
+
+						regexService.saveAll(regexes);
+					}
+
 					// 保存workflow dataxflow组件
 					if (workflow.getDataxflows() != null) {
 						for (ETLWorkflowDataxflow datax : workflow.getDataxflows()) {
@@ -781,6 +800,7 @@ public class ModuleService extends BaseService<ETLModule> {
 			workflow.setRunnable(iwf.getRunnable());
 			workflow.setIncrementalMode(iwf.getIncrementalMode());
 			workflow.setWorkflowSQL(iwf.getWorkflowSql());
+			workflow.setSelectRegexes(iwf.getSelectColumnRegex()); // 添加正则过滤
 			if (iwf.getParameterJson() != null) {
 				// 设置workflow 参数：
 				try {

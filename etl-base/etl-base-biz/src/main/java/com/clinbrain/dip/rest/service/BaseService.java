@@ -1,5 +1,6 @@
 package com.clinbrain.dip.rest.service;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import tk.mybatis.mapper.common.Mapper;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.ws.rs.DefaultValue;
+import java.util.Collection;
 import java.util.List;
 
 /**

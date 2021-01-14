@@ -19,7 +19,10 @@
 
 <configuration debug="false" scan="false">
 	<springProperty scop="context" name="spring.application.name" source="spring.application.name" defaultValue=""/>
-	<property scope="context" name="log.path" value="logs/${spring.application.name}"/>
+	<springProperty scop="context" name="logback.dir" source="logback.dir" defaultValue="logs/"/>
+	<springProperty scop="context" name="logback.level" source="logback.level" defaultValue="DEBUG"/>
+
+	<property scope="context" name="log.path" value="${logback.dir}"/>
 	<!-- 彩色日志格式 -->
 	<property name="CONSOLE_LOG_PATTERN"
 			  value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
@@ -29,25 +32,6 @@
 					converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
 	<conversionRule conversionWord="wEx"
 					converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
-	<!-- Console log output -->
-	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
-			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
-		</encoder>
-	</appender>
-
-	<!-- Log file debug output -->
-	<appender name="debug" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${log.path}/debug.log</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-			<fileNamePattern>${log.path}/%d{yyyy-MM, aux}/debug.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-			<maxFileSize>50MB</maxFileSize>
-			<maxHistory>3</maxHistory>
-		</rollingPolicy>
-		<encoder>
-			<pattern>%date [%thread] %-5level [%logger{50}] %file:%line - %msg%n</pattern>
-		</encoder>
-	</appender>
 
 	<!-- Log file error output -->
 	<appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -55,7 +39,7 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${log.path}/%d{yyyy-MM}/error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
 			<maxFileSize>50MB</maxFileSize>
-			<maxHistory>3</maxHistory>
+			<maxHistory>10</maxHistory>
 		</rollingPolicy>
 		<encoder>
 			<pattern>%date [%thread] %-5level [%logger{50}] %file:%line - %msg%n</pattern>
@@ -70,17 +54,8 @@
 		<appender-ref ref="error"/>
 	</logger>
 
-	<logger name="com.clinbrain.dip.strategy.mapper" additivity="false" level="DEBUG">
-		<appender-ref ref="console" />
-	</logger>
-	<logger name="com.clinbrain.dip.rest.mapper" additivity="false" level="DEBUG">
-		<appender-ref ref="console" />
-	</logger>
-
 	<!-- Level: FATAL 0  ERROR 3  WARN 4  INFO 6  DEBUG 7 -->
-	<root level="INFO">
-		<appender-ref ref="console"/>
-		<appender-ref ref="debug"/>
+	<root level="${logback.level}">
 		<appender-ref ref="error"/>
 	</root>
 </configuration>

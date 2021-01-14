@@ -45,7 +45,7 @@
 		<spring.checkstyle.plugin>0.0.22</spring.checkstyle.plugin>
 		<spring-boot-admin.version>2.2.3</spring-boot-admin.version>
 		<hutool.version>5.4.6</hutool.version>
-		<mybatis-plus.version>3.3.2</mybatis-plus.version>
+		<mybatis-plus.version>3.4.1</mybatis-plus.version>
 		<dynamic-ds.version>3.0.0</dynamic-ds.version>
 		<kaptcha.version>0.0.9</kaptcha.version>
 		<velocity.version>1.7</velocity.version>

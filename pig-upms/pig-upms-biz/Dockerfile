@@ -1,17 +1,19 @@
-FROM anapsix/alpine-java:8_server-jre_unlimited
+FROM moxm/java:1.8-full as builder
+WORKDIR /build
+ARG JAR_FILE=target/pig-upms-biz.jar
+COPY ${JAR_FILE} app.jar
+RUN java -Djarmode=layertools -jar app.jar extract && rm app.jar
 
-MAINTAINER wangiegie@gmail.com
+FROM moxm/java:1.8-full
+LABEL maintainer="jclazz@outlook.com"
+ENV TZ=Asia/Shanghai JAVA_OPTS="-Xms128m -Xmx256m -Djava.security.egd=file:/dev/./urandom"
+WORKDIR pig-upms
 
-ENV TZ=Asia/Shanghai
-
-RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-RUN mkdir -p /pig-upms
-
-WORKDIR /pig-upms
+COPY --from=builder /build/dependencies/ ./
+COPY --from=builder /build/snapshot-dependencies/ ./
+COPY --from=builder /build/spring-boot-loader/ ./
+COPY --from=builder /build/application/ ./
 
 EXPOSE 4000
 
-ADD ./target/pig-upms-biz.jar ./
-
-CMD sleep 60;java -Djava.security.egd=file:/dev/./urandom -jar pig-upms-biz.jar
+CMD sleep 60; java $JAVA_OPTS org.springframework.boot.loader.JarLauncher

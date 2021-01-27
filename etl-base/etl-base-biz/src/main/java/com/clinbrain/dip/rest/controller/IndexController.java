@@ -8,6 +8,7 @@ import com.clinbrain.dip.rest.bean.PropertyBean;
 import com.clinbrain.dip.rest.request.SqlParseRequest;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.util.SqlParseUtil;
+import com.pig4cloud.pig.common.security.annotation.Inner;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public class IndexController {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexController.class);
 
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(value = "/test" ,method = RequestMethod.GET)
     @ResponseBody
     public ResponseData index() {
         Map<String, String> dbProperty = new HashMap<>();

@@ -29,8 +29,9 @@ public class EtlWorkflowSelectRegexService extends BaseService<ETLWorkflowSelect
 
 		if(CollectionUtils.isNotEmpty(workflowCodes)) {
 			final List<String> workflowCodeList = workflowCodes.stream().map(ETLWorkflow::getWorkflowCode).collect(Collectors.toList());
-			return etlWorkflowSelectRegexMapper.deleteByExample(Weekend.of(ETLWorkflowSelectRegex.class).weekendCriteria()
-				.andIn(ETLWorkflowSelectRegex::getWorkflowCode, workflowCodeList));
+			final Weekend<ETLWorkflowSelectRegex> weekend = Weekend.of(ETLWorkflowSelectRegex.class);
+			weekend.weekendCriteria().andIn(ETLWorkflowSelectRegex::getWorkflowCode, workflowCodeList);
+			return etlWorkflowSelectRegexMapper.deleteByExample(weekend);
 		}
 		return 0;
 	}

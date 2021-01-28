@@ -40,7 +40,7 @@ import java.util.Map;
  * @date 2019/2/1 Redis 配置类
  */
 @EnableCaching
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
 @AutoConfigureBefore(RedisAutoConfiguration.class)
 public class RedisTemplateConfiguration {

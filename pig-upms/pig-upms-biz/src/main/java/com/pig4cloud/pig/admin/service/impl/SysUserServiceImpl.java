@@ -38,7 +38,6 @@ import com.pig4cloud.pig.admin.mapper.SysUserMapper;
 import com.pig4cloud.pig.admin.service.SysMenuService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
-import com.pig4cloud.pig.common.core.util.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -48,6 +47,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -158,19 +158,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	@Override
 	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
-	public R updateUserInfo(UserDTO userDto) {
+	public Boolean updateUserInfo(UserDTO userDto) {
 		UserVO userVO = baseMapper.getUserVoByUsername(userDto.getUsername());
 
-		if (!ENCODER.matches(userDto.getPassword(), userVO.getPassword())) {
-			return R.failed("原密码错误，修改失败");
-		}
+		Assert.isTrue(ENCODER.matches(userDto.getPassword(), userVO.getPassword()), "原密码错误，修改失败");
 
 		SysUser sysUser = new SysUser();
 		sysUser.setPassword(ENCODER.encode(userDto.getNewpassword1()));
 		sysUser.setPhone(userDto.getPhone());
 		sysUser.setUserId(userVO.getUserId());
 		sysUser.setAvatar(userDto.getAvatar());
-		return R.ok(this.updateById(sysUser));
+		return this.updateById(sysUser);
 	}
 
 	@Override

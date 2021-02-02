@@ -5,8 +5,8 @@ spring:
   application:
     name: @artifactId@
   cloud:
-    inetutils:
-      preferred-networks: ${spring.cloud.nacos.discovery.server-addr}
+#    inetutils:
+#      preferred-networks: ${spring.cloud.nacos.discovery.server-addr}
     nacos:
       discovery:
         server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}

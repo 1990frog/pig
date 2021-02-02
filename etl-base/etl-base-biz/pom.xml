@@ -9,7 +9,6 @@
 		<artifactId>etl-base</artifactId>
 		<version>2.0</version>
 	</parent>
-
     <artifactId>etl-base-biz</artifactId>
 	<packaging>war</packaging>
 
@@ -22,20 +21,28 @@
 	</properties>
 
     <dependencies>
-		<!--必备：安全模块-->
+		<!--必备: 依赖api模块-->
+		<dependency>
+			<groupId>com.clinbrain.dip</groupId>
+			<artifactId>etl-base-api</artifactId>
+			<version>2.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-security</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>com.github.jsqlparser</groupId>
+					<artifactId>jsqlparser</artifactId>
+				</exclusion>
+			</exclusions>
+
 		</dependency>
 		<!--必备：日志处理-->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-log</artifactId>
-		</dependency>
-		<!--必备：sentient-->
-		<dependency>
-			<groupId>com.pig4cloud</groupId>
-			<artifactId>pig-common-sentinel</artifactId>
 		</dependency>
 		<!--必备：swagger-->
 		<dependency>
@@ -53,23 +60,12 @@
 			<artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
 		</dependency>
 
-		<!--必备：web 模块-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-			<exclusions>
-				<!--排除tomcat依赖-->
-				<exclusion>
-					<artifactId>spring-boot-starter-tomcat</artifactId>
-					<groupId>org.springframework.boot</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 		<!--必备：undertow容器-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-undertow</artifactId>
 		</dependency>
+
 		<dependency>
 			<groupId>com.github.pagehelper</groupId>
 			<artifactId>pagehelper-spring-boot-starter</artifactId>
@@ -80,15 +76,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-			<groupId>com.clinbrain.dip</groupId>
-			<artifactId>etl-base-api</artifactId>
-			<version>2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>tk.mybatis</groupId>
-			<artifactId>mapper-spring-boot-starter</artifactId>
-		</dependency>
+
 		<dependency>
 			<groupId>pentaho.mondrian</groupId>
 			<artifactId>mondrian-kylin</artifactId>
@@ -170,6 +158,11 @@
 			<groupId>com.github.jsqlparser3</groupId>
 			<artifactId>jsqlparser</artifactId>
 			<version>3.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>pig-common-job</artifactId>
 		</dependency>
 
 		<!--<dependency>

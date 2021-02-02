@@ -107,7 +107,7 @@
 		<module>pig-upms</module>
 		<module>pig-common</module>
 		<module>pig-visual</module>
-	</modules>
+  </modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -210,5 +210,16 @@
 			</activation>
 		</profile>
 	</profiles>
+
+	<distributionManagement>
+		<repository>
+			<id>release</id>
+			<url>http://node1:8099/repository/maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<url>http://node1:8099/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>

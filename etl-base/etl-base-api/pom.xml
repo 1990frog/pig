@@ -13,20 +13,49 @@
 	<artifactId>etl-base-api</artifactId>
 	<packaging>jar</packaging>
 
-	<description>pig archetype gen</description>
+	<description>etl 策略微服务对象</description>
 
 	<dependencies>
-		<!--core 工具类-->
+
+		<!-- core 工具类 -->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-core</artifactId>
 		</dependency>
 
-		<!--feign 依赖-->
+		<!-- feign 依赖 -->
 		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-openfeign</artifactId>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>pig-common-feign</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>tk.mybatis</groupId>
+			<artifactId>mapper-spring-boot-starter</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.clinbrain.dip</groupId>
+			<artifactId>dip-core-etl</artifactId>
+			<version>${dip.etl.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>cn.hutool</groupId>
+					<artifactId>hutool-all</artifactId>
+				</exclusion>
+				<exclusion>
+					<artifactId>mybatis</artifactId>
+					<groupId>org.mybatis</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jsp-api</artifactId>
+					<groupId>javax.servlet.jsp</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
 </project>

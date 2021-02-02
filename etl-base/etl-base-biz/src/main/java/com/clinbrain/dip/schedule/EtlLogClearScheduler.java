@@ -8,6 +8,9 @@ import cn.hutool.core.io.FileUtil;
 import com.clinbrain.dip.common.DefineLogbackDir;
 import com.clinbrain.dip.common.DipConfig;
 import com.clinbrain.dip.util.LogBackUtil;
+import com.pig4cloud.pig.common.job.annotation.EnablePigXxlJob;
+import com.xxl.job.core.biz.model.ReturnT;
+import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,15 +22,15 @@ import java.util.stream.Stream;
  * Created by Liaopan on 2020-12-09.
  */
 @Component
-@EnableScheduling
+@EnablePigXxlJob
 @Slf4j
 public class EtlLogClearScheduler {
 
 	/**
 	 * 每天0点执行清除etl log文件
 	 */
-	@Scheduled(cron = " 0 0 0 * * ? ")
-	public void clearLog() {
+	@XxlJob("clearETLLog")
+	public ReturnT<String> clearLog(String param) {
 		final DipConfig configInstance = DipConfig.getConfigInstance();
 		final String logbackDir = configInstance.getProperty("logback.dir", "/logs");
 		final Integer maxHistory = Integer.parseInt(configInstance.getProperty("logback.maxHistory", "60"));
@@ -44,7 +47,7 @@ public class EtlLogClearScheduler {
 				}
 			}
 		});
-
+		return ReturnT.SUCCESS;
 	}
 
 }

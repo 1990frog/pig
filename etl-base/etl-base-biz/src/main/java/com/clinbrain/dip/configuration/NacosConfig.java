@@ -43,7 +43,7 @@ public class NacosConfig implements ApplicationRunner {
 				tomcatPort = Integer.parseInt(getTomcatPort());
 				log.info("获取外部服务运行端口用于nacos注册:" + tomcatPort);
 			}catch(Exception e) {
-				log.error("获取外部服务运行端口出错！{}", e.getMessage());
+				log.error("获取外部服务运行端口出错！{}, springboot方式启动时忽略该错误", e.getMessage());
 			}
 			registration.setPort(tomcatPort);
 			registration.start();

@@ -131,11 +131,11 @@ public class ModuleController extends ApiBaseController {
     public ResponseData edit(@RequestJson(value = "") ModuleTaskRequest moduleTask) {
         try {
             moduleService.editEtlModule(moduleTask);
+            return new ResponseData.Builder<>(moduleService.selectModuleDetail(moduleTask.getModuleCode())).success();
         } catch (Exception e) {
             logger.error("编辑module出错:", e);
             return new ResponseData.Builder<>().error(e.getMessage());
         }
-        return new ResponseData.Builder<>().success();
     }
 
 	@PutMapping("{code:.+}")

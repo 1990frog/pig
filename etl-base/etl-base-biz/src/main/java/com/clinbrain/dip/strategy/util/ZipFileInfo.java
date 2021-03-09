@@ -1,20 +1,17 @@
 package com.clinbrain.dip.strategy.util;
 
 import cn.hutool.core.io.IoUtil;
-import com.clinbrain.dip.pojo.ETLModule;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.strategy.bean.PackageInfo;
 import com.clinbrain.dip.strategy.bean.PackageItem;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
+import com.google.common.base.Preconditions;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.FileHeader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import parquet.Preconditions;
 
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

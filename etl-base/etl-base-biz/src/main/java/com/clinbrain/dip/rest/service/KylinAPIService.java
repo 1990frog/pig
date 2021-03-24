@@ -35,7 +35,7 @@ public class KylinAPIService {
 
     @PostConstruct
     public void init() {
-        client = new RestfulClient(propertyBean.getKylinHostname(), propertyBean.getKylinUsername(), propertyBean.getKylinPassword());
+        //client = new RestfulClient(propertyBean.getKylinHostname(), propertyBean.getKylinUsername(), propertyBean.getKylinPassword());
     }
 
     public ProjectInstance createProject(ProjectRequest request) throws Exception {

@@ -174,6 +174,8 @@ public class TemplateService extends BaseService<Template> {
 
 		//根据模板产生包描述文本
 		final Map<String, Object> map = BeanUtil.beanToMap(packageInfo);
+		map.put("jobId", packageInfo.getId());
+		map.put("jobName", packageInfo.getName());
 		final String systemInfo = systemTemplate.render(map);
 
 

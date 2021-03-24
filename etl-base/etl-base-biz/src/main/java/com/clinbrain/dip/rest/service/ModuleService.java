@@ -8,6 +8,10 @@ import cn.hutool.db.Page;
 import cn.hutool.db.PageResult;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.extension.plugins.pagination.DialectFactory;
+import com.baomidou.mybatisplus.extension.plugins.pagination.DialectModel;
+import com.baomidou.mybatisplus.extension.plugins.pagination.dialects.IDialect;
 import com.clinbrain.dip.common.DipConfig;
 import com.clinbrain.dip.connection.DatabaseClientFactory;
 import com.clinbrain.dip.connection.IDatabaseClient;
@@ -44,15 +48,16 @@ import com.clinbrain.dip.strategy.bean.ModuleDependencyVO;
 import com.clinbrain.dip.strategy.entity.JobVersion;
 import com.clinbrain.dip.strategy.service.EtlWorkflowSelectRegexService;
 import com.clinbrain.dip.strategy.service.VersionService;
+import com.clinbrain.dip.strategy.util.MyJdbcUtils;
 import com.clinbrain.dip.workflow.ETLStart;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -70,9 +75,9 @@ import tk.mybatis.mapper.entity.Example;
 import tk.mybatis.mapper.weekend.Weekend;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -81,8 +86,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -1086,6 +1094,24 @@ public class ModuleService extends BaseService<ETLModule> {
 		ETLStart.startByModule(moduleCode, uuid);
 	}
 
+	public String execModuleLog(String moduleCode, String uuid) throws Exception {
+		FutureTask<String> task = new FutureTask<>((Callable<String>) () -> {
+			Long summaryId = null;
+			Weekend<ETLLogSummary> weekend = new Weekend<>(ETLLogSummary.class);
+			weekend.weekendCriteria().andEqualTo(ETLLogSummary::getBatchId, uuid);
+			while (summaryId == null) {
+				final ETLLogSummary logSummary = logSummaryMapper.selectOneByExample(weekend);
+				if(logSummary != null) {
+					summaryId = logSummary.getSummaryId();
+				}
+			}
+			return uuid;
+		});
+		new Thread(task).start();
+		return task.get(20, TimeUnit.SECONDS);
+
+	}
+
 	public void execCheckDataModule(String moduleCode, String workflowCode, String startTime, String
 		endTime,
 												  String uuid, Page pageItem) throws Exception {
@@ -1124,9 +1150,14 @@ public class ModuleService extends BaseService<ETLModule> {
 		if (etlConnection != null) {
 			String tableName = etlModule.getTargetSchema() + "."
 				+ (StringUtils.endsWithIgnoreCase(etlModule.getTargetTable(), "_import") ? etlModule.getTargetTable() : etlModule.getTargetTable() + "_import");
+			logger.info("表名：" + tableName);
 			IDatabaseClient databaseClient = DatabaseClientFactory.getDatabaseClient(etlConnection.getUrl(), etlConnection.getUser(), etlConnection.getPassword());
 
-			pageList = Db.use(databaseClient.getDataSource())
+			String driverClassName = null;
+			if(etlConnection.getUrl().contains(":hive2:")) {
+				driverClassName = "com.mysql.jdbc.Driver";
+			}
+			pageList = Db.use(databaseClient.getDataSource(), driverClassName)
 				.page(Entity.create(tableName), pageItem);
 		}
 		return pageList;
@@ -1155,12 +1186,12 @@ public class ModuleService extends BaseService<ETLModule> {
 		String result = "";
 		String httpResult = "";
 		try {
+			System.out.println("获取核查接口数据：" + checkDataUrl);
 			httpResult = HttpUtil.get(checkDataUrl + "etl/check/", paramMap);
-			final CheckResult<String> checkResult = JSONUtil.toBean(httpResult, CheckResult.class);
-
+			final CheckResult<Integer> checkResult = JSONUtil.toBean(httpResult, CheckResult.class);
+			System.out.println("获取核查接口数据返回：" + checkResult);
 			Preconditions.checkArgument(checkResult.getCode() == 200, "调用数据核查服务出错," + httpResult);
-			logSummary.setCheckId(checkResult.getMsg());
-			result = checkResult.getMsg();
+			logSummary.setCheckId(String.valueOf(checkResult.getData()));
 
 			logSummaryMapper.updateByExample(logSummary, weekend);
 
@@ -1211,6 +1242,7 @@ public class ModuleService extends BaseService<ETLModule> {
 
 	@Getter
 	@Setter
+	@ToString
 	public static class CheckResult<T> {
 		private String msg;
 		private Integer code;

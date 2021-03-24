@@ -283,11 +283,17 @@ public class JobController {
         return new ResponseData.Builder<>().error(clientOutput.getText());
     }
 
+	/**
+	 * 实时查看datax运行日志
+	 * @param ip
+	 * @param logPath
+	 * @return
+	 */
     @GetMapping("logs")
-    public ResponseData realTimePrintLogs(@RequestParam String ip, @RequestParam String logPth){
+    public ResponseData realTimePrintLogs(@RequestParam String ip, @RequestParam String logPath){
         StringBuffer buffer = null;
         try {
-            buffer = jobService.realTimePrintLogs(ip,logPth);
+            buffer = jobService.realTimePrintLogs(ip,logPath);
         } catch (Exception e) {
             return new ResponseData.Builder<>().error(e.getMessage());
         }

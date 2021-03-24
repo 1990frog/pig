@@ -43,7 +43,8 @@ public class MyJdbcUtils {
 	public static DbType getDbType(String jdbcUrl) {
 		Assert.isFalse(StringUtils.isBlank(jdbcUrl), "Error: The jdbcUrl is Null, Cannot read database type");
 		String url = jdbcUrl.toLowerCase();
-		if (url.contains(":mysql:") || url.contains(":cobar:")) {
+		if (url.contains(":mysql:") || url.contains(":cobar:")
+				|| url.contains(":hive:") || url.contains(":hive2:")) {
 			return DbType.MYSQL;
 		} else if (url.contains(":mariadb:")) {
 			return DbType.MARIADB;

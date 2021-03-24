@@ -6,6 +6,10 @@ import com.clinbrain.dip.strategy.mapper.THospitalSystemMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
  * (THospitalSystem)表服务接口
  *
@@ -18,4 +22,9 @@ public class THospitalSystemService extends BaseService<HospitalSystem> {
 
 	private final THospitalSystemMapper tHospitalSystemMapper;
 
+
+	public Map<String, List<HospitalSystem>> getAll() {
+		final List<HospitalSystem> list = selectAll();
+		return list.stream().collect(Collectors.groupingBy(HospitalSystem::getVendor));
+	}
 }

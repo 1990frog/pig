@@ -213,6 +213,7 @@ public class ModuleController extends ApiBaseController {
 			if (moduleService.updateModuleByCode(etlModule) > 0) {
 				String uuid = UUID.randomUUID().toString();
 				moduleService.execModule(etlModule.getModuleCode(), uuid);
+				String uid = moduleService.execModuleLog(etlModule.getModuleCode(),uuid);
 				return new ResponseData.Builder<>(uuid).success();
 			} else {
 				return new ResponseData.Builder<>().error("提交数据失败");
@@ -237,7 +238,8 @@ public class ModuleController extends ApiBaseController {
 			String uuid = UUID.randomUUID().toString();
 			if (async) { // 异步方法
 				moduleService.execModule(moduleCode, uuid);
-				return new ResponseData.Builder<>(uuid).success();
+				String uid = moduleService.execModuleLog(moduleCode,uuid);
+				return new ResponseData.Builder<>(uid).success();
 			} else {
 				ETLStart.startByModule(moduleCode, uuid);
 				return new ResponseData.Builder<>(uuid).success();

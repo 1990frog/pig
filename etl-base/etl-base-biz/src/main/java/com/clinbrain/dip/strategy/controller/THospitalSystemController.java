@@ -44,7 +44,7 @@ public class THospitalSystemController extends ApiBaseController {
      */
     @GetMapping("all")
     public R selectAll() {
-		return success(this.tHospitalSystemService.selectAll());
+		return success(this.tHospitalSystemService.getAll());
     }
 
     /**

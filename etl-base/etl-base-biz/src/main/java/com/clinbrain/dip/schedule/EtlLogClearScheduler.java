@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class EtlLogClearScheduler {
 
-	/**
+/**
 	 * 每天0点执行清除etl log文件
 	 */
 	@XxlJob("clearETLLog")

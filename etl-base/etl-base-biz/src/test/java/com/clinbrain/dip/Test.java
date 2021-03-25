@@ -4,9 +4,12 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.io.file.FileReader;
 import cn.hutool.core.lang.Console;
 import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.XmlUtil;
 import cn.hutool.crypto.Mode;
 import cn.hutool.crypto.Padding;
 import cn.hutool.crypto.SecureUtil;
@@ -14,6 +17,10 @@ import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.asymmetric.SignAlgorithm;
 import cn.hutool.crypto.symmetric.AES;
 import cn.hutool.db.Db;
+import cn.hutool.db.Entity;
+import cn.hutool.db.Page;
+import cn.hutool.db.PageResult;
+import cn.hutool.extra.pinyin.PinyinUtil;
 import cn.hutool.extra.template.Template;
 import cn.hutool.extra.template.TemplateConfig;
 import cn.hutool.extra.template.TemplateEngine;
@@ -25,6 +32,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.DialectModel;
 import com.baomidou.mybatisplus.extension.plugins.pagination.dialects.IDialect;
 import com.baomidou.mybatisplus.extension.toolkit.JdbcUtils;
 import com.clinbrain.dip.connection.DatabaseClientFactory;
+import com.clinbrain.dip.connection.DatabaseTableMeta;
 import com.clinbrain.dip.connection.IDatabaseClient;
 import com.clinbrain.dip.metadata.Sql;
 import com.clinbrain.dip.sqlparse.ParseSql;
@@ -51,6 +59,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -61,7 +72,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -77,6 +87,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -286,5 +297,66 @@ public class Test {
 		byte[] result = aes.decrypt(Base64.decode(data.getBytes(StandardCharsets.UTF_8)));
 		System.out.println(new String(result, StandardCharsets.UTF_8));
 	}
+
+	@org.junit.Test
+	public void testXml() throws IOException {
+		BufferedReader fileReader
+				= new BufferedReader(new InputStreamReader(new FileInputStream("C:\\Users\\User\\Desktop\\temp\\xml.txt")));
+		StringBuffer sb = new StringBuffer();
+		String line = "";
+		while ((line = fileReader.readLine()) != null) {
+			sb.append(StringUtils.substringBefore(line,"--")).append("  ");
+		}
+		
+		final Document document = XmlUtil.parseXml(sb.toString());
+
+		final NodeList nodeListByXPath = XmlUtil.getNodeListByXPath("//ToolTip/text()", document);
+		System.out.println(nodeListByXPath.getLength());
+
+		for (int i = 0; i < nodeListByXPath.getLength(); i++) {
+			final Node item = nodeListByXPath.item(i);
+			System.out.println(item.getNodeName());
+			System.out.println(item.getNodeValue());
+		}
+	}
+
+	@org.junit.Test
+	public void testSqlserverParse() throws Exception {
+		String sql = "select BedCode as id,DocText as name from binzhou_HLHT.\"dbo\".\"24xiaoshineiruyuansiwangjilu\" a" ;
+		Sql obj = SqlParseUtil.parseSql(sql , ParseSql.SqlType.SQLSERVER);
+		System.out.println(obj);
+
+	}
+
+	@org.junit.Test
+	public void testJdbc() throws Exception{
+		IDatabaseClient client = DatabaseClientFactory.getDatabaseClient("jdbc:hive2://192.168.0.101:10000/default", "root", "");
+
+		final PageResult<Entity> result = Db.use(client.getDataSource(),"com.mysql.jdbc.Driver").page(Entity.create("test3_repl.masterdata"), new Page(1, 10));
+		System.out.println(result.getTotal());
+		/*final List<String> tableMeta = client.getDbNames();
+		tableMeta.forEach(d -> {
+			try {
+				final List<String> tableNames = client.getTableNames(d);
+				System.out.println(d);
+				System.out.println(tableNames);
+				System.out.println("------------------------");
+				final DatabaseTableMeta tableMeta1 = client.getTableMeta(d, tableNames.get(0));
+				System.out.println(tableMeta1);
+				System.out.println("=============================");
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+		});*/
+	}
+
+	@org.junit.Test
+	public void test22() {
+		List<String> ss = FileReader.create(new File("C:\\Users\\User\\Desktop\\厂商")).readLines();
+		ss.forEach(s -> {
+			System.out.println(s.split("_")[1]);
+		});
+	}
+
 
 }

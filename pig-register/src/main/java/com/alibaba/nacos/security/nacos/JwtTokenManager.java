@@ -16,6 +16,9 @@
 
 package com.alibaba.nacos.security.nacos;
 
+import java.util.Date;
+import java.util.List;
+
 import com.alibaba.nacos.auth.common.AuthConfigs;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -28,9 +31,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * JWT token manager.

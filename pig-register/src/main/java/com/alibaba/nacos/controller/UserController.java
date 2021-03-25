@@ -16,12 +16,6 @@
 
 package com.alibaba.nacos.controller;
 
-import java.io.IOException;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.auth.annotation.Secured;
 import com.alibaba.nacos.auth.common.ActionTypes;
@@ -42,7 +36,6 @@ import com.alibaba.nacos.security.nacos.users.NacosUser;
 import com.alibaba.nacos.security.nacos.users.NacosUserDetailsServiceImpl;
 import com.alibaba.nacos.utils.PasswordEncoderUtil;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -57,6 +50,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * User related methods entry.

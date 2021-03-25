@@ -17,12 +17,12 @@
 
 | 依赖                   | 版本          |
 | ---------------------- | ------------- |
-| Spring Boot            | 2.4.2 |
-| Spring Cloud           | 2020    |
-| Spring Cloud Alibaba   | 2.2.4.RELEASE |
+| Spring Boot            | 2.4.4 |
+| Spring Cloud           | 2020.0.2    |
+| Spring Cloud Alibaba   | 2020.0.RC |
 | Spring Security OAuth2 | 2.3.6         |
 | Mybatis Plus           | 3.4.2         |
-| hutool                 | 5.5.7         |
+| hutool                 | 5.6.1         |
 | Avue                   | 2.6.16        |
 
 ### 模块说明
@@ -98,7 +98,7 @@ mvn archetype:generate \
        -Dpackage=com.pig4cloud.pig.demo \
        -DarchetypeGroupId=com.pig4cloud.archetype \
        -DarchetypeArtifactId=pig-gen \
-       -DarchetypeVersion=3.0.3 \
+       -DarchetypeVersion=3.1.0 \
        -DarchetypeCatalog=local
 ```
 
@@ -135,3 +135,7 @@ pig 开源软件遵循 [Apache 2.0 协议](https://www.apache.org/licenses/LICEN
 2. 欢迎提交 [issue](https://gitee.com/log4j/pig/issues)，请写清楚遇到问题的原因、开发环境、复显步骤。
 
 3. 联系作者 <a href="mailto:pig4cloud@qq.com">pig4cloud@qq.com</a>
+
+
+[![Stargazers over time](https://whnb.wang/img/log4j/pig?e=604800)](https://whnb.wang/log4j/pig?e=604800)
+

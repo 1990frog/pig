@@ -28,7 +28,7 @@ start() {
       if [ -n "$PID" ];then
         echo "$MODULE---$MODULE_NAME:was running,PID=$PID"
       else
-        exec nohup java -jar $JAR_PATH/$JAR_NAME >> $LOG_PATH/$MODULE.out &
+        exec nohup java -jar $JAR_PATH/$JAR_NAME --server.port=$PORT >> $LOG_PATH/$MODULE.out &
         PID=`netstat -tunlp | grep $PORT | awk '{print $7}' | cut -d/ -f 1`
         while [ -z "$PID" ]
         do
@@ -48,7 +48,7 @@ start() {
     sleep 15s
   done
   if(($commandOk == 0));then
-    echo "the second param enter eg:clinbrain-monitor|clinbrain-sentinel|clinbrain-gateway|clinbrain-auth|clinbrain-upms-biz|xxl-job-admin"
+    echo "the second param enter eg:monitor|sentinel|gateway|auth|upms-biz|xxl-job-admin"
   else
     echo "............there has:$okCount server started..........."
   fi
@@ -85,7 +85,7 @@ stop() {
     fi
   done
   if (($commandOk == 0));then
-    echo "the second param enter eg:clinbrain-monitor|clinbrain-sentinel|clinbrain-gateway|clinbrain-auth|clinbrain-upms-biz|xxl-job-admin"
+    echo "the second param enter eg: monitor|sentinel|gateway|auth|upms-biz|xxl-job-admin"
   else
     echo "............there has:$okCount server stoped..........."
   fi

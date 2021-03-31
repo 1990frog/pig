@@ -1,0 +1,68 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+    <id>main</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>../pig-all</directory>
+            <includes>
+                <include>*</include>
+            </includes>
+            <outputDirectory>/</outputDirectory>
+			<fileMode>0755</fileMode>
+        </fileSet>
+
+		<fileSet>
+			<directory>../pig-auth/target</directory>
+			<includes>
+				<include>pig-auth.jar</include>
+			</includes>
+			<outputDirectory>/</outputDirectory>
+		</fileSet>
+
+		<fileSet>
+			<directory>../pig-gateway/target</directory>
+			<includes>
+				<include>pig-gateway.jar</include>
+			</includes>
+			<outputDirectory>/</outputDirectory>
+		</fileSet>
+
+		<fileSet>
+			<directory>../pig-upms/pig-upms-biz/target</directory>
+			<includes>
+				<include>pig-upms-biz.jar</include>
+			</includes>
+			<outputDirectory>/</outputDirectory>
+		</fileSet>
+
+		<fileSet>
+			<directory>../pig-visual/pig-monitor/target</directory>
+			<includes>
+				<include>pig-monitor.jar</include>
+			</includes>
+			<outputDirectory>/</outputDirectory>
+		</fileSet>
+
+		<fileSet>
+			<directory>../pig-visual/pig-sentinel-dashboard/target</directory>
+			<includes>
+				<include>pig-sentinel-dashboard.jar</include>
+			</includes>
+			<outputDirectory>/</outputDirectory>
+		</fileSet>
+
+		<fileSet>
+			<directory>../pig-visual/pig-xxl-job-admin/target</directory>
+			<includes>
+				<include>pig-xxl-job-admin.jar</include>
+			</includes>
+			<outputDirectory>/</outputDirectory>
+		</fileSet>
+
+
+    </fileSets>
+</assembly>

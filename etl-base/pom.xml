@@ -23,7 +23,7 @@
 		<mybatis.mapper.version>2.1.5</mybatis.mapper.version>
 		<mybatis.pagehelper.version>1.2.3</mybatis.pagehelper.version>
 
-		<dip.etl.version>2.0.0.xh</dip.etl.version>
+		<dip.etl.version>2.0.0</dip.etl.version>
 	</properties>
 
 	<!--项目子模块-->

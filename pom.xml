@@ -109,7 +109,8 @@
 		<module>pig-upms</module>
 		<module>pig-common</module>
 		<module>pig-visual</module>
-  </modules>
+		<module>pig-assembly</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>

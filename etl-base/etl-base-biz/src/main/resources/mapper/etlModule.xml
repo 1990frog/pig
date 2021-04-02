@@ -403,6 +403,7 @@
 	<resultMap id="workflowStatusMap" type="com.clinbrain.dip.rest.vo.ModuleWorkflowStatus">
 		<result column="module_name" property="moduleCode"/>
 		<result column="status" property="status"/>
+		<result column="batch_id" property="uuid"/>
 		<collection property="workflowStatusList" column="{moduleCode=module_name,uuid=batch_id}"
 					autoMapping="true" select="subDetailStatus"/>
 	</resultMap>

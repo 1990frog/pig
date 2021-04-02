@@ -2,6 +2,7 @@ package com.clinbrain.dip.rest.vo;
 
 import lombok.Data;
 
+import javax.persistence.Column;
 import java.util.List;
 
 /**
@@ -11,6 +12,7 @@ import java.util.List;
 public class ModuleWorkflowStatus {
 
 	private String moduleCode;
+	private String uuid;
 	private Integer status;
 
 	List<WorkflowStatus> workflowStatusList;

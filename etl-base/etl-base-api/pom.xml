@@ -55,7 +55,20 @@
 					<artifactId>jsp-api</artifactId>
 					<groupId>javax.servlet.jsp</groupId>
 				</exclusion>
-			</exclusions>
+				<exclusion>
+					<artifactId>mysql-connector-java</artifactId>
+					<groupId>mysql</groupId>
+				</exclusion>
+                <exclusion>
+                    <artifactId>nacos-client</artifactId>
+                    <groupId>com.alibaba.nacos</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.google.guava</groupId>
+                </exclusion>
+            </exclusions>
 		</dependency>
+
 	</dependencies>
 </project>

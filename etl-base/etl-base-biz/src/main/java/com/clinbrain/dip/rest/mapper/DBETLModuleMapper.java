@@ -61,4 +61,9 @@ public interface DBETLModuleMapper extends tk.mybatis.mapper.common.Mapper<ETLMo
 
 	@Update("update etl_module set dependency_code = #{dependencyCode} where dependency_code = #{moduleCode}")
 	int updateDependencyByModuleCode(@Param("moduleCode") String moduleCode, @Param("dependencyCode") String dependencyCode);
+
+	int updatePublishedByCodes(@Param("published") Boolean published, @Param("list") List<String> codes);
+
+	@Update("update etl_module set published = #{published} where module_code in (select module_code from etl_job_module where job_id = #{jobId})")
+	int updatePublishedByJobId(@Param("published") Boolean published,@Param("jobId") int jobId);
 }

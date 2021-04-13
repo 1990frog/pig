@@ -205,10 +205,16 @@
 		<id property="moduleCode" column="module_code"/>
 		<result property="hospitalName" column="hospital_code"/>
 		<result property="jobId" column="job_id"/>
+		<association property="etlLogSummary" javaType="etlLogSummary" fetchType="lazy" column="module_code" select="getMaxLogsummaryDetail">
+		</association>
 	</resultMap>
 
 	<select id="getLogsummeyMaxTime" parameterType="string" resultType="etlLogSummary">
 		SELECT *  FROM `etl_logsummary` WHERE module_name=#{module_code} and `status`=2 ORDER BY summary_id DESC limit 1;
+	</select>
+
+	<select id="getMaxLogsummaryDetail" parameterType="string" resultType="etlLogSummary">
+		select * from etl_logsummary where summary_id = (select max(summary_id) from etl_logsummary where module_name = #{module_code})
 	</select>
 
 	<select id="selectAllModules" resultMap="etlModulesMap" parameterType="int">
@@ -225,7 +231,7 @@
 		LEFT JOIN etl_job ej ON ejm.job_id=ej.id
 		<where>
 			<if test="topicId !=null and topicId !=''">
-				AND em.topic_id=#{topicId}
+				AND ej.topic_id=#{topicId}
 			</if>
 			<if test="jobId !=null and jobId !=''">
 				AND ejm.job_id=#{jobId}
@@ -253,7 +259,7 @@
 		LEFT JOIN etl_job ej ON ejm.job_id=ej.id
 		<where>
 			<if test="topicId !=null and topicId !=''">
-				AND em.topic_id=#{topicId}
+				AND ej.topic_id=#{topicId}
 			</if>
 			<if test="jobId !=null and jobId !=''">
 				AND ejm.job_id=#{jobId}
@@ -428,4 +434,11 @@
 			and b.summary_id = ( select summary_id from etl_logsummary where batch_id = #{uuid} order by log_summary_start desc limit 1)
 		where  a.runnable = 1 and  a.module_code = #{moduleCode}  order by a.workflow_sequence_customized
 	</select>
+
+	<update id="updatePublishedByCodes">
+		update etl_module set published = #{published} where module_code in
+		<foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</update>
 </mapper>

@@ -161,7 +161,6 @@ public class ModuleService extends BaseService<ETLModule> {
 				return null;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			return null;
 		}
 	}

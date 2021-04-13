@@ -4,9 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSON;
 import com.clinbrain.dip.connection.ClientOutput;
 import com.clinbrain.dip.metadata.azkaban.Project;
+import com.clinbrain.dip.multirequestbody.MultiRequestBody;
 import com.clinbrain.dip.pojo.ETLJob;
 import com.clinbrain.dip.pojo.ETLLogDetail;
 import com.clinbrain.dip.pojo.ETLLogSummary;
+import com.clinbrain.dip.pojo.ETLModule;
 import com.clinbrain.dip.pojo.ETLScheduler;
 import com.clinbrain.dip.rest.bean.EtlJobVersion;
 import com.clinbrain.dip.rest.response.ResponseData;
@@ -44,9 +46,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Api(tags = "任务组管理，任务组日志，任务组发布")
 @RestController
 @RequestMapping("/etl/job")
-@Api("job类")
 public class JobController {
     private static final Logger logger = LoggerFactory.getLogger(JobController.class);
     @Autowired
@@ -135,6 +137,7 @@ public class JobController {
      * @param jobId
      * @return
      */
+    @ApiOperation("任务上传到azkaban调度")
     @PostMapping("/upload")
     public ResponseData upload(@ApiParam(value = "任务组 id")@RequestParam("id") Integer jobId) {
         try {
@@ -144,6 +147,18 @@ public class JobController {
             return new ResponseData.Builder<>().data("").error("上传失败:" + e.getMessage());
         }
     }
+
+	@ApiOperation("指定任务上传到azkaban调度")
+	@PostMapping("/publish")
+	public ResponseData publish(@ApiParam(value = "任务组 id")@MultiRequestBody("jobId") Integer jobId,
+									   @ApiParam(value = "指定任务Code ")@MultiRequestBody("modules") List<ETLModule> modules) {
+		try {
+			return jobService.uploadByModules(jobId, modules);
+		} catch (Exception e) {
+			logger.error("任务组JOb上传到Azkaban出错：", e);
+			return new ResponseData.Builder<>().data("").error("上传失败:" + e.getMessage());
+		}
+	}
 
     /**
      * 验证调度时间表达式

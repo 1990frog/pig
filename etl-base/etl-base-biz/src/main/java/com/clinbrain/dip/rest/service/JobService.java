@@ -7,6 +7,7 @@ import com.clinbrain.dip.metadata.azkaban.Project;
 import com.clinbrain.dip.pojo.ETLJob;
 import com.clinbrain.dip.pojo.ETLLogDetail;
 import com.clinbrain.dip.pojo.ETLLogSummary;
+import com.clinbrain.dip.pojo.ETLModule;
 import com.clinbrain.dip.pojo.ETLScheduler;
 import com.clinbrain.dip.pojo.ETLTopic;
 import com.clinbrain.dip.pojo.EtlJobModule;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
 import java.io.BufferedReader;
@@ -103,6 +105,7 @@ public class JobService extends BaseService<ETLJob> {
         ETLJob job = jobMapper.selectByPrimaryKey(jobId);
         ETLTopic etlTopic = topicMapper.selectByPrimaryKey(Integer.valueOf(job.getTopicId()));
         job.setScheduler(schedulerMapper.selectByPrimaryKey(job.getSchedulerId()));
+
         Project project = new Project(job.getJobName(),job.getJobName(),
                 Optional.ofNullable(etlTopic.getTopicName()).orElse("未设置"),"create");
         String cronExp = Optional.ofNullable(job).map(ETLJob::getScheduler).map(ETLScheduler::getSchedulerCron).orElse(null);
@@ -122,6 +125,56 @@ public class JobService extends BaseService<ETLJob> {
             return responseData;
         }
     }
+
+	/**
+	 * 发布信息时指定etl任务code
+	 * @param jobId
+	 * @param modules
+	 * @return
+	 * @throws Exception
+	 */
+	public ResponseData<String> uploadByModules(Integer jobId, List<ETLModule> modules) throws Exception{
+
+		// 先更新module信息
+		for(ETLModule module : modules) {
+			moduleMapper.updateModuleByCode(module);
+		}
+
+		// 重新查找job信息，作为发布到azkaban上的项目信息
+		ETLJob job = jobMapper.selectByPrimaryKey(jobId);
+		ETLTopic etlTopic = topicMapper.selectByPrimaryKey(Integer.valueOf(job.getTopicId()));
+		job.setScheduler(schedulerMapper.selectByPrimaryKey(job.getSchedulerId()));
+
+		Project project = new Project(job.getJobName(),job.getJobName(),
+				Optional.ofNullable(etlTopic.getTopicName()).orElse("未设置"),"create");
+		String cronExp = Optional.ofNullable(job).map(ETLJob::getScheduler).map(ETLScheduler::getSchedulerCron).orElse(null);
+		if(StringUtils.isEmpty(cronExp)){
+			return new ResponseData.Builder("").error("该任务还未设置执行计划！");
+		}
+		project.setCronExpression(cronExp);
+		final List<String> moduleCodes = modules.stream().map(ETLModule::getModuleCode).collect(Collectors.toList());
+		String filePath = createZipFile.createJobFileById(job, moduleCodes);
+		String zipName = createZipFile.createZipByJobName(filePath, UUID.randomUUID().toString());
+		if(StringUtils.isEmpty(zipName)){
+			return new ResponseData.Builder("").error("任务上传失败，请检查该job下任务是否启用或者任务的依赖配置错误！");
+		}else {
+			project.setZipFileName(zipName);
+			ResponseData<String> responseData = azkabanJobManageService.createOrUpdateProject(project);
+			// 更新etlmodule published 状态值
+			if(ResponseData.Status.SUCCESS.getCode().equals(responseData.getStatus())) {
+				updatePublishStatus(jobId, moduleCodes);
+			}
+			createZipFile.deleteFile(zipFilePath + File.separator + zipName);
+			return responseData;
+		}
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	public void updatePublishStatus(int jobId, List<String> modules) {
+		// 先将所有的任务切换成未发布，更新已发布成功的任务的状态
+		moduleMapper.updatePublishedByJobId(false, jobId);
+		moduleMapper.updatePublishedByCodes(true, modules);
+	}
 
 
     public ResponseData.Page<ETLLogSummary> selectLogSummarys(int offset, int limit, Integer jobId, String moduleCode, Integer status, String hospital){

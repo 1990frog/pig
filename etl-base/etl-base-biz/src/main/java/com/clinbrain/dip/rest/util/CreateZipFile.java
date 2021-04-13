@@ -147,6 +147,41 @@ public class CreateZipFile {
 		return jobFilePath;
 	}
 
+	public String createJobFileById(ETLJob job, List<String> moduleCodes) throws Exception {
+
+		List<ETLModule> jobModules = jobMapper.selectModulesByJobIdAndCode(job.getId(),moduleCodes);
+		//创建job名称的临时文件夹
+		String jobFilePath = zipFilePath + File.separator + job.getJobName() + "_" + System.currentTimeMillis();
+
+		File jobFile = new File(jobFilePath);
+		if (!jobFile.exists()) {
+			jobFile.mkdirs();
+		}
+		//为每个module创建job文件
+		//1. 先找到所有的头部任务
+		final List<ETLModule> firstModules = jobModules.stream()
+				.filter(m -> StringUtils.isEmpty(m.getDependencyCode())).collect(Collectors.toList());
+		List<String> end= Lists.newArrayList();
+		for (ETLModule first : firstModules) {
+			String moduleName = Optional.ofNullable(first.getModuleName()).orElse(first.getModuleCode());
+			File moduleFile = new File(jobFilePath + File.separator + moduleName + ".job");
+			try (FileOutputStream fos = new FileOutputStream(moduleFile, false)) {
+				fos.write(String.format(fistCommond, moduleName, first.getModuleCode()).getBytes());
+				fos.flush();
+			}
+			findModules(jobModules, first.getModuleCode(), end, moduleName, jobFilePath);
+		}
+
+		//job文件生成后，添加一个以end.job文件
+		File moduleFile = new File(jobFilePath + File.separator + "end.job");
+		try(FileOutputStream fos = new FileOutputStream(moduleFile, false)) {
+			fos.write(String.format(endCommond, StringUtils.join(end,",")).getBytes());
+			fos.flush();
+		}
+
+		return jobFilePath;
+	}
+
 	void findModules(List<ETLModule> dataList, String moduleCode, List<String> endList, String dependencyName, String jobFilePath) {
 		final List<ETLModule> collect = dataList.stream()
 			.filter(m -> StringUtils.equalsIgnoreCase(m.getDependencyCode(), moduleCode)).collect(Collectors.toList());

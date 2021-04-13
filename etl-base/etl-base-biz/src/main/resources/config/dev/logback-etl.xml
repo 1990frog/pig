@@ -19,8 +19,8 @@
 
 <configuration debug="false" scan="false">
 	<springProperty scop="context" name="spring.application.name" source="spring.application.name" defaultValue=""/>
-	<springProperty scop="context" name="logback.dir" source="logback.dir" defaultValue="logs2/"/>
-	<springProperty scop="context" name="logback.level" source="logback.level" defaultValue="INFO"/>
+	<springProperty scop="context" name="logback.dir" source="logback.dir" defaultValue="logs/"/>
+	<springProperty scop="context" name="logback.level" source="logback.level" defaultValue="DEBUG"/>
 
 	<property scope="context" name="log.path" value="${logback.dir}"/>
 	<!-- 彩色日志格式 -->

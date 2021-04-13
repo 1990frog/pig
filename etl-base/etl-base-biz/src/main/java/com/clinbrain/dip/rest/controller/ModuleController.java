@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.UUID;
 
 
-@Api(tags = {"etl具体任务（Module）"})
+@Api(tags = {"etl任务管理（Module）"})
 @RequestMapping("/etl/module")
 @RestController
 public class ModuleController extends ApiBaseController {
@@ -90,14 +90,15 @@ public class ModuleController extends ApiBaseController {
 	 * @param rank     排序
 	 * @return
 	 */
+	@ApiOperation("获取任务列表")
 	@GetMapping("/names")
-	public ResponseData selectAllModuleNames(@RequestParam(value = "topicId", required = false) Integer topicId,
-											 @RequestParam(value = "jobId", required = false) Integer jobId,
-											 @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
-											 @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
-											 @RequestParam(value = "hospital", required = false) String hospital,
-											 @RequestParam(value = "rank", required = false, defaultValue = "desc") String rank,
-											 @RequestParam(value = "moduleName", required = false) String moduleName) {
+	public ResponseData selectAllModuleNames(@ApiParam("业务类型ID")@RequestParam(value = "topicId", required = false) Integer topicId,
+											 @ApiParam("任务组ID")@RequestParam(value = "jobId", required = false) Integer jobId,
+											 @ApiParam("分页offset")@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+											 @ApiParam("分页limit")@RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+											 @ApiParam("医院code")@RequestParam(value = "hospital", required = false) String hospital,
+											 @ApiParam("排序方式：desc/asc")@RequestParam(value = "rank", required = false, defaultValue = "desc") String rank,
+											 @ApiParam("任务名称")@RequestParam(value = "moduleName", required = false) String moduleName) {
 		PageHelper.offsetPage(offset, limit);
 		PageHelper.orderBy("em.created_at" + '\t' + rank);
 		Page pageData = (Page) moduleService.queryAllModules(topicId, jobId, hospital, moduleName);

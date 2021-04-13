@@ -1,3 +1,4 @@
+/*
 package com.clinbrain.dip.schedule;
 
 import cn.hutool.core.date.DateTime;
@@ -13,17 +14,21 @@ import org.springframework.stereotype.Component;
 
 import java.util.stream.Stream;
 
+*/
 /**
  * Created by Liaopan on 2021-01-28.
- */
+ *//*
+
 @Component
 @EnablePigXxlJob
 @Slf4j
 public class EtlLogClearScheduler {
 
+*/
 /**
 	 * 每天0点执行清除etl log文件
-	 */
+	 *//*
+
 	@XxlJob("clearETLLog")
 	public ReturnT<String> clearLog(String param) {
 		final DipConfig configInstance = DipConfig.getConfigInstance();
@@ -46,3 +51,4 @@ public class EtlLogClearScheduler {
 	}
 
 }
+*/

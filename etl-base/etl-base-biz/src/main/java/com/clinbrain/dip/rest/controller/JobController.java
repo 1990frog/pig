@@ -150,10 +150,10 @@ public class JobController {
 
 	@ApiOperation("指定任务上传到azkaban调度")
 	@PostMapping("/publish")
-	public ResponseData publish(@ApiParam(value = "任务组 id")@MultiRequestBody("jobId") Integer jobId,
-									   @ApiParam(value = "指定任务Code ")@MultiRequestBody("modules") List<ETLModule> modules) {
+	public ResponseData publish(@ApiParam(value = "任务组job对象")@MultiRequestBody("job") ETLJob job,
+									   @ApiParam(value = "指定任务Module对象 ")@MultiRequestBody("modules") List<ETLModule> modules) {
 		try {
-			return jobService.uploadByModules(jobId, modules);
+			return jobService.uploadByModules(job, modules);
 		} catch (Exception e) {
 			logger.error("任务组JOb上传到Azkaban出错：", e);
 			return new ResponseData.Builder<>().data("").error("上传失败:" + e.getMessage());

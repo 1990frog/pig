@@ -353,8 +353,12 @@ public class TemplateService extends BaseService<Template> {
 
 					// 根据表来删除不存在的列
 					tableColumns.forEach(cc -> {
-						final List<DatabaseMeta> tableColumnTemps =
-							connectionService.getDataBases(connectionCode, cc.getDatabaseName(), cc.getTableName());
+						List<DatabaseMeta> tableColumnTemps = new ArrayList<>();
+						try {
+							tableColumnTemps = connectionService.getDataBases(connectionCode, cc.getDatabaseName(), cc.getTableName());
+						} catch (Exception e) {
+							logger.error("获取数据库表出错", e);
+						}
 						final Set<String> columnTemps = tableColumnTemps.stream().map(DatabaseMeta::getTableMetas).flatMap(Collection::parallelStream)
 							.map(tableMeta -> tableMeta.allColumns).flatMap(Collection::parallelStream)
 							.map(t -> t.name).collect(Collectors.toSet());

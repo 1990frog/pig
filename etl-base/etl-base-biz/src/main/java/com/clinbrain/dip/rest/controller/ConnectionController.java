@@ -44,9 +44,13 @@ public class ConnectionController {
                                      @RequestParam(required = false) String dbName,
                                      @RequestParam(required = false) String tableName) {
         if (StringUtils.isNotEmpty(connectionCode)) {
-            return new ResponseData.Builder<List>(dipConnectionService.getDataBases(connectionCode, dbName, tableName)).success();
+        	try {
+				return new ResponseData.Builder<>(dipConnectionService.getDataBases(connectionCode, dbName, tableName)).success();
+			}catch (Exception e) {
+				return new ResponseData.Builder<>().error(e.getMessage());
+			}
         }
-        return new ResponseData.Builder<>().error("");
+		return new ResponseData.Builder<>().error("系统内部错误，请联系管理员");
     }
 
 

@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -65,7 +66,12 @@ public class VersionService extends BaseService<JobVersion> {
 			return workflow.getFullSql();
 		}
 		//获取元数据字段
-		List<DatabaseMeta> databaseMetaList = connectionService.getDataBases(connection.getConnectionCode(), workflow.getTargetSchema(), workflow.getTargetTable());
+		List<DatabaseMeta> databaseMetaList = new ArrayList<>();
+		try {
+			connectionService.getDataBases(connection.getConnectionCode(), workflow.getTargetSchema(), workflow.getTargetTable());
+		}catch (Exception e) {
+			logger.error("获取数据表出错", e);
+		}
 		Optional.ofNullable(databaseMetaList).ifPresent(databases -> databases.forEach(d -> {
 			Optional.ofNullable(d.getTableMetas()).ifPresent(tables -> tables.forEach(t -> {
 				Optional.ofNullable(t.allColumns).ifPresent(cols -> cols.forEach(c -> {

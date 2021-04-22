@@ -59,7 +59,7 @@ public class ConnectionService extends BaseService<ETLConnection> {
     }
 
     @Cacheable(cacheNames = "hiveTables")
-    public List<DatabaseMeta> getDataBases(String connectionCode, String dbName, String tableName) {
+    public List<DatabaseMeta> getDataBases(String connectionCode, String dbName, String tableName) throws Exception{
         if (StringUtils.isEmpty(connectionCode)) {
             return null;
         }
@@ -82,21 +82,17 @@ public class ConnectionService extends BaseService<ETLConnection> {
                     DatabaseMeta databases = new DatabaseMeta();
                     logger.debug("startGetDBInfos:" + System.currentTimeMillis() / 1000);
                     //dbs.forEach(dbName -> {
-                    try {
-                        logger.debug("dbName get all table names：" + dbName);
-                        List<String> tables = databaseClient.getTableNames(dbName);
-                        List<DatabaseTableMeta> tableMetas = new ArrayList<>();
-                        tables.forEach(table -> {
-                            tableMetas.add(new DatabaseTableMetaBuilder().setTableName(table).setAllColumns(null).createDatabaseTableMeta());
-                        });
-                        databases.setName(dbName);
-                        databases.setTableMetas(tableMetas);
-                        tableList.add(databases);
-                        return tableList;
-                    } catch (Exception e) {
-                        logger.error("查询数据库对应表信息出错", e);
-                    }
+					logger.debug("dbName get all table names：" + dbName);
+					List<String> tables = databaseClient.getTableNames(dbName);
+					List<DatabaseTableMeta> tableMetas = new ArrayList<>();
+					tables.forEach(table -> {
+						tableMetas.add(new DatabaseTableMetaBuilder().setTableName(table).setAllColumns(null).createDatabaseTableMeta());
+					});
+					databases.setName(dbName);
+					databases.setTableMetas(tableMetas);
+					tableList.add(databases);
                     logger.debug("end: " + System.currentTimeMillis() / 1000);
+					return tableList;
                 } else {
                     List<DatabaseMeta> cloumnList = Lists.newArrayList();
                     DatabaseMeta databaseMeta = new DatabaseMeta();
@@ -111,8 +107,8 @@ public class ConnectionService extends BaseService<ETLConnection> {
                 }
         } catch (Exception e) {
             logger.error("查询数据库出错", e);
+            throw e;
         }
-        return null;
     }
 
 

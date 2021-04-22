@@ -1,6 +1,5 @@
 package com.clinbrain.dip.rest.controller;
 
-import ch.qos.logback.classic.LoggerContext;
 import com.clinbrain.dip.connection.DatabaseClientFactory;
 import com.clinbrain.dip.connection.IDatabaseClient;
 import com.clinbrain.dip.metadata.Sql;
@@ -8,8 +7,6 @@ import com.clinbrain.dip.rest.bean.PropertyBean;
 import com.clinbrain.dip.rest.request.SqlParseRequest;
 import com.clinbrain.dip.rest.response.ResponseData;
 import com.clinbrain.dip.util.SqlParseUtil;
-import com.pig4cloud.pig.common.security.annotation.Inner;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,19 +20,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.File;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Controller
 @RequestMapping("/")
@@ -121,23 +109,8 @@ public class IndexController {
     @GetMapping("/logs")
     @ResponseBody
     public ResponseData showLog(@RequestParam(value = "fileName",required = false) String fileName) {
-		List<String> messages = null;
-		List<String> files = new ArrayList<>();
-		try {
-			LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-			String filePath = context.getProperty("log.path");
 
-			if(StringUtils.isNotEmpty(filePath)){
-				messages = Files.readAllLines(Paths.get(filePath + File.separator + "error.log"));
-			}
-		} catch (Exception e) {
-			return new ResponseData.Builder<>().error(e.getMessage());
-		}
-
-		Map dataMap = new HashMap();
-		dataMap.put("files",files);
-		dataMap.put("content",StringUtils.join(messages,"<br/>"));
-		return new ResponseData.Builder<>().data(dataMap).success();
+		return new ResponseData.Builder<>().data("").success();
     }
 
 }

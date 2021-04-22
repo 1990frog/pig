@@ -75,12 +75,6 @@
 		<dependency>
 			<groupId>com.github.pagehelper</groupId>
 			<artifactId>pagehelper-spring-boot-starter</artifactId>
-			<exclusions>
-				<exclusion>
-					<artifactId>jsqlparser</artifactId>
-					<groupId>com.github.jsqlparser</groupId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>

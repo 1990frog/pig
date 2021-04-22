@@ -6,6 +6,8 @@ import com.clinbrain.dip.metadata.DipConstants;
 import com.clinbrain.dip.pojo.ETLHospital;
 import com.clinbrain.dip.pojo.ETLLogSummary;
 import com.clinbrain.dip.pojo.ETLModule;
+import com.clinbrain.dip.pojo.EtlModuleTemplate;
+import com.clinbrain.dip.rest.mapper.DBETLModuleTemplateMapper;
 import com.clinbrain.dip.rest.request.ModuleTaskRequest;
 import com.clinbrain.dip.rest.request.RequestJson;
 import com.clinbrain.dip.rest.response.ResponseData;
@@ -111,6 +113,12 @@ public class ModuleController extends ApiBaseController {
 		return new ResponseData.Builder<ResponseData.Page>(pages).success();
 	}
 
+	/**
+	 * 检查任务是否存在
+	 * @param moduleCode
+	 * @return
+	 */
+	@ApiOperation("检查任务是否存在")
 	@GetMapping("/check")
 	public ResponseData checkModuleCode(@RequestParam String moduleCode) {
 		return new ResponseData.Builder<ETLModule>(moduleService.checkModuleCode(moduleCode)).success();
@@ -122,12 +130,14 @@ public class ModuleController extends ApiBaseController {
 	 * @param moduleCode 任务标识
 	 * @return
 	 */
+	@ApiOperation("获取任务详细信息")
 	@GetMapping("/{moduleCode}/jsoninfo")
 	public ResponseData selectDetail(@PathVariable String moduleCode) {
 		ModuleTaskRequest moduleTaskRequest = moduleService.selectModuleDetail(moduleCode);
 		return new ResponseData.Builder<>(moduleTaskRequest).success();
 	}
 
+	@ApiOperation("编辑任务")
     @PostMapping("")
     public ResponseData edit(@RequestJson(value = "") ModuleTaskRequest moduleTask) {
         try {
@@ -139,6 +149,13 @@ public class ModuleController extends ApiBaseController {
         }
     }
 
+	/**
+	 * 修改任务启用/禁用状态
+	 * @param code
+	 * @param enabled
+	 * @return
+	 */
+	@ApiOperation("修改用户启用/禁用状态")
 	@PutMapping("{code:.+}")
 	public ResponseData renovateModuleStatus(@PathVariable("code") String code, @RequestParam Integer enabled) {
 		try {
@@ -150,6 +167,7 @@ public class ModuleController extends ApiBaseController {
 		}
 	}
 
+	@ApiOperation("更新任务的增量/区间状态，需要编辑任务使用 post /etl/module")
 	@PostMapping("/update")
 	public ResponseData updateByModule(@RequestBody ModuleTaskRequest etlModule) {
 		try {
@@ -168,6 +186,8 @@ public class ModuleController extends ApiBaseController {
 	 * @param priority
 	 * @return
 	 */
+	@Deprecated
+	@ApiOperation("修改任务优先级，已废弃")
 	@PostMapping("/udpatePriority")
 	public ResponseData updatePriorityByModuleCode(@RequestParam("moduleCode") String moduleCode,
 												   @RequestParam(value = "priority", defaultValue = "0") Integer priority) {
@@ -505,6 +525,16 @@ public class ModuleController extends ApiBaseController {
 			logger.error("获取运行记录出错！", e);
 			return failed(e.getMessage());
 		}
+	}
+
+	/**
+	 * 增加新增任务时提供常用任务模板
+	 * @return
+	 */
+	@GetMapping("/template")
+	@ApiOperation("任务新增模板")
+	public R fetchModuleTemplates() {
+		return R.ok(moduleService.fetchModuleTemplate());
 	}
 
 }

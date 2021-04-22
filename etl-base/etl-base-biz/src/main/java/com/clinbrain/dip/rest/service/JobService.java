@@ -96,7 +96,7 @@ public class JobService extends BaseService<ETLJob> {
      *  上传job-scheduler 到 azkb上
      *  Optional.ofNullable(job).map(ETLJob::getScheduler).map(ETLScheduler::getSchedulerCron).orElse(null)
      *  判断job -> scheduler -> cron 是否为空
-     * @param job
+     * @param jobId
      * @return
      * @throws Exception
      */
@@ -128,20 +128,20 @@ public class JobService extends BaseService<ETLJob> {
 
 	/**
 	 * 发布信息时指定etl任务code
-	 * @param jobId
+	 * @param job
 	 * @param modules
 	 * @return
 	 * @throws Exception
 	 */
-	public ResponseData<String> uploadByModules(Integer jobId, List<ETLModule> modules) throws Exception{
+	public ResponseData<String> uploadByModules(ETLJob job, List<ETLModule> modules) throws Exception{
 
+		createOrUpdate(job);
 		// 先更新module信息
 		for(ETLModule module : modules) {
 			moduleMapper.updateModuleByCode(module);
 		}
 
 		// 重新查找job信息，作为发布到azkaban上的项目信息
-		ETLJob job = jobMapper.selectByPrimaryKey(jobId);
 		ETLTopic etlTopic = topicMapper.selectByPrimaryKey(Integer.valueOf(job.getTopicId()));
 		job.setScheduler(schedulerMapper.selectByPrimaryKey(job.getSchedulerId()));
 
@@ -162,7 +162,7 @@ public class JobService extends BaseService<ETLJob> {
 			ResponseData<String> responseData = azkabanJobManageService.createOrUpdateProject(project);
 			// 更新etlmodule published 状态值
 			if(ResponseData.Status.SUCCESS.getCode().equals(responseData.getStatus())) {
-				updatePublishStatus(jobId, moduleCodes);
+				updatePublishStatus(job.getId(), moduleCodes);
 			}
 			createZipFile.deleteFile(zipFilePath + File.separator + zipName);
 			return responseData;

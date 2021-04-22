@@ -8,10 +8,6 @@ import cn.hutool.db.Page;
 import cn.hutool.db.PageResult;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.annotation.DbType;
-import com.baomidou.mybatisplus.extension.plugins.pagination.DialectFactory;
-import com.baomidou.mybatisplus.extension.plugins.pagination.DialectModel;
-import com.baomidou.mybatisplus.extension.plugins.pagination.dialects.IDialect;
 import com.clinbrain.dip.common.DipConfig;
 import com.clinbrain.dip.connection.DatabaseClientFactory;
 import com.clinbrain.dip.connection.IDatabaseClient;
@@ -31,9 +27,11 @@ import com.clinbrain.dip.pojo.ETLWorkflowTokenFilter;
 import com.clinbrain.dip.pojo.ETLWorkflowTokenFromOrJoin;
 import com.clinbrain.dip.pojo.ETLWorkflowTokenFullSql;
 import com.clinbrain.dip.pojo.EtlJobModule;
+import com.clinbrain.dip.pojo.EtlModuleTemplate;
 import com.clinbrain.dip.rest.mapper.DBETLJobModuleMapper;
 import com.clinbrain.dip.rest.mapper.DBETLLogSummaryMapper;
 import com.clinbrain.dip.rest.mapper.DBETLModuleMapper;
+import com.clinbrain.dip.rest.mapper.DBETLModuleTemplateMapper;
 import com.clinbrain.dip.rest.mapper.DBETLWorkflowConnectionMapper;
 import com.clinbrain.dip.rest.mapper.DBETLWorkflowDataxflowMapper;
 import com.clinbrain.dip.rest.mapper.DBETLWorkflowMapper;
@@ -48,7 +46,6 @@ import com.clinbrain.dip.strategy.bean.ModuleDependencyVO;
 import com.clinbrain.dip.strategy.entity.JobVersion;
 import com.clinbrain.dip.strategy.service.EtlWorkflowSelectRegexService;
 import com.clinbrain.dip.strategy.service.VersionService;
-import com.clinbrain.dip.strategy.util.MyJdbcUtils;
 import com.clinbrain.dip.workflow.ETLStart;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -76,8 +73,6 @@ import tk.mybatis.mapper.weekend.Weekend;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -88,7 +83,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -128,6 +122,9 @@ public class ModuleService extends BaseService<ETLModule> {
 
 	@Autowired
 	private VersionService versionService;
+
+	@Autowired
+	private DBETLModuleTemplateMapper moduleTemplateMapper;
 
 	@Autowired
 	@Qualifier("jobModuleMapper")
@@ -1237,6 +1234,10 @@ public class ModuleService extends BaseService<ETLModule> {
 		}
 
 		return new MutablePair<>(etlLogSummary, fileLog);
+	}
+
+	public List<EtlModuleTemplate> fetchModuleTemplate() {
+		return moduleTemplateMapper.selectAll();
 	}
 
 	@Getter

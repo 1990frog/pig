@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinbrain.dip.rest.mapper.DBETLTopicMapper">
+
+	<resultMap id="etlModuleMap" type="etlModule" autoMapping="true">
+		<id property="moduleCode" column="module_code"/>
+		<result property="hospitalName" column="hospital_code"/>
+		<result property="jobId" column="job_id"/>
+		<association property="etlJob" javaType="etlJob" columnPrefix="b_" autoMapping="true">
+		</association>
+		<association property="etlLogSummary" javaType="etlLogSummary" autoMapping="true">
+		</association>
+	</resultMap>
+
+	<resultMap id="etlModuleMap4Log" type="etlModule" autoMapping="true">
+		<id property="moduleCode" column="module_code"/>
+		<result property="hospitalName" column="hospital_code"/>
+		<result property="jobId" column="job_id"/>
+		<association property="etlJob" javaType="etlJob" autoMapping="true" column="module_code" select="selectEtlJob">
+		</association>
+		<association property="etlLogSummary" javaType="etlLogSummary" autoMapping="true">
+		</association>
+	</resultMap>
+
+	<select id="selectEtlJob" resultType="etlJob">
+		select * from etl_job_module ejm inner join etl_job ej on ej.id = ejm.job_id
+		where ejm.module_code = #{module_code}
+	</select>
+
+	<!-- 查询总数 -->
+	<select id="totalByTopic" resultType="long">
+		select count(*)
+		from etl_module a inner join etl_job_module b on a.module_code = b.module_code
+		inner join etl_job c on c.id = b.job_id
+		<where>
+			<if test="topicId != null and topicId != ''">
+				c.topic_id = #{topicId}
+			</if>
+		</where>
+	</select>
+	<select id="totalByTopicDetail" resultMap="etlModuleMap">
+		select a.*, c.id as b_id,c.job_name as b_job_name,
+		       c.topic_id as b_topic_id, c.scheduler_id as b_scheduler_id,
+		       c.enabled as b_enabled, c.template_id as b_template_id, c.created_at as b_created_at ,
+		       c.updated_at as b_updated_at, c.published as b_published
+		from etl_module a inner join etl_job_module b on a.module_code = b.module_code
+		inner join etl_job c on c.id = b.job_id
+		<where>
+			<if test="topicId != null and topicId != ''">
+				c.topic_id = #{topicId}
+			</if>
+		</where>
+	</select>
+
+	<select id="totalOfFailure" resultType="long">
+		select count(*) from etl_logsummary where log_summary_start BETWEEN date_add(now(), interval -${day} day) and now()
+		                               and module_name in (
+			select a.module_code from etl_module a inner join etl_job_module b on a.module_code = b.module_code
+												   inner join etl_job c on c.id = b.job_id
+		<where>
+			<if test="topicId != null and topicId != ''">
+				 c.topic_id = #{topicId}
+			</if>
+		</where> )
+	</select>
+
+	<select id="totalOfFailureDetail" resultMap="etlModuleMap4Log">
+		select m.*, s.* from etl_logsummary s inner join etl_module m on s.module_name = m.module_code
+		where s.log_summary_start BETWEEN date_add(now(), interval -${day} day) and now()
+		and s.module_name in (
+		select b.module_code from etl_job_module b on a.module_code = b.module_code
+		inner join etl_job c on c.id = b.job_id
+		<where>
+			<if test="topicId != null and topicId != ''">
+				c.topic_id = #{topicId}
+			</if>
+		</where> )
+	</select>
+
+	<select id="totalOfOverTime" resultType="long">
+		select count(*) from etl_logsummary where TIMESTAMPDIFF(MINUTE,log_summary_start,now()) > ${minute} and status = 1 and module_name in (
+			select a.module_code from etl_module a inner join etl_job_module b on a.module_code = b.module_code
+												   inner join etl_job c on c.id = b.job_id
+		<where>
+			<if test="topicId != null and topicId != ''">
+				 c.topic_id = #{topicId}
+			</if>
+		</where>)
+	</select>
+
+	<select id="totalOfOverTimeDetail" resultMap="etlModuleMap4Log">
+		select m.*, s.* from etl_logsummary s inner join etl_module m on s.module_name = m.module_code
+			where TIMESTAMPDIFF(MINUTE,log_summary_start,now()) > ${minute} and status = 1 and s.module_name in (
+		select b.module_code from etl_job_module b
+		inner join etl_job c on c.id = b.job_id
+		<where>
+			<if test="topicId != null and topicId != ''">
+				c.topic_id = #{topicId}
+			</if>
+		</where>)
+	</select>
+
+	<select id="totalOfRunning" resultType="long">
+		select count(*) from etl_logsummary where status = 1 and module_name in (
+		select a.module_code from etl_module a inner join etl_job_module b on a.module_code = b.module_code
+		inner join etl_job c on c.id = b.job_id
+		<where>
+			<if test="topicId != null and topicId != ''">
+				 c.topic_id = #{topicId}
+			</if>
+		</where>)
+	</select>
+
+	<select id="totalOfRunningDetail" resultMap="etlModuleMap4Log">
+		select m.*, s.* from etl_logsummary s inner join etl_module m on s.module_name = m.module_code
+		where status = 1 and s.module_name in (
+		select b.module_code from etl_job_module b
+		inner join etl_job c on c.id = b.job_id
+		<where>
+			<if test="topicId != null and topicId != ''">
+				c.topic_id = #{topicId}
+			</if>
+		</where>)
+	</select>
+
+	<select id="totalOfRangeModule" resultType="long">
+		select count(*)
+		from etl_module a inner join etl_job_module b on a.module_code = b.module_code
+		inner join etl_job c on c.id = b.job_id
+		<where>
+			etl_type != 0
+			<if test="topicId != null and topicId != ''">
+				and c.topic_id = #{topicId}
+			</if>
+		</where>
+	</select>
+
+	<select id="totalOfRangeModuleDetail" resultMap="etlModuleMap">
+		select a.*, c.id as b_id,c.job_name as b_job_name,
+		c.topic_id as b_topic_id, c.scheduler_id as b_scheduler_id,
+		c.enabled as b_enabled, c.template_id as b_template_id, c.created_at as b_created_at ,
+		c.updated_at as b_updated_at, c.published as b_published
+		from etl_module a inner join etl_job_module b on a.module_code = b.module_code
+		inner join etl_job c on c.id = b.job_id
+		<where>
+			etl_type != 0
+			<if test="topicId != null and topicId != ''">
+				and c.topic_id = #{topicId}
+			</if>
+		</where>
+	</select>
+
+</mapper>

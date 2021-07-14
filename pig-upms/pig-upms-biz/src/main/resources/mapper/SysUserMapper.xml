@@ -31,6 +31,7 @@
 		<result column="udel_flag" property="delFlag"/>
 		<result column="deptId" property="deptId"/>
 		<result column="deptName" property="deptName"/>
+		<result column="sys_class" property="sysClass"/>
 		<collection property="roleList" ofType="com.pig4cloud.pig.admin.api.entity.SysRole"
 					select="com.pig4cloud.pig.admin.mapper.SysRoleMapper.listRolesByUserId" column="user_id">
 		</collection>
@@ -137,6 +138,7 @@
 		`user`.del_flag AS udel_flag,
 		`user`.lock_flag AS lock_flag,
 		`user`.dept_id AS deptId,
+		`user`.sys_class,
 		d.name AS deptName
 		FROM
 		sys_user AS `user`

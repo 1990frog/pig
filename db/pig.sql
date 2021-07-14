@@ -263,6 +263,7 @@ CREATE TABLE `sys_role` (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` datetime NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '删除标识（0-正常,1-删除）',
+  `sys_class` varchar(255) DEFAULT NULL COMMENT '系统分类(所属系统)',
   PRIMARY KEY (`role_id`),
   UNIQUE KEY `role_idx1_role_code` (`role_code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='系统角色表';
@@ -347,6 +348,7 @@ CREATE TABLE `sys_user` (
   `update_time` datetime NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   `lock_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '0-正常，9-锁定',
   `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '0-正常，1-删除',
+  `sys_class` varchar(255) DEFAULT NULL COMMENT '系统分类(所属系统)',
   PRIMARY KEY (`user_id`),
   KEY `user_idx1_username` (`username`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='用户表';

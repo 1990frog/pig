@@ -69,4 +69,6 @@ public class SysRole extends Model<SysRole> {
 	@TableLogic
 	private String delFlag;
 
+	@ApiModelProperty(value = "角色所属系统")
+	private String sysClass;
 }

@@ -93,6 +93,11 @@ public class UserVO implements Serializable {
 	private String deptName;
 
 	/**
+	 * 所属系统
+	 */
+	private String sysClass;
+
+	/**
 	 * 角色列表
 	 */
 	private List<SysRole> roleList;

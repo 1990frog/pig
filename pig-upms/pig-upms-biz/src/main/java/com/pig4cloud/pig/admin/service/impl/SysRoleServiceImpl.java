@@ -16,8 +16,11 @@
 
 package com.pig4cloud.pig.admin.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pig4cloud.pig.admin.api.dto.RoleMenuOperate;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
 import com.pig4cloud.pig.admin.mapper.SysRoleMapper;
@@ -45,6 +48,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
 	private final SysRoleMenuMapper sysRoleMenuMapper;
 
+	private final SysRoleMapper sysRoleMapper;
+
 	/**
 	 * 通过用户ID，查询角色信息
 	 * @param userId
@@ -66,6 +71,30 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	public Boolean removeRoleById(Integer id) {
 		sysRoleMenuMapper.delete(Wrappers.<SysRoleMenu>update().lambda().eq(SysRoleMenu::getRoleId, id));
 		return this.removeById(id);
+	}
+
+	@Override
+	@CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
+	@Transactional(rollbackFor = Exception.class)
+	public int operate(RoleMenuOperate roleMenuOperate) {
+		int[] count = {0};
+		List<RoleMenuOperate.Operate> operates = roleMenuOperate.getOperates();
+		operates.forEach(operate -> {
+			List<SysRoleMenu> list = operate.getList();
+			if(CollUtil.isNotEmpty((list))){
+				if(operate.getType() == 0){
+					list.forEach(record -> count[0]+=sysRoleMenuMapper.delete(new QueryWrapper<>(record)));
+				}else if(operate.getType() == 1){
+					list.forEach(record -> count[0]+=sysRoleMenuMapper.insert(record));
+				}
+			}
+		});
+		return count[0];
+	}
+
+	@Override
+	public int updateSelective(SysRole sysRole) {
+		return sysRoleMapper.updateSelective(sysRole);
 	}
 
 }

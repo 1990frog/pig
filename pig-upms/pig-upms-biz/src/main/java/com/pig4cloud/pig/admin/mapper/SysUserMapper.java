@@ -43,7 +43,7 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 	 * @param username 用户名
 	 * @return userVo
 	 */
-	UserVO getUserVoByUsername(String username);
+	UserVO getUserVoByUsername(String username,String sysCode);
 
 	/**
 	 * 分页查询用户信息（含角色）

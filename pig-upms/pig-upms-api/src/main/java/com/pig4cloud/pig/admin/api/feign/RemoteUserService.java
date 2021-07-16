@@ -40,8 +40,20 @@ public interface RemoteUserService {
 	 * @param from 调用标志
 	 * @return R
 	 */
+	@Deprecated
 	@GetMapping("/user/info/{username}")
 	R<UserInfo> info(@PathVariable("username") String username, @RequestHeader(SecurityConstants.FROM) String from);
+
+	/**
+	 * 通过用户名查询用户、角色信息
+	 * @param username 用户名
+	 * @param sysCode 系统标识
+	 * @param from 调用标志
+	 * @return R
+	 */
+	@GetMapping("/user/info/{username}/{sysCode}")
+	R<UserInfo> infoNew(@PathVariable("username") String username,@PathVariable("sysCode") String sysCode, @RequestHeader(SecurityConstants.FROM) String from);
+
 
 	/**
 	 * 通过社交账号查询用户、角色信息

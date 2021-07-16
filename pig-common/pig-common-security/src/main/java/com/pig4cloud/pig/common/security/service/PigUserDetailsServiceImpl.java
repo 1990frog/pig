@@ -30,6 +30,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -68,7 +69,10 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 		if (cache != null && cache.get(username) != null) {
 			return (PigUser) cache.get(username).get();
 		}
-
+//		String[] params = username.split("_");
+//		String name = params[0];
+//		String sysCode = params[1];
+//		R<UserInfo> result = remoteUserService.infoNew(name,sysCode, SecurityConstants.FROM_IN);
 		R<UserInfo> result = remoteUserService.info(username, SecurityConstants.FROM_IN);
 		UserDetails userDetails = getUserDetails(result);
 		if (cache != null) {
@@ -101,7 +105,7 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 		SysUser user = info.getSysUser();
 
 		// 构造security用户
-		return new PigUser(user.getUserId(), user.getDeptId(), user.getUsername(),
+		return new PigUser(user.getUserId(), user.getDeptId(),user.getSysClass(), user.getUsername(),
 				SecurityConstants.BCRYPT + user.getPassword(),
 				StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL), true, true, true, authorities);
 	}

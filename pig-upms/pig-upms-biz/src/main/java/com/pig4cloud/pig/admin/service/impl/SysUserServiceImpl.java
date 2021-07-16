@@ -17,6 +17,7 @@
 package com.pig4cloud.pig.admin.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -148,7 +149,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	 * @return Boolean
 	 */
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#sysUser.username")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#sysUser.username + '_' + #sysUser.sysClass")
 	public Boolean removeUserById(SysUser sysUser) {
 		sysUserRoleService.removeRoleByUserId(sysUser.getUserId());
 		this.removeById(sysUser.getUserId());
@@ -156,9 +157,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username + '_' + #userDto.sysClass")
 	public Boolean updateUserInfo(UserDTO userDto) {
-		UserVO userVO = baseMapper.getUserVoByUsername(userDto.getUsername());
+		UserVO userVO = baseMapper.getUserVoByUsername(userDto.getUsername(),userDto.getSysClass());
 
 		Assert.isTrue(ENCODER.matches(userDto.getPassword(), userVO.getPassword()), "原密码错误，修改失败");
 
@@ -173,7 +174,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username + '_' + #userDto.sysClass")
 	public Boolean updateUser(UserDTO userDto) {
 		SysUser sysUser = new SysUser();
 		BeanUtils.copyProperties(userDto, sysUser);
@@ -203,6 +204,41 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Override
 	public List<SysUser> listAncestorUsersByUsername(String username) {
 		SysUser sysUser = this.getOne(Wrappers.<SysUser>query().lambda().eq(SysUser::getUsername, username));
+
+		SysDept sysDept = sysDeptService.getById(sysUser.getDeptId());
+		if (sysDept == null) {
+			return null;
+		}
+
+		Integer parentId = sysDept.getParentId();
+		return this.list(Wrappers.<SysUser>query().lambda().eq(SysUser::getDeptId, parentId));
+	}
+
+	/**
+	 * 根据用户ID列表查询用户信息
+	 */
+	@Override
+	public List<UserVO> listUsersByUserIds(List<Integer> ids) {
+		List<UserVO> list = new ArrayList<>();
+		ids.forEach(id -> {
+			UserVO item= baseMapper.getUserVoById(id);
+			if(item != null){
+				list.add(item);
+			}
+		});
+		return list;
+	}
+
+	/**
+	 * 查询上级部门的用户信息
+	 * @param username 用户名
+	 * @return R
+	 */
+	@Override
+	public List<SysUser> listAncestorUsersByUsernameNew(String username, String sysClass) {
+		SysUser sysUser = this.getOne(Wrappers.<SysUser>query().lambda()
+				.eq(SysUser::getUsername, username)
+				.eq(SysUser::getSysClass, sysClass));
 
 		SysDept sysDept = sysDeptService.getById(sysUser.getDeptId());
 		if (sysDept == null) {

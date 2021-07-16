@@ -40,6 +40,11 @@ public class PigUser extends User {
 	 */
 	@Getter
 	private Integer deptId;
+	/**
+	 * 系统标识
+	 */
+	@Getter
+	String sysClass;
 
 	/**
 	 * Construct the <code>User</code> with the details required by
@@ -60,12 +65,13 @@ public class PigUser extends User {
 	 * @throws IllegalArgumentException if a <code>null</code> value was passed either as
 	 * a parameter or as an element in the <code>GrantedAuthority</code> collection
 	 */
-	public PigUser(Integer id, Integer deptId, String username, String password, boolean enabled,
+	public PigUser(Integer id, Integer deptId,String sysClass, String username, String password, boolean enabled,
 			boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked,
 			Collection<? extends GrantedAuthority> authorities) {
 		super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
 		this.id = id;
 		this.deptId = deptId;
+		this.sysClass = sysClass;
 	}
 
 }

@@ -81,7 +81,16 @@ public interface SysUserService extends IService<SysUser> {
 	 * @param username 用户名
 	 * @return R
 	 */
+	@Deprecated
 	List<SysUser> listAncestorUsersByUsername(String username);
+
+	/**
+	 * 查询上级部门的用户信息
+	 * @param username 用户名
+	 * @param sysClass 系统标识
+	 * @return R
+	 */
+	List<SysUser> listAncestorUsersByUsernameNew(String username,String sysClass);
 
 	/**
 	 * 保存用户信息
@@ -90,4 +99,12 @@ public interface SysUserService extends IService<SysUser> {
 	 */
 	Boolean saveUser(UserDTO userDto);
 
+	/**
+	 * @description 根据用户列表查询用户信息
+	 *
+	 * @author hexun
+	 * @param
+	 * @return
+	 */
+	List<UserVO> listUsersByUserIds(List<Integer> ids);
 }

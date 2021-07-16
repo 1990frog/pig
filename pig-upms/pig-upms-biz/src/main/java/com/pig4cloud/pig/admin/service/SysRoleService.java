@@ -17,6 +17,7 @@
 package com.pig4cloud.pig.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.pig4cloud.pig.admin.api.dto.RoleMenuOperate;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 
 import java.util.List;
@@ -45,4 +46,21 @@ public interface SysRoleService extends IService<SysRole> {
 	 */
 	Boolean removeRoleById(Integer id);
 
+	/**
+	 * @description 删除角色权限，与添加角色权限
+	 *
+	 * @author hexun
+	 * @param roleMenuOperate 操作内容
+	 * @return
+	 */
+    int operate(RoleMenuOperate roleMenuOperate);
+
+	/**
+	 * @description 根据角色信息
+	 *
+	 * @author hexun
+	 * @param sysRole 操作内容
+	 * @return
+	 */
+    int updateSelective(SysRole sysRole);
 }

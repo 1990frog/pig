@@ -105,6 +105,11 @@ public interface SecurityConstants {
 	String DETAILS_DEPT_ID = "dept_id";
 
 	/**
+	 * 用户名字段
+	 */
+	String DETAILS_SYS_CLASS = "sys_class";
+
+	/**
 	 * 协议字段
 	 */
 	String DETAILS_LICENSE = "license";

@@ -40,4 +40,11 @@ public interface SysRoleMapper extends BaseMapper<SysRole> {
 	 */
 	List<SysRole> listRolesByUserId(Integer userId);
 
+	/**
+	 * 通过角色ID，更新角色
+	 * @param sysRole
+	 * @return
+	 */
+	int updateSelective(SysRole sysRole);
+
 }

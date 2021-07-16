@@ -27,7 +27,7 @@
 		<result column="create_time" property="createTime"/>
 		<result column="update_time" property="updateTime"/>
 		<result column="del_flag" property="delFlag"/>
-		<result column="sys_class" property="sysClass"/>
+		<result column="sys_class" property="sysSystem"/>
 	</resultMap>
 
 	<!-- 通过用户ID，查询角色信息-->
@@ -37,4 +37,25 @@
         FROM
         sys_role r, sys_user_role ur WHERE r.role_id = ur.role_id AND r.del_flag = 0 and  ur.user_id IN (#{userId})
     </select>
+
+	<!--通过主键修改数据-->
+	<update id="updateSelective">
+		update sys_role
+		<set>
+			<if test="roleName != null and roleName != ''">
+				role_name = #{roleName},
+			</if>
+			<if test="roleCode != null and roleCode != ''">
+				role_code = #{roleCode},
+			</if>
+			<if test="roleDesc  != null  and roleCode != ''">
+				role_desc = #{roleDesc},
+			</if>
+			<if test="delFlag  != null  and delFlag != ''">
+				del_flag = #{delFlag},
+			</if>
+		</set>
+		where role_id = #{roleId}
+	</update>
+
 </mapper>

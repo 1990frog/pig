@@ -41,6 +41,7 @@
 	<resultMap id="userVoResultMap" type="com.pig4cloud.pig.admin.api.vo.UserVO">
 		<id column="user_id" property="userId"/>
 		<result column="username" property="username"/>
+		<result column="sys_class" property="sysClass"/>
 		<result column="password" property="password"/>
 		<result column="salt" property="salt"/>
 		<result column="phone" property="phone"/>
@@ -64,6 +65,7 @@
 	<sql id="userRoleSql">
 		`user`.user_id,
 		`user`.username,
+		`user`.sys_class,
 		`user`.`password`,
 		`user`.salt,
 		`user`.phone,
@@ -85,6 +87,7 @@
 	<sql id="userRoleDeptSql">
 		`user`.user_id,
 		`user`.username,
+		`user`.sys_class,
 		`user`.`password`,
 		`user`.salt,
 		`user`.phone,
@@ -110,7 +113,7 @@
 		sys_user AS `user`
 		LEFT JOIN sys_user_role AS ur ON ur.user_id = `user`.user_id
 		LEFT JOIN sys_role AS r ON r.role_id = ur.role_id
-		WHERE `user`.username = #{username}
+		WHERE `user`.username = #{username} AND `user`.sys_class = #{sysClass}
 	</select>
 
 	<select id="getUserVoById" resultMap="userVoResultMap">
@@ -129,6 +132,7 @@
 		SELECT
 		`user`.user_id,
 		`user`.username,
+		`user`.sys_class,
 		`user`.salt,
 		`user`.phone,
 		`user`.avatar,
@@ -147,6 +151,9 @@
 			`user`.del_flag = '0'
 			<if test="query.username != null and query.username != ''">
 				and `user`.username LIKE CONCAT('%',#{query.username},'%')
+			</if>
+			<if test="query.sysSystem != null and query.sysSystem != ''">
+				and `user`.sys_class LIKE CONCAT('%',#{query.sysSystem},'%')
 			</if>
 		</where>
 		ORDER BY `user`.create_time DESC

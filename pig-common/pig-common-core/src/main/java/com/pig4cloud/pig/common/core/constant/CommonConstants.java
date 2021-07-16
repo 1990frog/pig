@@ -92,4 +92,24 @@ public interface CommonConstants {
 	 */
 	String SIZE = "size";
 
+	enum System{
+
+		DZBL("DZBL","电子病例系统"),
+		HC("HC","核查系统");
+
+		private String sysCode;
+		private String sysName;
+
+		System(String sysCode,String sysName){
+			this.sysCode = sysCode;
+			this.sysName = sysName;
+		}
+		public String sysCode(){
+			return this.sysCode;
+		}
+		public String sysName(){
+			return this.sysName;
+		}
+	}
+
 }

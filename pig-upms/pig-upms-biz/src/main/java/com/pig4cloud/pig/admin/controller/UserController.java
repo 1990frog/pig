@@ -21,10 +21,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
+import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.service.SysUserService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.service.PigUser;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * @author lengleng
@@ -51,8 +54,12 @@ public class UserController {
 	 */
 	@GetMapping(value = { "/info" })
 	public R info() {
-		String username = SecurityUtils.getUser().getUsername();
-		SysUser user = userService.getOne(Wrappers.<SysUser>query().lambda().eq(SysUser::getUsername, username));
+		PigUser pigUser = SecurityUtils.getUser();
+		String username = pigUser.getUsername();
+		String sysCode = pigUser.getSysClass();
+		SysUser user = userService.getOne(Wrappers.<SysUser>query().lambda()
+				.eq(SysUser::getUsername, username)
+				.eq(SysUser::getSysClass,sysCode));
 		if (user == null) {
 			return R.failed("获取当前用户信息失败");
 		}
@@ -63,10 +70,27 @@ public class UserController {
 	 * 获取指定用户全部信息
 	 * @return 用户信息
 	 */
+	@Deprecated
 	@Inner
 	@GetMapping("/info/{username}")
 	public R info(@PathVariable String username) {
 		SysUser user = userService.getOne(Wrappers.<SysUser>query().lambda().eq(SysUser::getUsername, username));
+		if (user == null) {
+			return R.failed(String.format("用户信息为空 %s", username));
+		}
+		return R.ok(userService.getUserInfo(user));
+	}
+
+	/**
+	 * 获取指定用户全部信息
+	 * @return 用户信息
+	 */
+	@Inner
+	@GetMapping("/info/{username}/{sysClass}")
+	public R infoNew(@PathVariable String username, @PathVariable String sysClass) {
+		SysUser user = userService.getOne(Wrappers.<SysUser>query().lambda()
+				.eq(SysUser::getUsername, username)
+				.eq(SysUser::getSysClass, sysClass));
 		if (user == null) {
 			return R.failed(String.format("用户信息为空 %s", username));
 		}
@@ -88,10 +112,24 @@ public class UserController {
 	 * @param username 用户名
 	 * @return
 	 */
+	@Deprecated
 	@GetMapping("/details/{username}")
 	public R user(@PathVariable String username) {
 		SysUser condition = new SysUser();
 		condition.setUsername(username);
+		return R.ok(userService.getOne(new QueryWrapper<>(condition)));
+	}
+
+	/**
+	 * 根据用户名查询用户信息
+	 * @param username 用户名
+	 * @return
+	 */
+	@GetMapping("/details/{username}/{sysClass}/")
+	public R userNew(@PathVariable String username, @PathVariable String sysClass) {
+		SysUser condition = new SysUser();
+		condition.setUsername(username);
+		condition.setSysClass(sysClass);
 		return R.ok(userService.getOne(new QueryWrapper<>(condition)));
 	}
 
@@ -158,9 +196,27 @@ public class UserController {
 	 * @param username 用户名称
 	 * @return 上级部门用户列表
 	 */
+	@Deprecated
 	@GetMapping("/ancestor/{username}")
 	public R listAncestorUsers(@PathVariable String username) {
 		return R.ok(userService.listAncestorUsersByUsername(username));
 	}
 
+	/**
+	 * @param username 用户名称
+	 * @return 上级部门用户列表
+	 */
+	@GetMapping("/ancestor/{username}/{sysClass}/")
+	public R listAncestorUsersNew(@PathVariable String username, @PathVariable String sysClass) {
+		return R.ok(userService.listAncestorUsersByUsernameNew(username,sysClass));
+	}
+
+	/**
+	 * @param ids 用户ID列表
+	 * @return 根据用户ID列表查询用户信息
+	 */
+	@GetMapping("/list")
+	public R<List<UserVO>> listAncestorUsers(@RequestParam("ids") List<Integer> ids) {
+		return R.ok(userService.listUsersByUserIds(ids));
+	}
 }

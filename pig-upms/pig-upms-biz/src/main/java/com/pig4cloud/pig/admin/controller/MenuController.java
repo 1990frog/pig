@@ -127,4 +127,17 @@ public class MenuController {
 		return R.ok(sysMenuService.updateMenuById(sysMenu));
 	}
 
+
+	/**
+	 * 返回当前用户的所有菜单集合
+	 * @return 当前用户的菜单集合
+	 */
+	@GetMapping("/all")
+	public R getUserMenuAll() {
+		// 获取符合条件的菜单
+		Set<MenuVO> all = new HashSet<>();
+		SecurityUtils.getRoles().forEach(roleId -> all.addAll(sysMenuService.findMenuByRoleId(roleId)));
+		return R.ok(all);
+	}
+
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @Component
+@RefreshScope
 @ConfigurationProperties(prefix = "sso")
 public class SSOClientInfo {
 

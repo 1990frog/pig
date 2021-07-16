@@ -17,6 +17,7 @@
 package com.pig4cloud.pig.gateway.config;
 
 import com.pig4cloud.pig.gateway.handler.ImageCodeHandler;
+import com.pig4cloud.pig.gateway.handler.SSOConfigHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -39,10 +40,12 @@ public class RouterFunctionConfiguration {
 
 	private final ImageCodeHandler imageCodeHandler;
 
+	private final SSOConfigHandler ssoConfigHandler;
 	@Bean
 	public RouterFunction routerFunction() {
 		return RouterFunctions.route(
-				RequestPredicates.path("/code").and(RequestPredicates.accept(MediaType.TEXT_PLAIN)), imageCodeHandler);
+				RequestPredicates.path("/code").and(RequestPredicates.accept(MediaType.TEXT_PLAIN)), imageCodeHandler)
+				.andRoute(RequestPredicates.path("/sso").and(RequestPredicates.accept(MediaType.TEXT_PLAIN)),ssoConfigHandler);
 	}
 
 }

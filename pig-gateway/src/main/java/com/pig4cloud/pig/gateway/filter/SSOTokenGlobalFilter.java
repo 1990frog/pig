@@ -18,6 +18,7 @@
 
 package com.pig4cloud.pig.gateway.filter;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +27,6 @@ import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.gateway.sso.CustomAutoLogin;
 import com.pig4cloud.pig.gateway.sso.SSOClientInfo;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -52,7 +52,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author lengleng
@@ -92,11 +91,13 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-		if(!ssoClientInfo.isEnable()) {
+		ServerHttpRequest request = exchange.getRequest();
+		final String authorization = request.getHeaders().getFirst("Authorization");
+		if(!ssoClientInfo.isEnable()
+		|| StrUtil.startWith(authorization, "Bearer")) {
 			return chain.filter(exchange);
 		}
 		// sso 的token
-		ServerHttpRequest request = exchange.getRequest();
 		final String token = request.getHeaders().getFirst("token");
 		String errMsg = "无法验证token，请重新登录！";
 		if (!StringUtils.isEmpty(token)) {
@@ -105,10 +106,18 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 			if (userInfo != null && (userName = userInfo.get("Identity")) != null) {
 				final Map loginMap = autoLogin.login(String.valueOf(userName), ssoClientInfo.getCryptogram(), token);
 				if (loginMap != null) {
-					final ServerHttpRequest newRequest = request.mutate()
-						.headers(httpHeaders -> httpHeaders.add("Authorization", "Bearer "
-							+ Optional.ofNullable(loginMap.get("access_token")).orElse(""))).build();
-					return chain.filter(exchange.mutate().request(newRequest.mutate().build()).build());
+					ServerHttpResponse response = exchange.getResponse();
+					byte[] bits = new byte[0];
+					try {
+						bits = objectMapper.writeValueAsString(loginMap)
+								.getBytes(StandardCharsets.UTF_8);
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
+					DataBuffer buffer = response.bufferFactory().wrap(bits);
+					response.getHeaders().add("Content-Type", "text/json;charset=UTF-8");
+
+					return response.writeWith(Mono.just(buffer));
 				}
 			}else {
 				autoLogin.logout(request);
@@ -168,7 +177,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		final HttpEntity<String> entity = new HttpEntity<String>(headers);
 		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
 			HttpMethod.GET, entity, Map.class).getBody();
-		if(map != null && map.get("Username") != null) {
+		if(map != null && !map.keySet().isEmpty()) {
 			cache.put(token, map);
 		}
 		return map;

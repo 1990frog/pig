@@ -152,8 +152,8 @@
 			<if test="query.username != null and query.username != ''">
 				and `user`.username LIKE CONCAT('%',#{query.username},'%')
 			</if>
-			<if test="query.sysSystem != null and query.sysSystem != ''">
-				and `user`.sys_class LIKE CONCAT('%',#{query.sysSystem},'%')
+			<if test="query.sysClass != null and query.sysClass != ''">
+				and `user`.sys_class LIKE CONCAT('%',#{query.sysClass},'%')
 			</if>
 		</where>
 		ORDER BY `user`.create_time DESC

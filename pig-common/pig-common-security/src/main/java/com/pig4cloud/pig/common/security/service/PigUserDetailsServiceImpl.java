@@ -69,11 +69,10 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 		if (cache != null && cache.get(username) != null) {
 			return (PigUser) cache.get(username).get();
 		}
-//		String[] params = username.split("_");
-//		String name = params[0];
-//		String sysCode = params[1];
-//		R<UserInfo> result = remoteUserService.infoNew(name,sysCode, SecurityConstants.FROM_IN);
-		R<UserInfo> result = remoteUserService.info(username, SecurityConstants.FROM_IN);
+		String[] params = username.split("_");
+		String name = params[0];
+		String sysCode = params[1];
+		R<UserInfo> result = remoteUserService.infoNew(name,sysCode, SecurityConstants.FROM_IN);
 		UserDetails userDetails = getUserDetails(result);
 		if (cache != null) {
 			cache.put(username, userDetails);

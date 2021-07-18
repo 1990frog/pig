@@ -24,7 +24,7 @@
 		<version>3.1.0</version>
 	</parent>
 
-	<artifactId>pig-gateway-hx</artifactId>
+	<artifactId>pig-gateway</artifactId>
 	<packaging>jar</packaging>
 
 	<description>pig 服务网关，基于 spring cloud gateway</description>

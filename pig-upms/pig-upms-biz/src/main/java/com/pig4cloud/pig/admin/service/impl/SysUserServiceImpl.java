@@ -149,7 +149,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	 * @return Boolean
 	 */
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#sysUser.username + '_' + #sysUser.sysClass")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#sysUser.username + '@@' + #sysUser.sysClass")
 	public Boolean removeUserById(SysUser sysUser) {
 		sysUserRoleService.removeRoleByUserId(sysUser.getUserId());
 		this.removeById(sysUser.getUserId());
@@ -157,7 +157,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username + '_' + #userDto.sysClass")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username + '@@' + #userDto.sysClass")
 	public Boolean updateUserInfo(UserDTO userDto) {
 		UserVO userVO = baseMapper.getUserVoByUsername(userDto.getUsername(),userDto.getSysClass());
 
@@ -174,7 +174,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username + '_' + #userDto.sysClass")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username + '@@' + #userDto.sysClass")
 	public Boolean updateUser(UserDTO userDto) {
 		SysUser sysUser = new SysUser();
 		BeanUtils.copyProperties(userDto, sysUser);

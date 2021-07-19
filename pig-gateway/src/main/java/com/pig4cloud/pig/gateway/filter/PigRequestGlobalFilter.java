@@ -73,7 +73,7 @@ public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
 		URI uri = exchange.getRequest().getURI();
 		String queryParam = uri.getRawQuery();
 		Map<String, String> paramMap = HttpUtil.decodeParamMap(queryParam, CharsetUtil.CHARSET_UTF_8);
-		paramMap.put("username",paramMap.get("username") + "_" + sysClass);
+		paramMap.put("username",paramMap.get("username") + "@@" + sysClass);
 
 		// 判断是否跳过 下面的【2.重写部分】，避免由于系统使用contextPath后路由不到对应的路径
 		boolean skip = Boolean.parseBoolean(Optional.ofNullable(request.getHeaders().getFirst("skip")).orElse("false"));

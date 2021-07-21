@@ -16,8 +16,6 @@
 
 package com.pig4cloud.pig.gateway.filter;
 
-import cn.hutool.core.util.CharsetUtil;
-import cn.hutool.http.HttpUtil;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -26,12 +24,9 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -75,23 +70,6 @@ public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
 		String newPath = "/" + Arrays.stream(StringUtils.tokenizeToStringArray(rawPath, "/")).skip(1L)
 				.collect(Collectors.joining("/"));
 		ServerHttpRequest newRequest = request.mutate().path(newPath).build();
-
-		if(request.getURI().getPath().contains("oauth/token")){
-			URI uri = exchange.getRequest().getURI();
-			String queryParam = uri.getRawQuery();
-			Map<String, String> paramMap = HttpUtil.decodeParamMap(queryParam, CharsetUtil.CHARSET_UTF_8);
-			String sysClass = request.getHeaders().getFirst("sysClass");
-			// 没带系统，则默认以超管身份登录,登录系统为超管系统
-			// 非超管用户不能查看与编辑系统
-			if(sysClass == null){
-				sysClass = "SUPER";
-			}
-			paramMap.put("username",paramMap.get("username") + "@@" + sysClass);
-			URI newUri = UriComponentsBuilder.fromUri(uri).replaceQuery(HttpUtil.toParams(paramMap)).build(true)
-					.toUri();
-			newRequest = exchange.getRequest().mutate().path(newPath).uri(newUri).build();
-		}
-
 		exchange.getAttributes().put(GATEWAY_REQUEST_URL_ATTR, newRequest.getURI());
 
 		return chain.filter(exchange.mutate().request(newRequest.mutate().build()).build());

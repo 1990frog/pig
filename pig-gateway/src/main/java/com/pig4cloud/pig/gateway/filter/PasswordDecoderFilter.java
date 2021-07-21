@@ -76,6 +76,13 @@ public class PasswordDecoderFilter extends AbstractGatewayFilterFactory {
 			String queryParam = uri.getRawQuery();
 			Map<String, String> paramMap = HttpUtil.decodeParamMap(queryParam, CharsetUtil.CHARSET_UTF_8);
 
+			String sysClass = request.getHeaders().getFirst("sysClass");
+			if(sysClass == null){
+				log.error("登录错误，未指定目标系统");
+				return Mono.error(new Throwable("登录错误，未指定目标系统"));
+			}
+			paramMap.put("username",paramMap.get("username") + "@@" + sysClass);
+
 			String password = paramMap.get(PASSWORD);
 			if (StrUtil.isNotBlank(password)) {
 				try {

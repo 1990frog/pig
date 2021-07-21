@@ -125,7 +125,7 @@ public class UserController {
 	 * @param username 用户名
 	 * @return
 	 */
-	@GetMapping("/details/{username}/{sysClass}/")
+	@GetMapping("/details/{username}/{sysClass}")
 	public R userNew(@PathVariable String username, @PathVariable String sysClass) {
 		SysUser condition = new SysUser();
 		condition.setUsername(username);
@@ -206,7 +206,7 @@ public class UserController {
 	 * @param username 用户名称
 	 * @return 上级部门用户列表
 	 */
-	@GetMapping("/ancestor/{username}/{sysClass}/")
+	@GetMapping("/ancestor/{username}/{sysClass}")
 	public R listAncestorUsersNew(@PathVariable String username, @PathVariable String sysClass) {
 		return R.ok(userService.listAncestorUsersByUsernameNew(username,sysClass));
 	}

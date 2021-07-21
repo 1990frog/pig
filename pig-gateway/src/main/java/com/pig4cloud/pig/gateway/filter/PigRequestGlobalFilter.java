@@ -64,17 +64,6 @@ public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
 		ServerHttpRequest request = exchange.getRequest().mutate()
 				.headers(httpHeaders -> httpHeaders.remove(SecurityConstants.FROM)).build();
 
-		String sysClass = request.getHeaders().getFirst("sysClass");
-		// 没带系统，则默认以超管身份登录,登录系统为超管系统
-		// 非超管用户不能查看与编辑系统
-		if(sysClass == null){
-			sysClass = "SUPER";
-		}
-		URI uri = exchange.getRequest().getURI();
-		String queryParam = uri.getRawQuery();
-		Map<String, String> paramMap = HttpUtil.decodeParamMap(queryParam, CharsetUtil.CHARSET_UTF_8);
-		paramMap.put("username",paramMap.get("username") + "@@" + sysClass);
-
 		// 判断是否跳过 下面的【2.重写部分】，避免由于系统使用contextPath后路由不到对应的路径
 		boolean skip = Boolean.parseBoolean(Optional.ofNullable(request.getHeaders().getFirst("skip")).orElse("false"));
 		if(skip) {
@@ -85,11 +74,23 @@ public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
 		String rawPath = request.getURI().getRawPath();
 		String newPath = "/" + Arrays.stream(StringUtils.tokenizeToStringArray(rawPath, "/")).skip(1L)
 				.collect(Collectors.joining("/"));
-		//ServerHttpRequest newRequest = request.mutate().path(newPath).build();
+		ServerHttpRequest newRequest = request.mutate().path(newPath).build();
 
-		URI newUri = UriComponentsBuilder.fromUri(uri).replaceQuery(HttpUtil.toParams(paramMap)).build(true)
-				.toUri();
-		ServerHttpRequest newRequest = exchange.getRequest().mutate().path(newPath).uri(newUri).build();
+		if(request.getURI().getPath().contains("oauth/token")){
+			URI uri = exchange.getRequest().getURI();
+			String queryParam = uri.getRawQuery();
+			Map<String, String> paramMap = HttpUtil.decodeParamMap(queryParam, CharsetUtil.CHARSET_UTF_8);
+			String sysClass = request.getHeaders().getFirst("sysClass");
+			// 没带系统，则默认以超管身份登录,登录系统为超管系统
+			// 非超管用户不能查看与编辑系统
+			if(sysClass == null){
+				sysClass = "SUPER";
+			}
+			paramMap.put("username",paramMap.get("username") + "@@" + sysClass);
+			URI newUri = UriComponentsBuilder.fromUri(uri).replaceQuery(HttpUtil.toParams(paramMap)).build(true)
+					.toUri();
+			newRequest = exchange.getRequest().mutate().path(newPath).uri(newUri).build();
+		}
 
 		exchange.getAttributes().put(GATEWAY_REQUEST_URL_ATTR, newRequest.getURI());
 

@@ -51,7 +51,9 @@ import sun.misc.BASE64Encoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author lengleng
@@ -99,12 +101,15 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		}
 		// sso 的token
 		final String token = request.getHeaders().getFirst("token");
+		final String sysClass = request.getHeaders().getFirst("sysClass");
 		String errMsg = "无法验证token，请重新登录！";
 		if (!StringUtils.isEmpty(token)) {
-			final Map userInfo = getUser(token);
-			Object userName;
+			Map<String,String> appNameMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[0]));
+			Map<String,String> appCodeMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[1]));
+			final Map userInfo = getUser(token,appNameMap.get(sysClass),appCodeMap.get(sysClass));
+			Object userName ;
 			if (userInfo != null && (userName = userInfo.get("Identity")) != null) {
-				final Map loginMap = autoLogin.login(String.valueOf(userName), ssoClientInfo.getCryptogram(), token);
+				final Map loginMap = autoLogin.login(String.valueOf(ssoClientInfo.getDefaultUserCode()), ssoClientInfo.getCryptogram(), token,sysClass);
 				if (loginMap != null) {
 					ServerHttpResponse response = exchange.getResponse();
 					byte[] bits = new byte[0];
@@ -128,7 +133,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 				ServerHttpResponse response = exchange.getResponse();
 				R<String> result = new R<>();
 				result.setStatus(cn.hutool.http.HttpStatus.HTTP_UNAUTHORIZED);
-				result.setData(ssoClientInfo.getServerUrl());
+				result.setData(ssoClientInfo.getServerUrl() + appNameMap.get(sysClass));
 				result.setMessage(errMsg);
 
 				byte[] bits = new byte[0];
@@ -149,7 +154,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 
 	}
 
-	private Map getUser(String token) {
+	private Map getUser(String token,String appName,String appCode) {
 		final Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_CACHE);
 		if ( cache != null && cache.get(token) != null) {
 			return (Map) cache.get(token).get();
@@ -160,7 +165,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		//header = Base64(AppName)|TimeStamp|Sign
 		//Sign= MD5(Base64(AppName)|AppCode|TimeStamp|Token)
 		BASE64Encoder encoder = new BASE64Encoder();
-		byte[] textByte = ssoClientInfo.getAppName().getBytes(StandardCharsets.UTF_8);
+		byte[] textByte = appName.getBytes(StandardCharsets.UTF_8);
 		String base64AppName = encoder.encode(textByte);
 
 		//初始化LocalDateTime对象
@@ -168,7 +173,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		//初始化LocalDateTime对象
 		LocalDateTime localDateTime = LocalDateTime.now();
 		long TimeStamp = localDateTime.toEpochSecond(zoneOffset);
-		String buffer = base64AppName + "|" + ssoClientInfo.getAppCode() + "|" + TimeStamp + "|" + token;
+		String buffer = base64AppName + "|" + appCode + "|" + TimeStamp + "|" + token;
 		String Sign = SecureUtil.md5(buffer);
 		String header = base64AppName + "|" + TimeStamp + "|" + Sign;
 

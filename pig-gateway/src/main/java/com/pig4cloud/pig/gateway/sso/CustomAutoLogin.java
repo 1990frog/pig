@@ -35,7 +35,7 @@ public class CustomAutoLogin {
 
 	private final CacheManager cacheManager;
 
-	public Map login(String username,String password, String token) {
+	public Map login(String username,String password, String token,String sysClass) {
 		String cacheKey = "user:" + token;
 		final Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_CACHE);
 		if(cache != null && cache.get(cacheKey) != null) {
@@ -49,6 +49,7 @@ public class CustomAutoLogin {
 		formData.add("grant_type", "password");
 
 		HttpHeaders headers = new HttpHeaders();
+		headers.add("sysClass",sysClass);
 		headers.set("Authorization", getAuthorizationHeader("test", "test"));
 		Map<String, Object> map = postForMap(ssoClientInfo.getOauthTokenUrl(), formData, headers);
 		if(map != null && !map.isEmpty()) {
@@ -84,13 +85,18 @@ public class CustomAutoLogin {
 
 	private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
 		if (headers.getContentType() == null) {
-			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+			//headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+			headers.setContentType(MediaType.APPLICATION_JSON);
 		}
-		@SuppressWarnings("rawtypes")
-		Map map = restTemplate.exchange(path, HttpMethod.POST,
-			new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
-		@SuppressWarnings("unchecked")
-		Map<String, Object> result = map;
-		return result;
+		StringBuilder builder = new StringBuilder("?");
+		formData.forEach((key,value)->{
+			builder.append(key)
+					.append("=")
+					.append(value.get(0))
+					.append("&");
+		});
+		String queryPath = path + builder.toString().substring(0,builder.length() - 1);
+		return restTemplate.exchange(queryPath, HttpMethod.POST,
+				new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
 	}
 }

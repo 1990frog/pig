@@ -110,4 +110,10 @@ public class SysUser implements Serializable {
 	@ApiModelProperty(value = "所属系统")
 	private String sysClass;
 
+	/**
+	 * 邮箱
+	 */
+	@ApiModelProperty(value = "邮箱")
+	private String email;
+
 }

@@ -102,6 +102,7 @@ public class UserController {
 	 * @param id ID
 	 * @return 用户信息
 	 */
+	@Inner
 	@GetMapping("/{id}")
 	public R user(@PathVariable Integer id) {
 		return R.ok(userService.getUserVoById(id));
@@ -176,6 +177,7 @@ public class UserController {
 	 * @param userDTO 查询参数列表
 	 * @return 用户集合
 	 */
+	@Inner
 	@GetMapping("/page")
 	public R getUserPage(Page page, UserDTO userDTO) {
 		return R.ok(userService.getUserWithRolePage(page, userDTO));
@@ -219,4 +221,5 @@ public class UserController {
 	public R<List<UserVO>> listAncestorUsers(@RequestParam("ids") List<Integer> ids) {
 		return R.ok(userService.listUsersByUserIds(ids));
 	}
+
 }

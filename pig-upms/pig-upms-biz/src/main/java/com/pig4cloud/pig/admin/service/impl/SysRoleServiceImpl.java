@@ -97,4 +97,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 		return sysRoleMapper.updateSelective(sysRole);
 	}
 
+	@Override
+	public List<SysRole> getRoleList(String sysClass) {
+		return sysRoleMapper.selectList(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getSysClass,sysClass));
+	}
+
 }

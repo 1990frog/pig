@@ -71,7 +71,6 @@ public class UserController {
 	 * @return 用户信息
 	 */
 	@Deprecated
-	@Inner
 	@GetMapping("/info/{username}")
 	public R info(@PathVariable String username) {
 		SysUser user = userService.getOne(Wrappers.<SysUser>query().lambda().eq(SysUser::getUsername, username));
@@ -102,7 +101,6 @@ public class UserController {
 	 * @param id ID
 	 * @return 用户信息
 	 */
-	@Inner
 	@GetMapping("/{id}")
 	public R user(@PathVariable Integer id) {
 		return R.ok(userService.getUserVoById(id));
@@ -182,6 +180,7 @@ public class UserController {
 	public R getUserPage(Page page, UserDTO userDTO) {
 		return R.ok(userService.getUserWithRolePage(page, userDTO));
 	}
+
 
 	/**
 	 * 修改个人信息

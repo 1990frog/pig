@@ -2,17 +2,22 @@ package com.pig4cloud.pig.admin.controller.inner;
 
 import com.pig4cloud.pig.admin.api.condition.QueryRoleCondition;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
+import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.service.SysInnerService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.security.annotation.Inner;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 /**
  * @ClassName InnerController
@@ -58,14 +63,14 @@ public class InnerController {
 	// 新增用户
 	@Inner
 	@PostMapping(path = "/user/add")
-	public R addUser(UserDTO userDTO) {
+	public R addUser(@RequestBody UserDTO userDTO) {
 		return R.ok(sysInnerService.addUser(userDTO));
 	}
 
 	// 新增用户
 	@Inner
 	@PostMapping(path = "/user/update")
-	public R updateUser(UserDTO userDTO) {
+	public R updateUser(@RequestBody UserDTO userDTO) {
 		return R.ok(sysInnerService.updateUser(userDTO));
 	}
 
@@ -73,5 +78,25 @@ public class InnerController {
 	@PostMapping(path = "/user/roleInfo")
 	public R findUserRoleInfo(@RequestBody QueryRoleCondition condition) {
 		return R.ok(sysInnerService.findUserRoleInfo(condition.getUserIds()));
+	}
+
+	@Inner
+	@DeleteMapping(path = "/user/{userId}")
+	public R findUserRoleInfo(@PathVariable(value = "id") Integer id) {
+		return R.ok(sysInnerService.deleteUserByUserId(id));
+	}
+
+	@Inner
+	@PostMapping(path = "/role/add")
+	//@PreAuthorize("@pms.hasPermission('sys_role_del')")
+	public R saveRole(@Valid @RequestBody SysRole sysRole) {
+		return R.ok(sysInnerService.addRole(sysRole));
+	}
+
+	@Inner
+	@PostMapping(path = "/role/update")
+	//@PreAuthorize("@pms.hasPermission('sys_role_del')")
+	public R updateRole(@RequestBody SysRole sysRole) {
+		return R.ok(sysInnerService.updateRole(sysRole));
 	}
 }

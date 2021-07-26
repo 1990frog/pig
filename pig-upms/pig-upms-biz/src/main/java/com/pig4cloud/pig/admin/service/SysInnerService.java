@@ -73,4 +73,22 @@ public interface SysInnerService {
 	 * @return
 	 */
 	List<UserRoleDTO> findUserRoleInfo(List<Integer> userIds);
+
+	/**
+	 * 内部删除用户
+	 *
+	 * @param userId
+	 * @return
+	 */
+	Boolean deleteUserByUserId(Integer userId);
+
+	/**
+	 * 内部使用
+	 */
+	SysRole addRole(SysRole sysRole);
+
+	/**
+	 * 内部使用
+	 */
+	Boolean updateRole(SysRole sysRole);
 }

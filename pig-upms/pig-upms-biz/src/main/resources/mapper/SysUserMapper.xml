@@ -24,6 +24,7 @@
 		<result column="password" property="password"/>
 		<result column="salt" property="salt"/>
 		<result column="phone" property="phone"/>
+		<result column="email" property="email"/>
 		<result column="avatar" property="avatar"/>
 		<result column="ucreate_time" property="createTime"/>
 		<result column="uupdate_time" property="updateTime"/>
@@ -135,6 +136,7 @@
 		`user`.sys_class,
 		`user`.salt,
 		`user`.phone,
+		`user`.email,
 		`user`.avatar,
 		`user`.dept_id,
 		`user`.create_time AS ucreate_time,
@@ -154,6 +156,9 @@
 			</if>
 			<if test="query.sysClass != null and query.sysClass != ''">
 				and `user`.sys_class LIKE CONCAT('%',#{query.sysClass},'%')
+			</if>
+			<if test="query.keyword != null and query.keyword != ''">
+				and CONCAT(`user`.username,`user`.phone,`user`.email) LIKE CONCAT('%',#{query.keyword},'%')
 			</if>
 		</where>
 		ORDER BY `user`.create_time DESC

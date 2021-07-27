@@ -2,6 +2,7 @@ package com.pig4cloud.pig.admin.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.condition.QueryRoleCondition;
@@ -189,10 +190,8 @@ public class SysInnerServiceImpl implements SysInnerService {
 			return false;
 		}
 		// 先干掉，再批量增加
-		boolean remove = sysRoleMenuService.lambdaUpdate().eq(SysRoleMenu::getRoleId, condition.getRoleId()).remove();
-		if (!remove) {
-			return remove;
-		}
+		sysRoleMenuService.lambdaUpdate().eq(SysRoleMenu::getRoleId, condition.getRoleId()).remove();
+
 		List<SysRoleMenu> entityList = new ArrayList<>();
 		for (Integer menuId : allMenuId) {
 			SysRoleMenu sysRoleMenu = new SysRoleMenu();
@@ -307,6 +306,32 @@ public class SysInnerServiceImpl implements SysInnerService {
 			result.add(userRoleDTO);
 		}
 		return result;
+	}
+
+	@Override
+	public Boolean deleteUserByUserId(Integer userId) {
+		SysUser sysUser = new SysUser();
+		sysUser.setUserId(userId);
+		// 删除用户和角色的绑定
+		sysUserRoleService.removeRoleByUserId(userId);
+		return sysUserService.remove(new QueryWrapper<>(sysUser));
+	}
+
+	@Override
+	public SysRole addRole(SysRole sysRole) {
+		boolean save = sysRoleService.save(sysRole);
+		if (!save) {
+			return null;
+		}
+		SysRole condition = new SysRole();
+		condition.setRoleCode(sysRole.getRoleCode());
+		return sysRoleService.getOne(new QueryWrapper<>(condition));
+	}
+
+	@Override
+	public Boolean updateRole(SysRole sysRole) {
+		boolean save = sysRoleService.updateById(sysRole);
+		return save;
 	}
 
 	private void processChild(Set<Integer> allMenuId, Map<Integer, List<SysMenu>> collect, SysMenu sysMenu) {

@@ -63,4 +63,11 @@ public interface SysRoleService extends IService<SysRole> {
 	 * @return
 	 */
     int updateSelective(SysRole sysRole);
+
+	/**
+	 * 根据系统查询角色
+	 * @param sysClass
+	 * @return
+	 */
+	List<SysRole> getRoleList(String sysClass);
 }

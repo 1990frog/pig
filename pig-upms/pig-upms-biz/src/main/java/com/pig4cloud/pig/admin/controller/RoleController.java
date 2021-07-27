@@ -26,6 +26,7 @@ import com.pig4cloud.pig.admin.service.SysRoleMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.annotation.Inner;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -160,6 +161,16 @@ public class RoleController {
 	@PreAuthorize("@pms.hasPermission('sys_role_del') and @pms.hasPermission('sys_role_add')")
 	public R operate(@Valid @RequestBody RoleMenuOperate roleMenuOperate) {
 		return R.ok(sysRoleService.operate(roleMenuOperate));
+	}
+
+	/**
+	 * 获取角色列表
+	 * @return 角色列表
+	 */
+	@Inner
+	@GetMapping("/list/{sysClass}")
+	public R getRoleList(@PathVariable("sysClass") String sysClass){
+		return R.ok(sysRoleService.getRoleList(sysClass));
 	}
 
 }

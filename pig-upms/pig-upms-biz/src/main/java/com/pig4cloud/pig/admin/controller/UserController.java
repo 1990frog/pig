@@ -71,7 +71,6 @@ public class UserController {
 	 * @return 用户信息
 	 */
 	@Deprecated
-	@Inner
 	@GetMapping("/info/{username}")
 	public R info(@PathVariable String username) {
 		SysUser user = userService.getOne(Wrappers.<SysUser>query().lambda().eq(SysUser::getUsername, username));
@@ -176,10 +175,12 @@ public class UserController {
 	 * @param userDTO 查询参数列表
 	 * @return 用户集合
 	 */
+	@Inner
 	@GetMapping("/page")
 	public R getUserPage(Page page, UserDTO userDTO) {
 		return R.ok(userService.getUserWithRolePage(page, userDTO));
 	}
+
 
 	/**
 	 * 修改个人信息
@@ -219,4 +220,5 @@ public class UserController {
 	public R<List<UserVO>> listAncestorUsers(@RequestParam("ids") List<Integer> ids) {
 		return R.ok(userService.listUsersByUserIds(ids));
 	}
+
 }

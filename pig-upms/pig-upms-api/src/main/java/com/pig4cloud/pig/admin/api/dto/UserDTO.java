@@ -42,4 +42,9 @@ public class UserDTO extends SysUser {
 	 */
 	private String newpassword1;
 
+	/**
+	 * 模糊查询关键字
+	 */
+	private String keyword;
+
 }

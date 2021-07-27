@@ -1,15 +1,24 @@
 package com.pig4cloud.pig.gateway.sso;
 
-import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.nacos.common.http.HttpClientFactory;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.HttpEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.stereotype.Component;
@@ -18,7 +27,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Liaopan on 2020-08-25.
@@ -51,6 +64,7 @@ public class CustomAutoLogin {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("sysClass",sysClass);
 		headers.set("Authorization", getAuthorizationHeader("test", "test"));
+		headers.set("Connection", "Close");
 		Map<String, Object> map = postForMap(ssoClientInfo.getOauthTokenUrl(), formData, headers);
 		if(map != null && !map.isEmpty()) {
 			cache.put(cacheKey, map);
@@ -84,10 +98,6 @@ public class CustomAutoLogin {
 	}
 
 	private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
-		if (headers.getContentType() == null) {
-			//headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-			headers.setContentType(MediaType.APPLICATION_JSON);
-		}
 		StringBuilder builder = new StringBuilder("?");
 		formData.forEach((key,value)->{
 			builder.append(key)
@@ -96,7 +106,44 @@ public class CustomAutoLogin {
 					.append("&");
 		});
 		String queryPath = path + builder.toString().substring(0,builder.length() - 1);
-		return restTemplate.exchange(queryPath, HttpMethod.POST,
-				new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
+		return post(queryPath,headers);
+//		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+//		factory.setConnectTimeout(3000);
+//		factory.setReadTimeout(3000);
+//		restTemplate.setRequestFactory(factory);
+//		return restTemplate.exchange(queryPath, HttpMethod.POST,
+//				new HttpEntity<MultiValueMap<String, String>>(null, headers), Map.class).getBody();
+	}
+
+	@SneakyThrows
+	private Map<String,Object> post(String path, HttpHeaders headers){
+		HttpEntity httpEntity = null;
+		HttpPost httpPost = null;
+		try{
+			RequestConfig defaultRequestConfig = RequestConfig.custom()
+					.setSocketTimeout(5000)
+					.setConnectTimeout(5000)
+					.setConnectionRequestTimeout(5000)
+					.build();
+			CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).build();
+			httpPost = new HttpPost(path);
+			Set<Map.Entry<String, List<String>>> sets = headers.entrySet();
+			Iterator<Map.Entry<String, List<String>>> it = sets.iterator();
+			while (it.hasNext()) {
+				Map.Entry<String, List<String>> header = it.next();
+				httpPost.setHeader(header.getKey(), header.getValue().get(0));
+			}
+			log.info("[{}]-sso内部登录请求:[{}]", LocalDateTime.now().toString(), JSON.toJSONString(httpPost));
+			HttpResponse httpResponse = httpClient.execute(httpPost);
+			httpEntity= httpResponse.getEntity();
+
+			String resultString = EntityUtils.toString(httpEntity, "utf-8");
+			return JSON.parseObject(resultString,Map.class);
+		}finally {
+			EntityUtils.consumeQuietly(httpEntity);
+			if(httpPost != null){
+				httpPost.releaseConnection();
+			}
+		}
 	}
 }

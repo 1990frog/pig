@@ -18,7 +18,9 @@ package com.pig4cloud.pig.auth.endpoint;
 
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.auth.config.CustomConfig;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
@@ -49,6 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,6 +72,8 @@ public class PigTokenEndpoint {
 	private final RedisTemplate redisTemplate;
 
 	private final CacheManager cacheManager;
+
+	private final CustomConfig customConfig;
 
 	/**
 	 * 认证页面
@@ -199,6 +204,17 @@ public class PigTokenEndpoint {
 			log.error("关闭cursor 失败");
 		}
 		return result;
+	}
+
+	@GetMapping("innerLogin")
+	public Object login(@RequestParam String username,@RequestParam String password,
+						@RequestParam String grant_type,@RequestParam String scope){
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("username",username);
+		parameters.put("password",password);
+		parameters.put("grant_type",grant_type);
+		parameters.put("scope",scope);
+		return customConfig.initToken(parameters);
 	}
 
 }

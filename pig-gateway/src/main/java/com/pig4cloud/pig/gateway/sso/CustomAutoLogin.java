@@ -1,7 +1,6 @@
 package com.pig4cloud.pig.gateway.sso;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.nacos.common.http.HttpClientFactory;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -17,21 +16,19 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Liaopan on 2020-08-25.
@@ -55,21 +52,35 @@ public class CustomAutoLogin {
 			return (Map) cache.get(cacheKey).get();
 		}
 
-		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
-		formData.add("username", username);
-		formData.add("password", password);
-		formData.add("scope", "server");
-		formData.add("grant_type", "password");
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("sysClass",sysClass);
-		headers.set("Authorization", getAuthorizationHeader("test", "test"));
-		headers.set("Connection", "Close");
-		Map<String, Object> map = postForMap(ssoClientInfo.getOauthTokenUrl(), formData, headers);
-		if(map != null && !map.isEmpty()) {
-			cache.put(cacheKey, map);
+		MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+		parameters.add("username",username+"@@"+sysClass);
+		parameters.add("password",password);
+		parameters.add("grant_type","password");
+		parameters.add("scope","server");
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(ssoClientInfo.getOauthTokenUrl());
+		URI uri = builder.queryParams(parameters).build().encode().toUri();
+		ResponseEntity<Map> forEntity = restTemplate.getForEntity(uri, Map.class);
+		if(forEntity.getBody() == null){
+			return null;
 		}
-		return map;
+		return forEntity.getBody();
+
+//		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
+//		formData.add("username", username);
+//		formData.add("password", password);
+//		formData.add("scope", "server");
+//		formData.add("grant_type", "password");
+//		formData.add("random",String.valueOf(System.currentTimeMillis()));
+//
+//		HttpHeaders headers = new HttpHeaders();
+//		headers.add("sysClass",sysClass);
+//		headers.set("Authorization", getAuthorizationHeader("test", "test"));
+//		headers.set("Connection", "Close");
+//		Map<String, Object> map = postForMap(ssoClientInfo.getOauthTokenUrl(), formData, headers);
+//		if(map != null && !map.isEmpty()) {
+//			cache.put(cacheKey, map);
+//		}
+//		return map;
 	}
 
 	public void logout(ServerHttpRequest request) {
@@ -108,8 +119,8 @@ public class CustomAutoLogin {
 		String queryPath = path + builder.toString().substring(0,builder.length() - 1);
 		return post(queryPath,headers);
 //		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-//		factory.setConnectTimeout(3000);
-//		factory.setReadTimeout(3000);
+//		factory.setConnectTimeout(5000);
+//		factory.setReadTimeout(5000);
 //		restTemplate.setRequestFactory(factory);
 //		return restTemplate.exchange(queryPath, HttpMethod.POST,
 //				new HttpEntity<MultiValueMap<String, String>>(null, headers), Map.class).getBody();

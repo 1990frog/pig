@@ -44,10 +44,11 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 	@Override
 	@SneakyThrows
 	protected void configure(HttpSecurity http) {
-		http.formLogin().loginPage("/token/login").loginProcessingUrl("/token/form")
+		http.formLogin()
+				.loginPage("/token/login").loginProcessingUrl("/token/form")
 				.failureHandler(authenticationFailureHandler()).and().logout()
 				.logoutSuccessHandler(logoutSuccessHandler()).deleteCookies("JSESSIONID").invalidateHttpSession(true)
-				.and().authorizeRequests().antMatchers("/token/**", "/actuator/**", "/mobile/**").permitAll()
+				.and().authorizeRequests().antMatchers("/token/**", "/actuator/**", "/mobile/**", "/abc/**").permitAll()
 				.anyRequest().authenticated().and().csrf().disable();
 	}
 

@@ -23,8 +23,10 @@ import com.pig4cloud.pig.common.security.service.PigClientDetailsService;
 import com.pig4cloud.pig.common.security.service.PigUser;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,12 +37,20 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.CompositeTokenGranter;
+import org.springframework.security.oauth2.provider.OAuth2RequestFactory;
+import org.springframework.security.oauth2.provider.TokenGranter;
+import org.springframework.security.oauth2.provider.refresh.RefreshTokenGranter;
+import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +69,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 	private final AuthenticationManager authenticationManager;
 
 	private final RedisConnectionFactory redisConnectionFactory;
+	private AuthorizationServerEndpointsConfigurer endpoints;
 
 	@Override
 	@SneakyThrows
@@ -81,6 +92,17 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 				.authenticationManager(authenticationManager).reuseRefreshTokens(false)
 				.pathMapping("/oauth/confirm_access", "/token/confirm_access")
 				.exceptionTranslator(new PigWebResponseExceptionTranslator());
+
+//		List<TokenGranter> tokenGranters = new ArrayList<>();
+//		tokenGranters
+//				.add(new PasswordTokenGranter(authenticationManager,
+//						endpoints.getTokenServices(), endpoints.getClientDetailsService(),
+//						endpoints.getOAuth2RequestFactory()));
+//		tokenGranters.add(new RefreshTokenGranter(endpoints.getTokenServices(),
+//				endpoints.getClientDetailsService(),
+//				endpoints.getOAuth2RequestFactory()));
+//		endpoints.tokenGranter(new CompositeTokenGranter(tokenGranters));
+		this.endpoints = endpoints;
 	}
 
 	@Bean
@@ -105,4 +127,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 		};
 	}
 
+	public AuthorizationServerEndpointsConfigurer getEndpoints() {
+		return endpoints;
+	}
 }

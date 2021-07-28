@@ -24,9 +24,8 @@ public class PasswordTokenGranter extends ResourceOwnerPasswordTokenGranter {
 		Map<String, String> parameters = new LinkedHashMap(tokenRequest.getRequestParameters());
 		String username = (String)parameters.get("username");
 		String password = (String)parameters.get("password");
-		String sysClass = (String)parameters.get("sysClass");
 		parameters.remove("password");
-		Authentication userAuth = new UsernamePasswordAuthenticationToken(username+"_"+sysClass, password);
+		Authentication userAuth = new UsernamePasswordAuthenticationToken(username, password);
 		((AbstractAuthenticationToken)userAuth).setDetails(parameters);
 
 		try {

@@ -46,6 +46,7 @@
 		<result column="password" property="password"/>
 		<result column="salt" property="salt"/>
 		<result column="phone" property="phone"/>
+		<result column="email" property="email"/>
 		<result column="avatar" property="avatar"/>
 		<result column="ucreate_time" property="createTime"/>
 		<result column="uupdate_time" property="updateTime"/>
@@ -70,6 +71,7 @@
 		`user`.`password`,
 		`user`.salt,
 		`user`.phone,
+		`user`.email,
 		`user`.avatar,
 		`user`.dept_id,
 		`user`.create_time AS ucreate_time,
@@ -92,6 +94,7 @@
 		`user`.`password`,
 		`user`.salt,
 		`user`.phone,
+		`user`.email,
 		`user`.avatar,
 		`user`.create_time AS ucreate_time,
 		`user`.update_time AS uupdate_time,

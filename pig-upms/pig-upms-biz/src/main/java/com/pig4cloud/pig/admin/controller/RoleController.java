@@ -33,6 +33,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * @author lengleng
@@ -169,8 +170,8 @@ public class RoleController {
 	 */
 	@Inner
 	@GetMapping("/list/{sysClass}")
-	public R getRoleList(@PathVariable("sysClass") String sysClass){
-		return R.ok(sysRoleService.getRoleList(sysClass));
+	public List<SysRole> getRoleList(@PathVariable("sysClass") String sysClass){
+		return sysRoleService.getRoleList(sysClass);
 	}
 
 }

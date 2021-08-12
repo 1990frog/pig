@@ -1,19 +1,17 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.common.security.component;
@@ -23,6 +21,7 @@ import com.pig4cloud.pig.common.security.exception.InvalidException;
 import com.pig4cloud.pig.common.security.exception.MethodNotAllowed;
 import com.pig4cloud.pig.common.security.exception.PigAuth2Exception;
 import com.pig4cloud.pig.common.security.exception.ServerErrorException;
+import com.pig4cloud.pig.common.security.exception.TokenInvalidException;
 import com.pig4cloud.pig.common.security.exception.UnauthorizedException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +32,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.DefaultThrowableAnalyzer;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.ClientAuthenticationException;
-import org.springframework.security.oauth2.common.exceptions.InsufficientScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
-import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.security.oauth2.common.exceptions.*;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -73,6 +69,13 @@ public class PigWebResponseExceptionTranslator implements WebResponseExceptionTr
 				causeChain);
 		if (ase != null) {
 			return handleOAuth2Exception(new InvalidException(ase.getMessage(), ase));
+		}
+
+		// token 过期 特殊处理 返回 424 不是 401
+		ase = (InvalidTokenException) throwableAnalyzer.getFirstThrowableOfType(InvalidTokenException.class,
+				causeChain);
+		if (ase != null) {
+			return handleOAuth2Exception(new TokenInvalidException(ase.getMessage(), ase));
 		}
 
 		ase = (HttpRequestMethodNotSupportedException) throwableAnalyzer

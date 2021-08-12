@@ -1,69 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ /*
-  ~  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
-  ~  *  <p>
-  ~  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
-  ~  *  you may not use this file except in compliance with the License.
-  ~  *  You may obtain a copy of the License at
-  ~  *  <p>
-  ~  * https://www.gnu.org/licenses/lgpl.html
-  ~  *  <p>
-  ~  * Unless required by applicable law or agreed to in writing, software
-  ~  * distributed under the License is distributed on an "AS IS" BASIS,
-  ~  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~  * See the License for the specific language governing permissions and
-  ~  * limitations under the License.
-  ~  */
+  ~ Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
   -->
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
+		<!-- 源码: https://gitee.com/log4j/pig-cloud-dependencies-parent -->
 		<groupId>com.pig4cloud</groupId>
 		<artifactId>pig-cloud-dependencies-parent</artifactId>
-		<version>Hoxton.SR5</version>
+		<version>3.3.0</version>
 	</parent>
 
 	<groupId>com.pig4cloud</groupId>
 	<artifactId>pig</artifactId>
-	<version>2.8.0</version>
 	<name>${project.artifactId}</name>
+	<version>3.3.0</version>
 	<packaging>pom</packaging>
 	<url>https://www.pig4cloud.com</url>
 
 	<properties>
-		<spring-boot.version>2.3.1.RELEASE</spring-boot.version>
-		<spring-cloud.version>Hoxton.SR5</spring-cloud.version>
-		<spring-cloud-alibaba.version>2.2.1.RELEASE</spring-cloud-alibaba.version>
+		<spring-boot.version>2.5.3</spring-boot.version>
+		<spring-cloud.version>2020.0.3</spring-cloud.version>
+		<spring-cloud-alibaba.version>2021.1</spring-cloud-alibaba.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<git.commit.plugin>2.2.5</git.commit.plugin>
-		<spring.checkstyle.plugin>0.0.22</spring.checkstyle.plugin>
-		<spring-boot-admin.version>2.2.3</spring-boot-admin.version>
-		<hutool.version>5.3.8</hutool.version>
-		<mybatis-plus.version>3.3.2</mybatis-plus.version>
-		<dynamic-ds.version>3.0.0</dynamic-ds.version>
-		<kaptcha.version>0.0.9</kaptcha.version>
+		<spring-boot-admin.version>2.4.3</spring-boot-admin.version>
+		<hutool.version>5.7.7</hutool.version>
+		<mybatis-plus.version>3.4.3</mybatis-plus.version>
+		<dynamic-ds.version>3.4.1</dynamic-ds.version>
+		<captcha.version>2.2.0</captcha.version>
 		<velocity.version>1.7</velocity.version>
+		<configuration.version>1.10</configuration.version>
+		<nacos.version>2.0.2</nacos.version>
 		<jasypt.version>2.1.0</jasypt.version>
-		<fastjson.version>1.2.69</fastjson.version>
-		<swagger.fox.version>2.9.2</swagger.fox.version>
-		<swagger.core.version>1.5.24</swagger.core.version>
-		<reactor.netty.version>0.9.7.RELEASE</reactor.netty.version>
-		<security.oauth.version>2.3.6.RELEASE</security.oauth.version>
+		<swagger.fox.version>3.0.0</swagger.fox.version>
+		<xxl-job.version>2.3.0</xxl-job.version>
 		<docker.plugin.version>0.32.0</docker.plugin.version>
-		<docker.host>http://172.17.0.111:2375</docker.host>
-		<docker.registry>172.17.0.111</docker.registry>
-		<docker.namespace>library</docker.namespace>
-		<docker.username>admin</docker.username>
-		<docker.password>Harbor12345</docker.password>
+		<docker.host>http://192.168.0.100:2375</docker.host>
+		<docker.registry>192.168.0.100</docker.registry>
+		<docker.namespace>pig4cloud</docker.namespace>
+		<docker.username>username</docker.username>
+		<docker.password>password</docker.password>
 	</properties>
 
 	<dependencies>
+		<!--bootstrap 启动器-->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-bootstrap</artifactId>
+		</dependency>
 		<!--配置文件处理器-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -112,6 +113,7 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- spring boot 依赖 -->
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
@@ -119,6 +121,7 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!-- spring cloud 依赖 -->
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
@@ -126,55 +129,13 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!--spring cloud alibaba-->
+			<!-- spring cloud alibaba 依赖 -->
 			<dependency>
 				<groupId>com.alibaba.cloud</groupId>
 				<artifactId>spring-cloud-alibaba-dependencies</artifactId>
 				<version>${spring-cloud-alibaba.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-			<!--稳定版本，替代spring security bom内置-->
-			<dependency>
-				<groupId>org.springframework.security.oauth</groupId>
-				<artifactId>spring-security-oauth2</artifactId>
-				<version>${security.oauth.version}</version>
-			</dependency>
-			<!--稳定版本，替代spring boot bom内置-->
-			<dependency>
-				<groupId>io.projectreactor.netty</groupId>
-				<artifactId>reactor-netty</artifactId>
-				<version>${reactor.netty.version}</version>
-			</dependency>
-			<!--swagger 最新依赖内置版本-->
-			<dependency>
-				<groupId>io.swagger</groupId>
-				<artifactId>swagger-models</artifactId>
-				<version>${swagger.core.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.swagger</groupId>
-				<artifactId>swagger-annotations</artifactId>
-				<version>${swagger.core.version}</version>
-			</dependency>
-			<!--fastjson 版本-->
-			<dependency>
-				<groupId>com.alibaba</groupId>
-				<artifactId>fastjson</artifactId>
-				<version>${fastjson.version}</version>
-			</dependency>
-			<!--web 模块-->
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-web</artifactId>
-				<version>${spring-boot.version}</version>
-				<exclusions>
-					<!--排除tomcat依赖-->
-					<exclusion>
-						<artifactId>spring-boot-starter-tomcat</artifactId>
-						<groupId>org.springframework.boot</groupId>
-					</exclusion>
-				</exclusions>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -195,6 +156,9 @@
 					<version>${spring-boot.version}</version>
 					<configuration>
 						<finalName>${project.build.finalName}</finalName>
+						<layers>
+							<enabled>true</enabled>
+						</layers>
 					</configuration>
 					<executions>
 						<execution>
@@ -233,49 +197,7 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
-		<plugins>
-			<!--打包jar 与git commit 关联插件-->
-			<plugin>
-				<groupId>pl.project13.maven</groupId>
-				<artifactId>git-commit-id-plugin</artifactId>
-				<version>${git.commit.plugin}</version>
-			</plugin>
-			<!--代码格式插件，默认使用spring 规则-->
-			<plugin>
-				<groupId>io.spring.javaformat</groupId>
-				<artifactId>spring-javaformat-maven-plugin</artifactId>
-				<version>${spring.checkstyle.plugin}</version>
-			</plugin>
-		</plugins>
 	</build>
-
-	<repositories>
-		<!--阿里云主仓库，代理了maven central和jcenter仓库-->
-		<repository>
-			<id>aliyun</id>
-			<name>aliyun</name>
-			<url>https://maven.aliyun.com/repository/public</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>aliyun-plugin</id>
-			<url>https://maven.aliyun.com/repository/public</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<profiles>
 		<profile>
@@ -290,4 +212,16 @@
 			</activation>
 		</profile>
 	</profiles>
+
+	<distributionManagement>
+		<repository>
+			<id>release</id>
+			<url>http://node1:8099/repository/maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<url>http://node1:8099/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 </project>

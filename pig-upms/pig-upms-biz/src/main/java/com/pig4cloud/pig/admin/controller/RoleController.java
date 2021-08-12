@@ -1,31 +1,32 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.admin.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.admin.api.dto.RoleMenuOperate;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.vo.RoleVo;
 import com.pig4cloud.pig.admin.service.SysRoleMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.annotation.Inner;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -108,8 +109,12 @@ public class RoleController {
 	 * @return 分页对象
 	 */
 	@GetMapping("/page")
-	public R getRolePage(Page page) {
-		return R.ok(sysRoleService.page(page, Wrappers.emptyWrapper()));
+	public R getRolePage(Page page,String sysClass) {
+		SysRole role =new SysRole();
+		if(sysClass!=null && !sysClass.isEmpty()){
+			role.setSysClass(sysClass);
+		}
+		return R.ok(sysRoleService.page(page, Wrappers.lambdaQuery(role)));
 	}
 
 	/**
@@ -123,6 +128,49 @@ public class RoleController {
 	public R saveRoleMenus(@RequestBody RoleVo roleVo) {
 		SysRole sysRole = sysRoleService.getById(roleVo.getRoleId());
 		return R.ok(sysRoleMenuService.saveRoleMenus(sysRole.getRoleCode(), roleVo.getRoleId(), roleVo.getMenuIds()));
+	}
+
+	/**
+	 * 根据code获取角色
+	 * @return 角色
+	 */
+	@GetMapping("/one")
+	public R roleByCode(@RequestParam String roleCode) {
+		SysRole condition = new SysRole();
+		condition.setRoleCode(roleCode);
+		return R.ok(sysRoleService.getOne(new QueryWrapper<>(condition)));
+	}
+
+	/**
+	 * 根据code删除角色
+	 * @return 角色
+	 */
+	@SysLog("删除角色")
+	@PostMapping("/del")
+	@PreAuthorize("@pms.hasPermission('sys_role_del')")
+	public R deleteByCode(@Valid @RequestBody SysRole sysRole) {
+		return R.ok(sysRoleService.updateSelective(sysRole));
+	}
+
+	/**
+	 * 角色权限操作
+	 * @return 角色
+	 */
+	@SysLog("角色权限新增和删除")
+	@PostMapping("/operate")
+	@PreAuthorize("@pms.hasPermission('sys_role_del') and @pms.hasPermission('sys_role_add')")
+	public R operate(@Valid @RequestBody RoleMenuOperate roleMenuOperate) {
+		return R.ok(sysRoleService.operate(roleMenuOperate));
+	}
+
+	/**
+	 * 获取角色列表
+	 * @return 角色列表
+	 */
+	@Inner
+	@GetMapping("/list/{sysClass}")
+	public R getRoleList(@PathVariable("sysClass") String sysClass){
+		return R.ok(sysRoleService.getRoleList(sysClass));
 	}
 
 }

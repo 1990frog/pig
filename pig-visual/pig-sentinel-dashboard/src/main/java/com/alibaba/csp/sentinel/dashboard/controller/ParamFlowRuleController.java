@@ -16,6 +16,7 @@
 package com.alibaba.csp.sentinel.dashboard.controller;
 
 import com.alibaba.csp.sentinel.dashboard.auth.AuthAction;
+import com.alibaba.csp.sentinel.dashboard.auth.AuthService;
 import com.alibaba.csp.sentinel.dashboard.auth.AuthService.PrivilegeType;
 import com.alibaba.csp.sentinel.dashboard.client.CommandNotFoundException;
 import com.alibaba.csp.sentinel.dashboard.client.SentinelApiClient;
@@ -110,7 +111,7 @@ public class ParamFlowRuleController {
 	}
 
 	@PostMapping("/rule")
-	@AuthAction(PrivilegeType.WRITE_RULE)
+	@AuthAction(AuthService.PrivilegeType.WRITE_RULE)
 	public Result<ParamFlowRuleEntity> apiAddParamFlowRule(@RequestBody ParamFlowRuleEntity entity) {
 		Result<ParamFlowRuleEntity> checkResult = checkEntityInternal(entity);
 		if (checkResult != null) {
@@ -182,7 +183,7 @@ public class ParamFlowRuleController {
 	}
 
 	@PutMapping("/rule/{id}")
-	@AuthAction(PrivilegeType.WRITE_RULE)
+	@AuthAction(AuthService.PrivilegeType.WRITE_RULE)
 	public Result<ParamFlowRuleEntity> apiUpdateParamFlowRule(@PathVariable("id") Long id,
 			@RequestBody ParamFlowRuleEntity entity) {
 		if (id == null || id <= 0) {

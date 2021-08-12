@@ -1,24 +1,23 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.pig4cloud.pig.admin.api.dto.RoleMenuOperate;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 
 import java.util.List;
@@ -47,4 +46,28 @@ public interface SysRoleService extends IService<SysRole> {
 	 */
 	Boolean removeRoleById(Integer id);
 
+	/**
+	 * @description 删除角色权限，与添加角色权限
+	 *
+	 * @author hexun
+	 * @param roleMenuOperate 操作内容
+	 * @return
+	 */
+    int operate(RoleMenuOperate roleMenuOperate);
+
+	/**
+	 * @description 根据角色信息
+	 *
+	 * @author hexun
+	 * @param sysRole 操作内容
+	 * @return
+	 */
+    int updateSelective(SysRole sysRole);
+
+	/**
+	 * 根据系统查询角色
+	 * @param sysClass
+	 * @return
+	 */
+	List<SysRole> getRoleList(String sysClass);
 }

@@ -1,22 +1,27 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.admin.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
@@ -24,32 +29,23 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.pig4cloud.pig.admin.api.entity.SysDept;
-import com.pig4cloud.pig.admin.api.entity.SysRole;
-import com.pig4cloud.pig.admin.api.entity.SysUser;
-import com.pig4cloud.pig.admin.api.entity.SysUserRole;
-import com.pig4cloud.pig.admin.service.SysDeptService;
-import com.pig4cloud.pig.admin.service.SysRoleService;
-import com.pig4cloud.pig.admin.service.SysUserRoleService;
-import com.pig4cloud.pig.admin.service.SysUserService;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
-import com.pig4cloud.pig.admin.api.vo.MenuVO;
+import com.pig4cloud.pig.admin.api.entity.*;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.mapper.SysUserMapper;
-import com.pig4cloud.pig.admin.service.SysMenuService;
+import com.pig4cloud.pig.admin.service.*;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
-import com.pig4cloud.pig.common.core.util.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -116,7 +112,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		Set<String> permissions = new HashSet<>();
 		roleIds.forEach(roleId -> {
 			List<String> permissionList = sysMenuService.findMenuByRoleId(roleId).stream()
-					.filter(menuVo -> StringUtils.isNotEmpty(menuVo.getPermission())).map(MenuVO::getPermission)
+					.filter(menuVo -> StrUtil.isNotEmpty(menuVo.getPermission())).map(SysMenu::getPermission)
 					.collect(Collectors.toList());
 			permissions.addAll(permissionList);
 		});
@@ -151,7 +147,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	 * @return Boolean
 	 */
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#sysUser.username")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#sysUser.username + '@@' + #sysUser.sysClass")
 	public Boolean removeUserById(SysUser sysUser) {
 		sysUserRoleService.removeRoleByUserId(sysUser.getUserId());
 		this.removeById(sysUser.getUserId());
@@ -159,23 +155,24 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
-	public R updateUserInfo(UserDTO userDto) {
-		UserVO userVO = baseMapper.getUserVoByUsername(userDto.getUsername());
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username + '@@' + #userDto.sysClass")
+	public Boolean updateUserInfo(UserDTO userDto) {
+		UserVO userVO = baseMapper.getUserVoByUsername(userDto.getUsername(),userDto.getSysClass());
 
-		if (!ENCODER.matches(userDto.getPassword(), userVO.getPassword())) {
-			return R.failed("原密码错误，修改失败");
-		}
+		Assert.isTrue(ENCODER.matches(userDto.getPassword(), userVO.getPassword()), "原密码错误，修改失败");
 
 		SysUser sysUser = new SysUser();
-		sysUser.setPassword(ENCODER.encode(userDto.getNewpassword1()));
+		if (StrUtil.isNotBlank(userDto.getNewpassword1())) {
+			sysUser.setPassword(ENCODER.encode(userDto.getNewpassword1()));
+		}
 		sysUser.setPhone(userDto.getPhone());
 		sysUser.setUserId(userVO.getUserId());
 		sysUser.setAvatar(userDto.getAvatar());
-		return R.ok(this.updateById(sysUser));
+		return this.updateById(sysUser);
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
 	public Boolean updateUser(UserDTO userDto) {
 		SysUser sysUser = new SysUser();
@@ -206,6 +203,41 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Override
 	public List<SysUser> listAncestorUsersByUsername(String username) {
 		SysUser sysUser = this.getOne(Wrappers.<SysUser>query().lambda().eq(SysUser::getUsername, username));
+
+		SysDept sysDept = sysDeptService.getById(sysUser.getDeptId());
+		if (sysDept == null) {
+			return null;
+		}
+
+		Integer parentId = sysDept.getParentId();
+		return this.list(Wrappers.<SysUser>query().lambda().eq(SysUser::getDeptId, parentId));
+	}
+
+	/**
+	 * 根据用户ID列表查询用户信息
+	 */
+	@Override
+	public List<UserVO> listUsersByUserIds(List<Integer> ids) {
+		List<UserVO> list = new ArrayList<>();
+		ids.forEach(id -> {
+			UserVO item= baseMapper.getUserVoById(id);
+			if(item != null){
+				list.add(item);
+			}
+		});
+		return list;
+	}
+
+	/**
+	 * 查询上级部门的用户信息
+	 * @param username 用户名
+	 * @return R
+	 */
+	@Override
+	public List<SysUser> listAncestorUsersByUsernameNew(String username, String sysClass) {
+		SysUser sysUser = this.getOne(Wrappers.<SysUser>query().lambda()
+				.eq(SysUser::getUsername, username)
+				.eq(SysUser::getSysClass, sysClass));
 
 		SysDept sysDept = sysDeptService.getById(sysUser.getDeptId());
 		if (sysDept == null) {

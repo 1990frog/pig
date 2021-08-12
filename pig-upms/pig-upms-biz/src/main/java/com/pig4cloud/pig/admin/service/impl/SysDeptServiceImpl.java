@@ -1,30 +1,29 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.admin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.lang.tree.TreeNode;
+import cn.hutool.core.lang.tree.TreeUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.SysDept;
 import com.pig4cloud.pig.admin.api.entity.SysDeptRelation;
-import com.pig4cloud.pig.admin.api.dto.DeptTree;
-import com.pig4cloud.pig.admin.api.vo.TreeUtil;
 import com.pig4cloud.pig.admin.mapper.SysDeptMapper;
 import com.pig4cloud.pig.admin.service.SysDeptRelationService;
 import com.pig4cloud.pig.admin.service.SysDeptService;
@@ -112,7 +111,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 	 * @return 树
 	 */
 	@Override
-	public List<DeptTree> listDeptTrees() {
+	public List<Tree<Integer>> listDeptTrees() {
 		return getDeptTree(this.list(Wrappers.emptyWrapper()));
 	}
 
@@ -121,7 +120,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 	 * @return
 	 */
 	@Override
-	public List<DeptTree> listCurrentUserDeptTrees() {
+	public List<Tree<Integer>> listCurrentUserDeptTrees() {
 		Integer deptId = SecurityUtils.getUser().getDeptId();
 		List<Integer> descendantIdList = sysDeptRelationService
 				.list(Wrappers.<SysDeptRelation>query().lambda().eq(SysDeptRelation::getAncestor, deptId)).stream()
@@ -136,16 +135,18 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 	 * @param depts 部门
 	 * @return
 	 */
-	private List<DeptTree> getDeptTree(List<SysDept> depts) {
-		List<DeptTree> treeList = depts.stream().filter(dept -> !dept.getDeptId().equals(dept.getParentId()))
+	private List<Tree<Integer>> getDeptTree(List<SysDept> depts) {
+		List<TreeNode<Integer>> collect = depts.stream()
+				.filter(dept -> dept.getDeptId().intValue() != dept.getParentId())
 				.sorted(Comparator.comparingInt(SysDept::getSort)).map(dept -> {
-					DeptTree node = new DeptTree();
-					node.setId(dept.getDeptId());
-					node.setParentId(dept.getParentId());
-					node.setName(dept.getName());
-					return node;
+					TreeNode<Integer> treeNode = new TreeNode();
+					treeNode.setId(dept.getDeptId());
+					treeNode.setParentId(dept.getParentId());
+					treeNode.setName(dept.getName());
+					return treeNode;
 				}).collect(Collectors.toList());
-		return TreeUtil.build(treeList, 0);
+
+		return TreeUtil.build(collect, 0);
 	}
 
 }

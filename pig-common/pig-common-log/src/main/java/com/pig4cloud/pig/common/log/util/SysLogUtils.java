@@ -1,19 +1,17 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.common.log.util;
@@ -22,11 +20,13 @@ import cn.hutool.core.util.URLUtil;
 import cn.hutool.extra.servlet.ServletUtil;
 import cn.hutool.http.HttpUtil;
 import com.pig4cloud.pig.admin.api.entity.SysLog;
-import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import lombok.experimental.UtilityClass;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.web.authentication.www.BasicAuthenticationConverter;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -46,13 +46,14 @@ public class SysLogUtils {
 				.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
 		SysLog sysLog = new SysLog();
 		sysLog.setCreateBy(Objects.requireNonNull(getUsername()));
-		sysLog.setType(CommonConstants.STATUS_NORMAL);
+		sysLog.setUpdateBy(Objects.requireNonNull(getUsername()));
+		sysLog.setType(LogTypeEnum.NORMAL.getType());
 		sysLog.setRemoteAddr(ServletUtil.getClientIP(request));
 		sysLog.setRequestUri(URLUtil.getPath(request.getRequestURI()));
 		sysLog.setMethod(request.getMethod());
-		sysLog.setUserAgent(request.getHeader("user-agent"));
+		sysLog.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
 		sysLog.setParams(HttpUtil.toParams(request.getParameterMap()));
-		sysLog.setServiceId(getClientId());
+		sysLog.setServiceId(getClientId(request));
 		return sysLog;
 	}
 
@@ -60,11 +61,19 @@ public class SysLogUtils {
 	 * 获取客户端
 	 * @return clientId
 	 */
-	private String getClientId() {
+	private String getClientId(HttpServletRequest request) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication instanceof OAuth2Authentication) {
 			OAuth2Authentication auth2Authentication = (OAuth2Authentication) authentication;
 			return auth2Authentication.getOAuth2Request().getClientId();
+		}
+		if (authentication instanceof UsernamePasswordAuthenticationToken) {
+			BasicAuthenticationConverter basicAuthenticationConverter = new BasicAuthenticationConverter();
+			UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = basicAuthenticationConverter
+					.convert(request);
+			if (usernamePasswordAuthenticationToken != null) {
+				return usernamePasswordAuthenticationToken.getName();
+			}
 		}
 		return null;
 	}

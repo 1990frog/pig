@@ -1,25 +1,26 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.admin.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pig4cloud.pig.admin.api.dto.RoleMenuOperate;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
 import com.pig4cloud.pig.admin.mapper.SysRoleMapper;
@@ -47,13 +48,15 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
 	private final SysRoleMenuMapper sysRoleMenuMapper;
 
+	private final SysRoleMapper sysRoleMapper;
+
 	/**
 	 * 通过用户ID，查询角色信息
 	 * @param userId
 	 * @return
 	 */
 	@Override
-	public List findRolesByUserId(Integer userId) {
+	public List<SysRole> findRolesByUserId(Integer userId) {
 		return baseMapper.listRolesByUserId(userId);
 	}
 
@@ -63,11 +66,40 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	 * @return
 	 */
 	@Override
-	@CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
 	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
 	public Boolean removeRoleById(Integer id) {
 		sysRoleMenuMapper.delete(Wrappers.<SysRoleMenu>update().lambda().eq(SysRoleMenu::getRoleId, id));
 		return this.removeById(id);
+	}
+
+	@Override
+	@CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
+	@Transactional(rollbackFor = Exception.class)
+	public int operate(RoleMenuOperate roleMenuOperate) {
+		int[] count = {0};
+		List<RoleMenuOperate.Operate> operates = roleMenuOperate.getOperates();
+		operates.forEach(operate -> {
+			List<SysRoleMenu> list = operate.getList();
+			if(CollUtil.isNotEmpty((list))){
+				if(operate.getType() == 0){
+					list.forEach(record -> count[0]+=sysRoleMenuMapper.delete(new QueryWrapper<>(record)));
+				}else if(operate.getType() == 1){
+					list.forEach(record -> count[0]+=sysRoleMenuMapper.insert(record));
+				}
+			}
+		});
+		return count[0];
+	}
+
+	@Override
+	public int updateSelective(SysRole sysRole) {
+		return sysRoleMapper.updateSelective(sysRole);
+	}
+
+	@Override
+	public List<SysRole> getRoleList(String sysClass) {
+		return sysRoleMapper.selectList(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getSysClass,sysClass));
 	}
 
 }

@@ -103,3 +103,17 @@ services:
 #    hostname: pig-codegen
 #    image: pig-codegen
 
+
+  pig-job:
+    build:
+      context: ./pig-visual/pig-xxl-job-admin
+    restart: always
+    container_name: pig-job
+    hostname: pig-job
+    image: pig-job
+    ports:
+      - 5004:5004
+    extra_hosts:
+      - "pig-register:192.168.0.112"
+      - "pig-mysql:192.168.0.112"
+      - "pig-redis:192.168.0.112"

@@ -1,19 +1,17 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.admin.api.feign;
@@ -42,8 +40,20 @@ public interface RemoteUserService {
 	 * @param from 调用标志
 	 * @return R
 	 */
+	@Deprecated
 	@GetMapping("/user/info/{username}")
 	R<UserInfo> info(@PathVariable("username") String username, @RequestHeader(SecurityConstants.FROM) String from);
+
+	/**
+	 * 通过用户名查询用户、角色信息
+	 * @param username 用户名
+	 * @param sysCode 系统标识
+	 * @param from 调用标志
+	 * @return R
+	 */
+	@GetMapping("/user/info/{username}/{sysCode}")
+	R<UserInfo> infoNew(@PathVariable("username") String username,@PathVariable("sysCode") String sysCode, @RequestHeader(SecurityConstants.FROM) String from);
+
 
 	/**
 	 * 通过社交账号查询用户、角色信息

@@ -1,19 +1,17 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.pig4cloud.pig.admin.api.entity;
@@ -22,11 +20,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -37,7 +33,7 @@ import java.time.LocalDateTime;
  * @since 2019/2/1
  */
 @Data
-public class SysUser implements Serializable {
+public class SysUser extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -68,18 +64,6 @@ public class SysUser implements Serializable {
 	private String salt;
 
 	/**
-	 * 创建时间
-	 */
-	@ApiModelProperty(value = "创建时间")
-	private LocalDateTime createTime;
-
-	/**
-	 * 修改时间
-	 */
-	@ApiModelProperty(value = "修改时间")
-	private LocalDateTime updateTime;
-
-	/**
 	 * 锁定标记
 	 */
 	@ApiModelProperty(value = "锁定标记")
@@ -108,5 +92,14 @@ public class SysUser implements Serializable {
 	 */
 	@TableLogic
 	private String delFlag;
+
+	@ApiModelProperty(value = "所属系统")
+	private String sysClass;
+
+	/**
+	 * 邮箱
+	 */
+	@ApiModelProperty(value = "邮箱")
+	private String email;
 
 }

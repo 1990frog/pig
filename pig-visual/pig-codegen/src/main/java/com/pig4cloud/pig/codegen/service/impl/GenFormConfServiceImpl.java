@@ -1,19 +1,17 @@
 /*
+ * Copyright (c) 2020 pig4cloud Authors. All Rights Reserved.
  *
- *  *  Copyright (c) 2019-2020, 冷冷 (wangiegie@gmail.com).
- *  *  <p>
- *  *  Licensed under the GNU Lesser General Public License 3.0 (the "License");
- *  *  you may not use this file except in compliance with the License.
- *  *  You may obtain a copy of the License at
- *  *  <p>
- *  * https://www.gnu.org/licenses/lgpl.html
- *  *  <p>
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.pig4cloud.pig.codegen.service.impl;
 
@@ -26,7 +24,7 @@ import com.pig4cloud.pig.codegen.entity.GenFormConf;
 import com.pig4cloud.pig.codegen.mapper.GenFormConfMapper;
 import com.pig4cloud.pig.codegen.mapper.GeneratorMapper;
 import com.pig4cloud.pig.codegen.service.GenFormConfService;
-import com.pig4cloud.pig.codegen.util.CodeGenUtils;
+import com.pig4cloud.pig.codegen.support.CodeGenKits;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.lang.StringUtils;
@@ -82,14 +80,13 @@ public class GenFormConfServiceImpl extends ServiceImpl<GenFormConfMapper, GenFo
 		for (Map<String, String> column : columns) {
 			ColumnEntity columnEntity = new ColumnEntity();
 			columnEntity.setComments(column.get("columnComment"));
-			columnEntity
-					.setLowerAttrName(StringUtils.uncapitalize(CodeGenUtils.columnToJava(column.get("columnName"))));
+			columnEntity.setLowerAttrName(StringUtils.uncapitalize(CodeGenKits.columnToJava(column.get("columnName"))));
 			columnList.add(columnEntity);
 		}
 		context.put("columns", columnList);
 		StringWriter writer = new StringWriter();
 		template.merge(context, writer);
-		return StrUtil.trim(StrUtil.removePrefix(writer.toString(), CodeGenUtils.CRUD_PREFIX));
+		return StrUtil.trim(StrUtil.removePrefix(writer.toString(), CodeGenKits.CRUD_PREFIX));
 	}
 
 }

@@ -1,24 +1,34 @@
 package com.pig4cloud.pig.gateway.sso;
 
-import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.HttpEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Map;
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * Created by Liaopan on 2020-08-25.
@@ -35,26 +45,42 @@ public class CustomAutoLogin {
 
 	private final CacheManager cacheManager;
 
-	public Map login(String username,String password, String token) {
+	public Map login(String username,String password, String token,String sysClass) {
 		String cacheKey = "user:" + token;
 		final Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_CACHE);
 		if(cache != null && cache.get(cacheKey) != null) {
 			return (Map) cache.get(cacheKey).get();
 		}
 
-		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
-		formData.add("username", username);
-		formData.add("password", password);
-		formData.add("scope", "server");
-		formData.add("grant_type", "password");
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", getAuthorizationHeader("test", "test"));
-		Map<String, Object> map = postForMap(ssoClientInfo.getOauthTokenUrl(), formData, headers);
-		if(map != null && !map.isEmpty()) {
-			cache.put(cacheKey, map);
+		MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+		parameters.add("username",username+"@@"+sysClass);
+		parameters.add("password",password);
+		parameters.add("grant_type","password");
+		parameters.add("scope","server");
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(ssoClientInfo.getOauthTokenUrl());
+		URI uri = builder.queryParams(parameters).build().encode().toUri();
+		ResponseEntity<Map> forEntity = restTemplate.getForEntity(uri, Map.class);
+		if(forEntity.getBody() == null){
+			return null;
 		}
-		return map;
+		return forEntity.getBody();
+
+//		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
+//		formData.add("username", username);
+//		formData.add("password", password);
+//		formData.add("scope", "server");
+//		formData.add("grant_type", "password");
+//		formData.add("random",String.valueOf(System.currentTimeMillis()));
+//
+//		HttpHeaders headers = new HttpHeaders();
+//		headers.add("sysClass",sysClass);
+//		headers.set("Authorization", getAuthorizationHeader("test", "test"));
+//		headers.set("Connection", "Close");
+//		Map<String, Object> map = postForMap(ssoClientInfo.getOauthTokenUrl(), formData, headers);
+//		if(map != null && !map.isEmpty()) {
+//			cache.put(cacheKey, map);
+//		}
+//		return map;
 	}
 
 	public void logout(ServerHttpRequest request) {
@@ -83,14 +109,52 @@ public class CustomAutoLogin {
 	}
 
 	private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
-		if (headers.getContentType() == null) {
-			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		StringBuilder builder = new StringBuilder("?");
+		formData.forEach((key,value)->{
+			builder.append(key)
+					.append("=")
+					.append(value.get(0))
+					.append("&");
+		});
+		String queryPath = path + builder.toString().substring(0,builder.length() - 1);
+		return post(queryPath,headers);
+//		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+//		factory.setConnectTimeout(5000);
+//		factory.setReadTimeout(5000);
+//		restTemplate.setRequestFactory(factory);
+//		return restTemplate.exchange(queryPath, HttpMethod.POST,
+//				new HttpEntity<MultiValueMap<String, String>>(null, headers), Map.class).getBody();
+	}
+
+	@SneakyThrows
+	private Map<String,Object> post(String path, HttpHeaders headers){
+		HttpEntity httpEntity = null;
+		HttpPost httpPost = null;
+		try{
+			RequestConfig defaultRequestConfig = RequestConfig.custom()
+					.setSocketTimeout(5000)
+					.setConnectTimeout(5000)
+					.setConnectionRequestTimeout(5000)
+					.build();
+			CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).build();
+			httpPost = new HttpPost(path);
+			Set<Map.Entry<String, List<String>>> sets = headers.entrySet();
+			Iterator<Map.Entry<String, List<String>>> it = sets.iterator();
+			while (it.hasNext()) {
+				Map.Entry<String, List<String>> header = it.next();
+				httpPost.setHeader(header.getKey(), header.getValue().get(0));
+			}
+			log.info("[{}]-sso内部登录请求:[{}]", LocalDateTime.now().toString(), JSON.toJSONString(httpPost));
+			HttpResponse httpResponse = httpClient.execute(httpPost);
+			httpEntity= httpResponse.getEntity();
+
+			String resultString = EntityUtils.toString(httpEntity, "utf-8");
+			return JSON.parseObject(resultString,Map.class);
+		}finally {
+			EntityUtils.consumeQuietly(httpEntity);
+			if(httpPost != null){
+				httpPost.releaseConnection();
+			}
 		}
-		@SuppressWarnings("rawtypes")
-		Map map = restTemplate.exchange(path, HttpMethod.POST,
-			new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
-		@SuppressWarnings("unchecked")
-		Map<String, Object> result = map;
-		return result;
 	}
 }

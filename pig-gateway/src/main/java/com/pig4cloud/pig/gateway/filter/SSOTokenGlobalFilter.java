@@ -18,6 +18,7 @@
 
 package com.pig4cloud.pig.gateway.filter;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +27,6 @@ import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.gateway.sso.CustomAutoLogin;
 import com.pig4cloud.pig.gateway.sso.SSOClientInfo;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -51,8 +51,9 @@ import sun.misc.BASE64Encoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author lengleng
@@ -92,23 +93,36 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-		if(!ssoClientInfo.isEnable()) {
+		ServerHttpRequest request = exchange.getRequest();
+		final String authorization = request.getHeaders().getFirst("Authorization");
+		if(!ssoClientInfo.isEnable()
+		|| StrUtil.startWith(authorization, "Bearer")) {
 			return chain.filter(exchange);
 		}
 		// sso 的token
-		ServerHttpRequest request = exchange.getRequest();
 		final String token = request.getHeaders().getFirst("token");
+		final String sysClass = request.getHeaders().getFirst("sysClass");
 		String errMsg = "无法验证token，请重新登录！";
 		if (!StringUtils.isEmpty(token)) {
-			final Map userInfo = getUser(token);
-			Object userName;
+			Map<String,String> appNameMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[0]));
+			Map<String,String> appCodeMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[1]));
+			final Map userInfo = getUser(token,appNameMap.get(sysClass),appCodeMap.get(sysClass));
+			Object userName ;
 			if (userInfo != null && (userName = userInfo.get("Identity")) != null) {
-				final Map loginMap = autoLogin.login(String.valueOf(userName), ssoClientInfo.getCryptogram(), token);
+				final Map loginMap = autoLogin.login(String.valueOf(ssoClientInfo.getDefaultUserCode()), ssoClientInfo.getCryptogram(), token,sysClass);
 				if (loginMap != null) {
-					final ServerHttpRequest newRequest = request.mutate()
-						.headers(httpHeaders -> httpHeaders.add("Authorization", "Bearer "
-							+ Optional.ofNullable(loginMap.get("access_token")).orElse(""))).build();
-					return chain.filter(exchange.mutate().request(newRequest.mutate().build()).build());
+					ServerHttpResponse response = exchange.getResponse();
+					byte[] bits = new byte[0];
+					try {
+						bits = objectMapper.writeValueAsString(loginMap)
+								.getBytes(StandardCharsets.UTF_8);
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
+					DataBuffer buffer = response.bufferFactory().wrap(bits);
+					response.getHeaders().add("Content-Type", "text/json;charset=UTF-8");
+
+					return response.writeWith(Mono.just(buffer));
 				}
 			}else {
 				autoLogin.logout(request);
@@ -119,7 +133,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 				ServerHttpResponse response = exchange.getResponse();
 				R<String> result = new R<>();
 				result.setStatus(cn.hutool.http.HttpStatus.HTTP_UNAUTHORIZED);
-				result.setData(ssoClientInfo.getServerUrl());
+				result.setData(ssoClientInfo.getServerUrl() + appNameMap.get(sysClass));
 				result.setMessage(errMsg);
 
 				byte[] bits = new byte[0];
@@ -140,7 +154,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 
 	}
 
-	private Map getUser(String token) {
+	private Map getUser(String token,String appName,String appCode) {
 		final Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_CACHE);
 		if ( cache != null && cache.get(token) != null) {
 			return (Map) cache.get(token).get();
@@ -151,7 +165,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		//header = Base64(AppName)|TimeStamp|Sign
 		//Sign= MD5(Base64(AppName)|AppCode|TimeStamp|Token)
 		BASE64Encoder encoder = new BASE64Encoder();
-		byte[] textByte = ssoClientInfo.getAppName().getBytes(StandardCharsets.UTF_8);
+		byte[] textByte = appName.getBytes(StandardCharsets.UTF_8);
 		String base64AppName = encoder.encode(textByte);
 
 		//初始化LocalDateTime对象
@@ -159,7 +173,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		//初始化LocalDateTime对象
 		LocalDateTime localDateTime = LocalDateTime.now();
 		long TimeStamp = localDateTime.toEpochSecond(zoneOffset);
-		String buffer = base64AppName + "|" + ssoClientInfo.getAppCode() + "|" + TimeStamp + "|" + token;
+		String buffer = base64AppName + "|" + appCode + "|" + TimeStamp + "|" + token;
 		String Sign = SecureUtil.md5(buffer);
 		String header = base64AppName + "|" + TimeStamp + "|" + Sign;
 
@@ -168,7 +182,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		final HttpEntity<String> entity = new HttpEntity<String>(headers);
 		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
 			HttpMethod.GET, entity, Map.class).getBody();
-		if(map != null && map.get("Username") != null) {
+		if(map != null && !map.keySet().isEmpty()) {
 			cache.put(token, map);
 		}
 		return map;

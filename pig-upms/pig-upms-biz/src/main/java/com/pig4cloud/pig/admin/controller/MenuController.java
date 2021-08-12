@@ -134,7 +134,7 @@ public class MenuController {
 	@GetMapping("/all")
 	public R getUserMenuAll() {
 		// 获取符合条件的菜单
-		Set<MenuVO> all = new HashSet<>();
+		Set<SysMenu> all = new HashSet<>();
 		SecurityUtils.getRoles().forEach(roleId -> all.addAll(sysMenuService.findMenuByRoleId(roleId)));
 		return R.ok(all);
 	}

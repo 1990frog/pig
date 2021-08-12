@@ -38,6 +38,12 @@ public class SysClassController {
 		return R.ok(sysClassService.getPageSysClass(page, sysSystem));
 	}
 
+	@GetMapping("/all")
+	@PreAuthorize("@pms.hasPermission('sys_sys_search')")
+	public R list() {
+		return R.ok(sysClassService.getAllSystem());
+	}
+
 	@GetMapping("/{id}")
 	@PreAuthorize("@pms.hasPermission('sys_sys_search')")
 	public R sys(@PathVariable Integer id) {

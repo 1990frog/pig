@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import io.netty.handler.codec.json.JsonObjectDecoder;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
@@ -44,9 +45,11 @@ public class R<T> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	@Setter
 	@JsonProperty("status")
 	private int code;
 
+	@Setter
 	@JsonProperty("message")
 	private String msg;
 

@@ -21,6 +21,7 @@ import com.pig4cloud.pig.common.security.exception.InvalidException;
 import com.pig4cloud.pig.common.security.exception.MethodNotAllowed;
 import com.pig4cloud.pig.common.security.exception.PigAuth2Exception;
 import com.pig4cloud.pig.common.security.exception.ServerErrorException;
+import com.pig4cloud.pig.common.security.exception.TokenInvalidException;
 import com.pig4cloud.pig.common.security.exception.UnauthorizedException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

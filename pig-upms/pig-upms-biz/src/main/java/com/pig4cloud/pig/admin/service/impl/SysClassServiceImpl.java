@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,11 @@ public class SysClassServiceImpl  extends ServiceImpl<SysClassMapper, SysSystem>
 	@Override
 	public SysSystem getSysClassById(Integer sysId) {
 		return baseMapper.selectById(sysId);
+	}
+
+	@Override
+	public List<SysSystem> getAllSystem() {
+		return baseMapper.selectList(null);
 	}
 
 	@Override

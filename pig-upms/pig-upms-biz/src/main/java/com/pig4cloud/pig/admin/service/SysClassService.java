@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.pig4cloud.pig.admin.api.entity.SysSystem;
 
+import java.util.List;
+
 public interface SysClassService  extends IService<SysSystem> {
 
 	/**
@@ -25,6 +27,8 @@ public interface SysClassService  extends IService<SysSystem> {
 	 * @return
 	 */
 	IPage getPageSysClass(Page page, SysSystem sysSystem);
+
+	List<SysSystem> getAllSystem();
 
 	/**
 	 * @description 根据ID删除系统信息

@@ -15,7 +15,6 @@ import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.entity.SysUserRole;
-import com.pig4cloud.pig.admin.api.vo.MenuVO;
 import com.pig4cloud.pig.admin.service.SysInnerService;
 import com.pig4cloud.pig.admin.service.SysMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleMenuService;
@@ -144,12 +143,12 @@ public class SysInnerServiceImpl implements SysInnerService {
 		if (CollectionUtils.isEmpty(list)) {
 			return Collections.emptyList();
 		}
-		List<MenuVO> menuByRoleId = sysMenuService.findMenuByRoleId(condition.getRoleId());
-		Map<Integer, MenuVO> map = null;
+		List<SysMenu> menuByRoleId = sysMenuService.findMenuByRoleId(condition.getRoleId());
+		Map<Integer, SysMenu> map = null;
 		if (CollectionUtils.isEmpty(menuByRoleId)) {
 			map = Collections.EMPTY_MAP;
 		} else {
-			map = menuByRoleId.stream().collect(Collectors.toMap(MenuVO::getMenuId, Function.identity()));
+			map = menuByRoleId.stream().collect(Collectors.toMap(SysMenu::getMenuId, Function.identity()));
 		}
 		List<MenuTreeDTO> result = new ArrayList<>();
 		processTree(list, result);
@@ -406,9 +405,9 @@ public class SysInnerServiceImpl implements SysInnerService {
 	 * @param map
 	 * @param roleId
 	 */
-	private void processResult(List<MenuTreeDTO> result, Map<Integer, MenuVO> map, Integer roleId) {
+	private void processResult(List<MenuTreeDTO> result, Map<Integer, SysMenu> map, Integer roleId) {
 		for (MenuTreeDTO menuTreeDTO : result) {
-			MenuVO menuVO = map.get(menuTreeDTO.getMenuId());
+			SysMenu menuVO = map.get(menuTreeDTO.getMenuId());
 			if (!Objects.isNull(menuVO)) {
 				menuTreeDTO.setHasPermission(true);
 				menuTreeDTO.setRoleId(roleId);

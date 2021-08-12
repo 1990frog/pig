@@ -17,7 +17,6 @@
 
 package com.pig4cloud.pig.common.swagger.support;
 
-import com.pig4cloud.pig.common.swagger.config.SwaggerProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.config.GatewayProperties;
@@ -25,7 +24,6 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.support.NameUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
 import springfox.documentation.swagger.web.SwaggerResource;
 import springfox.documentation.swagger.web.SwaggerResourcesProvider;
 
@@ -36,7 +34,6 @@ import java.util.List;
  * @author Sywd 聚合接口文档注册，和zuul实现类似
  */
 @Primary
-@Component
 @RequiredArgsConstructor
 public class SwaggerProvider implements SwaggerResourcesProvider {
 

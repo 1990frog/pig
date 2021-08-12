@@ -16,23 +16,19 @@
 
 package com.alibaba.nacos.security.nacos;
 
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.auth.AuthManager;
 import com.alibaba.nacos.auth.exception.AccessException;
 import com.alibaba.nacos.auth.model.Permission;
 import com.alibaba.nacos.auth.model.User;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.config.server.auth.RoleInfo;
 import com.alibaba.nacos.config.server.utils.RequestUtil;
 import com.alibaba.nacos.core.utils.Loggers;
 import com.alibaba.nacos.security.nacos.roles.NacosRoleServiceImpl;
 import com.alibaba.nacos.security.nacos.users.NacosUser;
 import io.jsonwebtoken.ExpiredJwtException;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,6 +36,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * Builtin access control entry of Nacos.
@@ -51,6 +50,10 @@ import org.springframework.stereotype.Component;
 public class NacosAuthManager implements AuthManager {
 
 	private static final String TOKEN_PREFIX = "Bearer ";
+
+	private static final String PARAM_USERNAME = "username";
+
+	private static final String PARAM_PASSWORD = "password";
 
 	@Autowired
 	private JwtTokenManager tokenManager;
@@ -157,8 +160,8 @@ public class NacosAuthManager implements AuthManager {
 		}
 		bearerToken = request.getParameter(Constants.ACCESS_TOKEN);
 		if (StringUtils.isBlank(bearerToken)) {
-			String userName = request.getParameter("username");
-			String password = request.getParameter("password");
+			String userName = request.getParameter(PARAM_USERNAME);
+			String password = request.getParameter(PARAM_PASSWORD);
 			bearerToken = resolveTokenFromUser(userName, password);
 		}
 
@@ -175,8 +178,8 @@ public class NacosAuthManager implements AuthManager {
 		}
 		bearerToken = request.getHeader(Constants.ACCESS_TOKEN);
 		if (StringUtils.isBlank(bearerToken)) {
-			String userName = request.getHeader("username");
-			String password = request.getHeader("password");
+			String userName = request.getHeader(PARAM_USERNAME);
+			String password = request.getHeader(PARAM_PASSWORD);
 			bearerToken = resolveTokenFromUser(userName, password);
 		}
 
@@ -184,17 +187,25 @@ public class NacosAuthManager implements AuthManager {
 	}
 
 	private String resolveTokenFromUser(String userName, String rawPassword) throws AccessException {
-
+		String finalName;
+		Authentication authenticate;
 		try {
 			UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userName,
 					rawPassword);
-			authenticationManager.authenticate(authenticationToken);
+			authenticate = authenticationManager.authenticate(authenticationToken);
 		}
 		catch (AuthenticationException e) {
 			throw new AccessException("unknown user!");
 		}
 
-		return tokenManager.createToken(userName);
+		if (null == authenticate || StringUtils.isBlank(authenticate.getName())) {
+			finalName = userName;
+		}
+		else {
+			finalName = authenticate.getName();
+		}
+
+		return tokenManager.createToken(finalName);
 	}
 
 }

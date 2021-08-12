@@ -16,11 +16,6 @@
 
 package com.pig4cloud.pig.common.feign.ext;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
-
 import com.alibaba.cloud.sentinel.feign.SentinelContractHolder;
 import feign.Contract;
 import feign.Feign;
@@ -35,6 +30,11 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * 支持自动降级注入 重写 {@link com.alibaba.cloud.sentinel.feign.SentinelFeign}
@@ -79,8 +79,8 @@ public final class PigSentinelFeign {
 
 					// 查找 FeignClient 上的 降级策略
 					FeignClient feignClient = AnnotationUtils.findAnnotation(target.type(), FeignClient.class);
-					Class fallback = feignClient.fallback();
-					Class fallbackFactory = feignClient.fallbackFactory();
+					Class<?> fallback = feignClient.fallback();
+					Class<?> fallbackFactory = feignClient.fallbackFactory();
 
 					String beanName = feignClient.contextId();
 					if (!StringUtils.hasText(beanName)) {
@@ -88,7 +88,7 @@ public final class PigSentinelFeign {
 					}
 
 					Object fallbackInstance;
-					FallbackFactory fallbackFactoryInstance;
+					FallbackFactory<?> fallbackFactoryInstance;
 					if (void.class != fallback) {
 						fallbackInstance = getFromContext(beanName, "fallback", fallback, target.type());
 						return new PigSentinelInvocationHandler(target, dispatch,
@@ -96,14 +96,14 @@ public final class PigSentinelFeign {
 					}
 
 					if (void.class != fallbackFactory) {
-						fallbackFactoryInstance = (FallbackFactory) getFromContext(beanName, "fallbackFactory",
+						fallbackFactoryInstance = (FallbackFactory<?>) getFromContext(beanName, "fallbackFactory",
 								fallbackFactory, FallbackFactory.class);
 						return new PigSentinelInvocationHandler(target, dispatch, fallbackFactoryInstance);
 					}
 					return new PigSentinelInvocationHandler(target, dispatch);
 				}
 
-				private Object getFromContext(String name, String type, Class fallbackType, Class targetType) {
+				private Object getFromContext(String name, String type, Class<?> fallbackType, Class<?> targetType) {
 					Object fallbackInstance = feignContext.getInstance(name, fallbackType);
 					if (fallbackInstance == null) {
 						throw new IllegalStateException(String.format(

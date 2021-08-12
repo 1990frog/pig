@@ -21,6 +21,7 @@ import com.alibaba.nacos.naming.controllers.OperatorController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,7 +57,7 @@ public class HealthController {
 	 * equal to 500 indicates that Nacos is in broken states.
 	 */
 	@GetMapping("/liveness")
-	public ResponseEntity liveness() {
+	public ResponseEntity<String> liveness() {
 		return ResponseEntity.ok().body("OK");
 	}
 
@@ -66,7 +67,7 @@ public class HealthController {
 	 * 500 indicates that Nacos is not ready.
 	 */
 	@GetMapping("/readiness")
-	public ResponseEntity readiness(HttpServletRequest request) {
+	public ResponseEntity<String> readiness(HttpServletRequest request) {
 		boolean isConfigReadiness = isConfigReadiness();
 		boolean isNamingReadiness = isNamingReadiness(request);
 
@@ -75,14 +76,15 @@ public class HealthController {
 		}
 
 		if (!isConfigReadiness && !isNamingReadiness) {
-			return ResponseEntity.status(500).body("Config and Naming are not in readiness");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Config and Naming are not in readiness");
 		}
 
 		if (!isConfigReadiness) {
-			return ResponseEntity.status(500).body("Config is not in readiness");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Config is not in readiness");
 		}
 
-		return ResponseEntity.status(500).body("Naming is not in readiness");
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Naming is not in readiness");
 	}
 
 	private boolean isConfigReadiness() {

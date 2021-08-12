@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>com.pig4cloud</groupId>
 		<artifactId>pig-upms</artifactId>
-		<version>3.1.0</version>
+		<version>3.3.0</version>
 	</parent>
 
 	<artifactId>pig-upms-biz</artifactId>
@@ -69,6 +69,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-undertow</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>pig-common-test</artifactId>
 		</dependency>
 
 		<dependency>

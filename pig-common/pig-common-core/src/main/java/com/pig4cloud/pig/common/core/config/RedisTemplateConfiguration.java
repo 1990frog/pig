@@ -41,14 +41,11 @@ import java.util.Map;
  */
 @EnableCaching
 @Configuration(proxyBeanMethods = false)
-@RequiredArgsConstructor
 @AutoConfigureBefore(RedisAutoConfiguration.class)
 public class RedisTemplateConfiguration {
 
-	private final RedisConnectionFactory factory;
-
 	@Bean
-	public RedisTemplate<String, Object> redisTemplate() {
+	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
 		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setKeySerializer(new StringRedisSerializer());
 		redisTemplate.setHashKeySerializer(new StringRedisSerializer());

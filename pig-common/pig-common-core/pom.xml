@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>com.pig4cloud</groupId>
 		<artifactId>pig-common</artifactId>
-		<version>3.1.0</version>
+		<version>3.3.0</version>
 	</parent>
 
 	<artifactId>pig-common-core</artifactId>
@@ -46,12 +46,6 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
-		</dependency>
-		<!--mybatis plus extension,包含了mybatis plus core-->
-		<dependency>
-			<groupId>com.baomidou</groupId>
-			<artifactId>mybatis-plus-extension</artifactId>
-			<version>${mybatis-plus.version}</version>
 		</dependency>
 		<!--hibernate-validator-->
 		<dependency>

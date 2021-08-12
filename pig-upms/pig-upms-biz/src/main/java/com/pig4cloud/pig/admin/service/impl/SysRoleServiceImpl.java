@@ -56,7 +56,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	 * @return
 	 */
 	@Override
-	public List findRolesByUserId(Integer userId) {
+	public List<SysRole> findRolesByUserId(Integer userId) {
 		return baseMapper.listRolesByUserId(userId);
 	}
 
@@ -66,8 +66,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	 * @return
 	 */
 	@Override
-	@CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
 	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
 	public Boolean removeRoleById(Integer id) {
 		sysRoleMenuMapper.delete(Wrappers.<SysRoleMenu>update().lambda().eq(SysRoleMenu::getRoleId, id));
 		return this.removeById(id);

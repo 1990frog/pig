@@ -31,10 +31,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.DefaultThrowableAnalyzer;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.ClientAuthenticationException;
-import org.springframework.security.oauth2.common.exceptions.InsufficientScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
-import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.security.oauth2.common.exceptions.*;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -71,6 +68,13 @@ public class PigWebResponseExceptionTranslator implements WebResponseExceptionTr
 				causeChain);
 		if (ase != null) {
 			return handleOAuth2Exception(new InvalidException(ase.getMessage(), ase));
+		}
+
+		// token 过期 特殊处理 返回 424 不是 401
+		ase = (InvalidTokenException) throwableAnalyzer.getFirstThrowableOfType(InvalidTokenException.class,
+				causeChain);
+		if (ase != null) {
+			return handleOAuth2Exception(new TokenInvalidException(ase.getMessage(), ase));
 		}
 
 		ase = (HttpRequestMethodNotSupportedException) throwableAnalyzer

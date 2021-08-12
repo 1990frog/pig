@@ -23,10 +23,9 @@ import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,8 +35,6 @@ import java.io.PrintWriter;
  * @author lengleng
  * @date 2019/2/1 客户端异常处理 1. 可以根据 AuthenticationException 不同细化异常处理
  */
-@Slf4j
-@Component
 @RequiredArgsConstructor
 public class ResourceAuthExceptionEntryPoint implements AuthenticationEntryPoint {
 
@@ -50,12 +47,18 @@ public class ResourceAuthExceptionEntryPoint implements AuthenticationEntryPoint
 		response.setCharacterEncoding(CommonConstants.UTF8);
 		response.setContentType(CommonConstants.CONTENT_TYPE);
 		R<String> result = new R<>();
-		result.setStatus(HttpStatus.HTTP_UNAUTHORIZED);
+		result.setCode(CommonConstants.FAIL);
+		response.setStatus(HttpStatus.HTTP_UNAUTHORIZED);
 		if (authException != null) {
 			result.setMessage(ExceptionUtil.getRootCauseMessage(authException));
 			result.setData(authException.getMessage());
 		}
-		response.setStatus(HttpStatus.HTTP_UNAUTHORIZED);
+
+		// 针对令牌过期返回特殊的 424
+		if (authException instanceof InsufficientAuthenticationException) {
+			response.setStatus(org.springframework.http.HttpStatus.FAILED_DEPENDENCY.value());
+			result.setMsg("token expire");
+		}
 		PrintWriter printWriter = response.getWriter();
 		printWriter.append(objectMapper.writeValueAsString(result));
 	}

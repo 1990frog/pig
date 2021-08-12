@@ -16,6 +16,7 @@
 
 package com.pig4cloud.pig.admin.service;
 
+import cn.hutool.core.lang.tree.Tree;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.pig4cloud.pig.admin.api.entity.SysDept;
 import com.pig4cloud.pig.admin.api.dto.DeptTree;
@@ -36,13 +37,13 @@ public interface SysDeptService extends IService<SysDept> {
 	 * 查询部门树菜单
 	 * @return 树
 	 */
-	List<DeptTree> listDeptTrees();
+	List<Tree<Integer>> listDeptTrees();
 
 	/**
 	 * 查询用户部门树
 	 * @return
 	 */
-	List<DeptTree> listCurrentUserDeptTrees();
+	List<Tree<Integer>> listCurrentUserDeptTrees();
 
 	/**
 	 * 添加信息部门

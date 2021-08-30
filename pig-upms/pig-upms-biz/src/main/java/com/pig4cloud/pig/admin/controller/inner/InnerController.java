@@ -82,8 +82,8 @@ public class InnerController {
 
 	@Inner
 	@DeleteMapping(path = "/user/{userId}")
-	public R findUserRoleInfo(@PathVariable(value = "id") Integer id) {
-		return R.ok(sysInnerService.deleteUserByUserId(id));
+	public R findUserRoleInfo(@PathVariable(value = "userId") Integer userId) {
+		return R.ok(sysInnerService.deleteUserByUserId(userId));
 	}
 
 	@Inner

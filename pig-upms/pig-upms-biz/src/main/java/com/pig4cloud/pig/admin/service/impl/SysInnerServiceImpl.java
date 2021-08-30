@@ -330,6 +330,7 @@ public class SysInnerServiceImpl implements SysInnerService {
 
 	@Override
 	public Boolean updateRole(SysRole sysRole) {
+		log.info("内部调用,修改角色信息,{}", sysRole);
 		boolean save = sysRoleService.updateById(sysRole);
 		return save;
 	}

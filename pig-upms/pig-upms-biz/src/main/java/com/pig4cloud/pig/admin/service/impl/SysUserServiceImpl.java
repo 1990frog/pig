@@ -16,13 +16,6 @@
 
 package com.pig4cloud.pig.admin.service.impl;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -54,6 +47,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author lengleng
@@ -247,6 +247,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 		Integer parentId = sysDept.getParentId();
 		return this.list(Wrappers.<SysUser>query().lambda().eq(SysUser::getDeptId, parentId));
+	}
+
+	@Override
+	public Boolean deleteUserByUserId(Integer userId) {
+		if (userId == null || userId.intValue() <= 0) {
+			return false;
+		}
+		return this.lambdaUpdate().eq(SysUser::getUserId, userId).remove();
 	}
 
 }

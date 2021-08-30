@@ -19,11 +19,10 @@ package com.pig4cloud.pig.admin.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
+import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
-import com.pig4cloud.pig.common.core.util.R;
 
 import java.util.List;
 
@@ -107,4 +106,13 @@ public interface SysUserService extends IService<SysUser> {
 	 * @return
 	 */
 	List<UserVO> listUsersByUserIds(List<Integer> ids);
+
+
+	/**
+	 * 根据用户id，删除用户
+	 *
+	 * @param userId
+	 * @return
+	 */
+	Boolean deleteUserByUserId(Integer userId);
 }

@@ -310,11 +310,9 @@ public class SysInnerServiceImpl implements SysInnerService {
 
 	@Override
 	public Boolean deleteUserByUserId(Integer userId) {
-		SysUser sysUser = new SysUser();
-		sysUser.setUserId(userId);
 		// 删除用户和角色的绑定
 		sysUserRoleService.removeRoleByUserId(userId);
-		return sysUserService.remove(new QueryWrapper<>(sysUser));
+		return sysUserService.deleteUserByUserId(userId);
 	}
 
 	@Override

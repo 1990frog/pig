@@ -138,12 +138,13 @@ public class SysInnerServiceImpl implements SysInnerService {
 
 	@Override
 	public List<MenuTreeDTO> getRoleMenus(QueryRoleCondition condition) {
-		log.info("内部接口， 获取当前角色所有的菜单，参数，{}", condition);
+		log.info("内部接口， 获取当前角色所有的菜单1，参数，{}", condition);
 		// 获取所有的菜单
 		List<SysMenu> list = sysMenuService.lambdaQuery().eq(SysMenu::getDelFlag, "0").list();
 		if (CollectionUtils.isEmpty(list)) {
 			return Collections.emptyList();
 		}
+		log.info("内部接口， 获取当前角色所有的菜单2，参数，{}", condition);
 		List<MenuVO> menuByRoleId = sysMenuService.findMenuByRoleId(condition.getRoleId());
 		Map<Integer, MenuVO> map = null;
 		if (CollectionUtils.isEmpty(menuByRoleId)) {
@@ -364,6 +365,7 @@ public class SysInnerServiceImpl implements SysInnerService {
 
 	public void processTree(List<SysMenu> list, List<MenuTreeDTO> result) {
 		// 按照父节点进行分组
+		log.info("内部接口， 获取当前角色所有的菜单3，参数，{}", list == null ? 0 : list.size());
 		Map<Integer, List<SysMenu>> collect = list.stream().collect(Collectors.groupingBy(SysMenu::getParentId));
 		if (CollectionUtils.isEmpty(collect)) {
 			return;
@@ -413,6 +415,7 @@ public class SysInnerServiceImpl implements SysInnerService {
 	 * @param roleId
 	 */
 	private void processResult(List<MenuTreeDTO> result, Map<Integer, MenuVO> map, Integer roleId) {
+		log.info("内部接口， 获取当前角色所有的菜单4，参数，{}", map == null ? 0 : map.size());
 		for (MenuTreeDTO menuTreeDTO : result) {
 			MenuVO menuVO = map.get(menuTreeDTO.getMenuId());
 			if (!Objects.isNull(menuVO)) {

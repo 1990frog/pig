@@ -144,8 +144,8 @@ public class SysInnerServiceImpl implements SysInnerService {
 		if (CollectionUtils.isEmpty(list)) {
 			return Collections.emptyList();
 		}
-		log.info("内部接口， 获取当前角色所有的菜单2，参数，{}", condition);
 		List<MenuVO> menuByRoleId = sysMenuService.findMenuByRoleId(condition.getRoleId());
+		log.info("内部接口， 获取当前角色所有的菜单2，参数，{}", menuByRoleId == null ? 0 : menuByRoleId.size());
 		Map<Integer, MenuVO> map = null;
 		if (CollectionUtils.isEmpty(menuByRoleId)) {
 			map = Collections.EMPTY_MAP;

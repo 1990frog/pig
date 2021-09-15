@@ -30,7 +30,6 @@ import com.pig4cloud.pig.admin.service.SysMenuService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.enums.MenuTypeEnum;
-import com.pig4cloud.pig.common.core.util.R;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -148,6 +147,13 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 			trees.add(node);
 		}
 		return TreeUtils.build(trees, root);
+	}
+
+	/**
+	 *  自定义实现查询角色已经绑定的菜单
+	 */
+	public List<MenuVO> findMenuInfoByRoleId(Integer roleId){
+		return baseMapper.listMenusByRoleId(roleId);
 	}
 
 }

@@ -163,8 +163,12 @@ public class SysInnerServiceImpl implements SysInnerService {
 	@Override
 	public Boolean edit(QueryRoleCondition condition) {
 		log.info("内部接口， 编辑菜单信息的角色，参数，{}", condition);
-		if (Objects.isNull(condition) || CollectionUtils.isEmpty(condition.getMenuIds())) {
+		if (Objects.isNull(condition) || condition.getMenuIds() == null) {
 			return false;
+		}
+		if (condition.getMenuIds().size() == 0) {
+			// 只需要删除之前就行
+			return sysRoleMenuService.lambdaUpdate().eq(SysRoleMenu::getRoleId, condition.getRoleId()).remove();
 		}
 		List<SysMenu> all = sysMenuService.lambdaQuery().eq(SysMenu::getDelFlag, "0").list();
 		if (CollectionUtils.isEmpty(all)) {

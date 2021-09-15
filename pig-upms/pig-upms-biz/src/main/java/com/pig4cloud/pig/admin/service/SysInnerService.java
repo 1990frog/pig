@@ -91,4 +91,9 @@ public interface SysInnerService {
 	 * 内部使用
 	 */
 	Boolean updateRole(SysRole sysRole);
+
+	/**
+	 * 内部使用
+	 */
+	Boolean deleteRole(SysRole sysRole);
 }

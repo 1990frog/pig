@@ -99,4 +99,11 @@ public class InnerController {
 	public R updateRole(@RequestBody SysRole sysRole) {
 		return R.ok(sysInnerService.updateRole(sysRole));
 	}
+
+	@Inner
+	@DeleteMapping(path = "/role/delete")
+	//@PreAuthorize("@pms.hasPermission('sys_role_del')")
+	public R deleteRole(@RequestBody SysRole sysRole) {
+		return R.ok(sysInnerService.deleteRole(sysRole));
+	}
 }

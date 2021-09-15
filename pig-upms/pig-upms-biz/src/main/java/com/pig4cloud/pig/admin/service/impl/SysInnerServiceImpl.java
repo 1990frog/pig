@@ -333,6 +333,13 @@ public class SysInnerServiceImpl implements SysInnerService {
 		return save;
 	}
 
+	@Override
+	public Boolean deleteRole(SysRole sysRole) {
+		log.info("内部调用,删除角色信息,{}", sysRole);
+		boolean remove = sysRoleService.removeRoleById(sysRole.getRoleId());
+		return remove;
+	}
+
 	private void processChild(Set<Integer> allMenuId, Map<Integer, List<SysMenu>> collect, SysMenu sysMenu) {
 		// 这里就是子
 		List<SysMenu> sysMenus = collect.get(sysMenu.getMenuId());

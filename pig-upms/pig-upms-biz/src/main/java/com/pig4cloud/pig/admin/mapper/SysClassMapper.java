@@ -12,6 +12,6 @@ import java.util.List;
 @Mapper
 public interface SysClassMapper extends BaseMapper<SysSystem> {
 
-	IPage<List<SysSystem>> selectPage(Page page, @Param("sysSystem") SysSystem sysSystem);
+	IPage<List<SysSystem>> selectPage(Page page, @Param("query") SysSystem sysSystem);
 
 }

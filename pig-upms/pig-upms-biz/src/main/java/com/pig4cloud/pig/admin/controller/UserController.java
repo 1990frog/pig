@@ -181,6 +181,11 @@ public class UserController {
 		return R.ok(userService.getUserWithRolePage(page, userDTO));
 	}
 
+	@GetMapping("/pageList")
+	public R getUserPageList(Page page, UserDTO userDTO) {
+		return R.ok(userService.getUserWithRolePage(page, userDTO));
+	}
+
 
 	/**
 	 * 修改个人信息

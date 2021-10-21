@@ -95,6 +95,8 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 		if (ArrayUtil.isNotEmpty(info.getRoles())) {
 			// 获取角色
 			Arrays.stream(info.getRoles()).forEach(role -> dbAuthsSet.add(SecurityConstants.ROLE + role));
+			//获取用户系统标识
+			dbAuthsSet.add(SecurityConstants.SYS_CLASS + info.getSysUser().getSysClass());
 			// 获取资源
 			dbAuthsSet.addAll(Arrays.asList(info.getPermissions()));
 

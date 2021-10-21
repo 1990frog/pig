@@ -31,6 +31,10 @@ public interface SecurityConstants {
 	 * 前缀
 	 */
 	String PROJECT_PREFIX = "pig_";
+	/**
+	 * 用户系统标识
+	 */
+	String SYS_CLASS="SYS_LASS@";
 
 	/**
 	 * 项目的license

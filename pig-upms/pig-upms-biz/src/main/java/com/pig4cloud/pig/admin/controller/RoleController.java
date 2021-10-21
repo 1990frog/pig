@@ -16,6 +16,7 @@
 
 package com.pig4cloud.pig.admin.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -24,15 +25,22 @@ import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.vo.RoleVo;
 import com.pig4cloud.pig.admin.service.SysRoleMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
+import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.Inner;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -112,7 +120,18 @@ public class RoleController {
 	@GetMapping("/page")
 	public R getRolePage(Page page,String sysClass) {
 		SysRole role =new SysRole();
-		if(sysClass!=null && !sysClass.isEmpty()){
+		List<String> sysClassList = new ArrayList<>();
+		if(sysClass==null || sysClass.isEmpty()){
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+			authorities.stream().filter(granted -> StrUtil.startWith(granted.getAuthority(), SecurityConstants.SYS_CLASS))
+					.forEach(granted -> {
+				String temp = StrUtil.removePrefix(granted.getAuthority(), SecurityConstants.SYS_CLASS);
+						sysClassList.add(temp);
+			});
+			sysClass = sysClassList.get(0);
+		}
+		if(!"SUPER".equals(sysClass)){
 			role.setSysClass(sysClass);
 		}
 		return R.ok(sysRoleService.page(page, Wrappers.lambdaQuery(role)));

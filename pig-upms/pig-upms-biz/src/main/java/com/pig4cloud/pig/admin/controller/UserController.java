@@ -175,7 +175,6 @@ public class UserController {
 	 * @param userDTO 查询参数列表
 	 * @return 用户集合
 	 */
-	@Inner
 	@GetMapping("/page")
 	public R getUserPage(Page page, UserDTO userDTO) {
 		return R.ok(userService.getUserWithRolePage(page, userDTO));

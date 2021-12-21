@@ -8,7 +8,7 @@
 		<version>3.1.0</version>
 	</parent>
 
-	<artifactId>pig-upms-sso-biz</artifactId>
+	<artifactId>pig-upms-biz</artifactId>
 	<packaging>jar</packaging>
 
 	<description>pig 通用用户权限管理系统业务处理模块</description>

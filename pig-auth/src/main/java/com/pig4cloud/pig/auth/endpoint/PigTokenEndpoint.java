@@ -18,7 +18,6 @@ package com.pig4cloud.pig.auth.endpoint;
 
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.auth.config.CustomConfig;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
@@ -44,7 +43,15 @@ import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
@@ -77,8 +84,9 @@ public class PigTokenEndpoint {
 
 	/**
 	 * 认证页面
+	 *
 	 * @param modelAndView
-	 * @param error 表单登录失败处理回调的错误信息
+	 * @param error        表单登录失败处理回调的错误信息
 	 * @return ModelAndView
 	 */
 	@GetMapping("/login")
@@ -90,6 +98,7 @@ public class PigTokenEndpoint {
 
 	/**
 	 * 确认授权页面
+	 *
 	 * @param request
 	 * @param session
 	 * @param modelAndView
@@ -114,6 +123,7 @@ public class PigTokenEndpoint {
 
 	/**
 	 * 退出并删除token
+	 *
 	 * @param authHeader Authorization
 	 */
 	@DeleteMapping("/logout")
@@ -128,6 +138,7 @@ public class PigTokenEndpoint {
 
 	/**
 	 * 令牌管理调用
+	 *
 	 * @param token token
 	 */
 	@Inner
@@ -153,6 +164,7 @@ public class PigTokenEndpoint {
 
 	/**
 	 * 查询token
+	 *
 	 * @param params 分页参数
 	 * @return
 	 */
@@ -199,21 +211,29 @@ public class PigTokenEndpoint {
 
 		try {
 			cursor.close();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			log.error("关闭cursor 失败");
 		}
 		return result;
 	}
 
 	@GetMapping("innerLogin")
-	public Object login(@RequestParam String username,@RequestParam String password,
-						@RequestParam String grant_type,@RequestParam String scope){
+	public Object login(@RequestParam(name = "username") String username,
+						@RequestParam(name = "password") String password,
+						@RequestParam(name = "grant_type") String grant_type,
+						@RequestParam(name = "scope") String scope,
+						@RequestParam(name = "token") String token,
+						@RequestParam(name = "appCode") String appCode,
+						@RequestParam(name = "appName") String appName) {
 		Map<String, String> parameters = new HashMap<>();
-		parameters.put("username",username);
-		parameters.put("password",password);
-		parameters.put("grant_type",grant_type);
-		parameters.put("scope",scope);
+		parameters.put("username", username);
+		parameters.put("password", password);
+		parameters.put("grant_type", grant_type);
+		parameters.put("scope", scope);
+		// 准备做一个两边token的缓存
+		parameters.put("token", token);
+		parameters.put("appCode", appCode);
+		parameters.put("appName", appName);
 		return customConfig.initToken(parameters);
 	}
 

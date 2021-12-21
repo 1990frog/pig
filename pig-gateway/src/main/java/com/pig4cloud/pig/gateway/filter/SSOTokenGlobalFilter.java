@@ -20,6 +20,7 @@ package com.pig4cloud.pig.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
@@ -27,6 +28,7 @@ import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.gateway.sso.CustomAutoLogin;
 import com.pig4cloud.pig.gateway.sso.SSOClientInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -51,8 +53,8 @@ import sun.misc.BASE64Encoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +69,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 
 	private static final String SSO_TOKEN_CACHE = "sso:cache:token:";
@@ -95,21 +98,41 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 
 		ServerHttpRequest request = exchange.getRequest();
 		final String authorization = request.getHeaders().getFirst("Authorization");
-		if(!ssoClientInfo.isEnable()
-		|| StrUtil.startWith(authorization, "Bearer")) {
+		if (!ssoClientInfo.isEnable()
+				|| StrUtil.startWith(authorization, "Bearer")) {
 			return chain.filter(exchange);
 		}
 		// sso 的token
-		final String token = request.getHeaders().getFirst("token");
-		final String sysClass = request.getHeaders().getFirst("sysClass");
+		String token = request.getHeaders().getFirst("token");
+		String sysClass = request.getHeaders().getFirst("sysClass");
+		// 兼容华西的sso接入
+		if (StringUtils.isEmpty(token)) {
+			// 可能从header传入，也可能是queryString
+			token = request.getHeaders().containsKey("tk") ? request.getHeaders().getFirst("tk") : null;
+			if (StringUtils.isEmpty(token)) {
+				MultiValueMap<String, String> queryParams = request.getQueryParams();
+				token = (queryParams == null || queryParams.isEmpty()) ? null : queryParams.getFirst("tk");
+			}
+		}
+		log.info("sso 登录流程 开始");
+		log.info("sso 登录流程 开始 token = {}", token);
+		log.info("sso 登录流程 开始 sysClass = {}", sysClass);
 		String errMsg = "无法验证token，请重新登录！";
 		if (!StringUtils.isEmpty(token)) {
-			Map<String,String> appNameMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[0]));
-			Map<String,String> appCodeMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[1]));
-			final Map userInfo = getUser(token,appNameMap.get(sysClass),appCodeMap.get(sysClass));
-			Object userName ;
+			Map<String, String> appNameMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[0]));
+			Map<String, String> appCodeMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[1]));
+			final Map userInfo = getUser(token, appNameMap.get(sysClass), appCodeMap.get(sysClass));
+			Object userName;
 			if (userInfo != null && (userName = userInfo.get("Identity")) != null) {
-				final Map loginMap = autoLogin.login(String.valueOf(ssoClientInfo.getDefaultUserCode()), ssoClientInfo.getCryptogram(), token,sysClass);
+				// 这儿使用用户的真实userCode 和 appName
+				// 获取一下拿到的真实用户信息
+				// cache ssoClientInfo
+				cacheSsoClientInfo();
+				cacheServerToken((String) userName, sysClass, token);
+				//final Map loginMap = autoLogin.login(String.valueOf(ssoClientInfo.getDefaultUserCode()), ssoClientInfo.getCryptogram(), token,sysClass);
+				// appName 和 appCode 我也需要cache，后续要使用
+				final Map loginMap = autoLogin.login((String) userName, ssoClientInfo.getCryptogram(),
+						token, sysClass, appNameMap.get(sysClass), appCodeMap.get(sysClass));
 				if (loginMap != null) {
 					ServerHttpResponse response = exchange.getResponse();
 					byte[] bits = new byte[0];
@@ -121,13 +144,13 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 					}
 					DataBuffer buffer = response.bufferFactory().wrap(bits);
 					response.getHeaders().add("Content-Type", "text/json;charset=UTF-8");
-
+					// 登录成功再缓存serverToken 和 localToken
 					return response.writeWith(Mono.just(buffer));
 				}
-			}else {
+			} else {
 				autoLogin.logout(request);
 				// 登录失败。返回401错误
-				if(userInfo != null) {
+				if (userInfo != null) {
 					errMsg = String.valueOf(userInfo.getOrDefault("message", errMsg));
 				}
 				ServerHttpResponse response = exchange.getResponse();
@@ -139,7 +162,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 				byte[] bits = new byte[0];
 				try {
 					bits = objectMapper.writeValueAsString(result)
-						.getBytes(StandardCharsets.UTF_8);
+							.getBytes(StandardCharsets.UTF_8);
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}
@@ -147,6 +170,8 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 				response.setStatusCode(HttpStatus.UNAUTHORIZED);
 				response.getHeaders().add("Content-Type", "text/json;charset=UTF-8");
 
+				// clearCache
+				clearCache(token);
 				return response.writeWith(Mono.just(buffer));
 			}
 		}
@@ -154,9 +179,9 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 
 	}
 
-	private Map getUser(String token,String appName,String appCode) {
-		final Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_CACHE);
-		if ( cache != null && cache.get(token) != null) {
+	private Map getUser(String token, String appName, String appCode) {
+		final Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_TOKEN_USER_CACHE);
+		if (cache != null && cache.get(token) != null) {
 			return (Map) cache.get(token).get();
 		}
 
@@ -181,11 +206,45 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		headers.set("Authorization", "Basic " + header);
 		final HttpEntity<String> entity = new HttpEntity<String>(headers);
 		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
-			HttpMethod.GET, entity, Map.class).getBody();
-		if(map != null && !map.keySet().isEmpty()) {
+				HttpMethod.GET, entity, Map.class).getBody();
+		if (map != null && !map.keySet().isEmpty()) {
 			cache.put(token, map);
 		}
 		return map;
+	}
+
+	/**
+	 * 还需要把ssoClientInfo cache住，因为后面在用户模块中需要用到
+	 */
+	private void cacheSsoClientInfo() {
+		Cache ssoClientInfoCache = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
+		if (ssoClientInfoCache == null || ssoClientInfoCache.get(CacheConstants.SSO_CLIENT_INFO) == null ||
+				ssoClientInfoCache.get(CacheConstants.SSO_CLIENT_INFO).get() == null) {
+			Map map = JSONObject.parseObject(JSONObject.toJSONString(this.ssoClientInfo), Map.class);
+			ssoClientInfoCache.put(CacheConstants.SSO_CLIENT_INFO, map);
+		}
+	}
+
+	private void cacheServerToken(String userName, String sysClass, String serverToken) {
+		Cache ssoClientInfoCache = cacheManager.getCache(CacheConstants.SSO_USER_SERVER_TOKEN);
+		ssoClientInfoCache.put(userName + "@@" + sysClass, serverToken);
+	}
+
+
+	/**
+	 * 失败了需要把前面步骤的缓存给清除掉
+	 */
+	private void clearCache(String serverToken) {
+		// 双边映射
+		Cache serverToLocal = cacheManager.getCache(CacheConstants.SSO_SERVER_LOCAL_TOKEN);
+		if (!Objects.isNull(serverToLocal) && !Objects.isNull(serverToLocal.get(serverToken))) {
+			serverToLocal.evictIfPresent(serverToken);
+		}
+		// OSS服务端需要使用的参数
+		Cache serverInfo = cacheManager.getCache(CacheConstants.SSO_SERVER_INFO);
+		if (!Objects.isNull(serverInfo) && !Objects.isNull(serverInfo.get(serverToken))) {
+			serverInfo.evictIfPresent(serverToken);
+		}
 	}
 
 	@Override

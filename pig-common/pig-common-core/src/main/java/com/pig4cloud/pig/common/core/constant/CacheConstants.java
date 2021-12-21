@@ -64,6 +64,39 @@ public interface CacheConstants {
 	 */
 	String PARAMS_DETAILS = "params_details";
 
-	String SSO_CLIENT_CACHE = "sso_client:token";
+	/**
+	 * SSO服务端和客户端的token换取缓存 缓存情况是 服务端的token -> 本地生成的token
+	 */
+	String SSO_SERVER_LOCAL_TOKEN = "sso_server_local_token:token";
+	/**
+	 * 本地token -> sso 的token
+	 */
+	String SSO_LOCAL_SERVER_TOKEN = "sso_local_server_token:token";
+	/**
+	 * 用户信息和token缓存
+	 */
+	String SSO_SERVER_INFO = "sso_server_info:token";
+	/**
+	 * 把ssoClientInfo cache住
+	 */
+	String SSO_CLIENT_INFO = "sso_client_info";
+
+	String SSO_USER_SERVER_TOKEN = "sso_user_server_token:username";
+
+	/**
+	 * 存的是serverToken对应的用户信息
+	 */
+	String SSO_SERVER_TOKEN_USER_CACHE = "sso_client:token";
+	/**
+	 * userInfo
+	 */
+	String SSO_LOCAL_USER_INFO_CACHE = "sso_username_user_info:username";
+
+	/**
+	 * 缓存登录信息 ，用户名称@@sysclass
+	 */
+	String SSO_USERNAME_INFO = "sso_username_info:username";
+
+	String SSO_CLIENT_ID = "sso_client_id";
 
 }

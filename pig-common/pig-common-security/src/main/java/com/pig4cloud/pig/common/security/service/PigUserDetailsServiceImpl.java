@@ -18,9 +18,9 @@ package com.pig4cloud.pig.common.security.service;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
-import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
@@ -30,7 +30,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -99,7 +98,11 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 			dbAuthsSet.add(SecurityConstants.SYS_CLASS + info.getSysUser().getSysClass());
 			// 获取资源
 			dbAuthsSet.addAll(Arrays.asList(info.getPermissions()));
-
+		}
+		// soo的权限
+		if (ArrayUtil.isNotEmpty(info.getSsoRoles())) {
+			// 获取角色
+			Arrays.stream(info.getSsoRoles()).forEach(role -> dbAuthsSet.add(SecurityConstants.ROLE + role));
 		}
 		Collection<? extends GrantedAuthority> authorities = AuthorityUtils
 				.createAuthorityList(dbAuthsSet.toArray(new String[0]));

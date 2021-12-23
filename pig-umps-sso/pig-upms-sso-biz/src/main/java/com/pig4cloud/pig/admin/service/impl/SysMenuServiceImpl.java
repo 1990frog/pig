@@ -16,19 +16,32 @@
 
 package com.pig4cloud.pig.admin.service.impl;
 
+import com.alibaba.cloud.commons.lang.StringUtils;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
+import com.pig4cloud.pig.admin.api.dto.TreeNode;
 import com.pig4cloud.pig.admin.api.entity.SysMenu;
 import com.pig4cloud.pig.admin.api.util.TreeUtils;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
 import com.pig4cloud.pig.admin.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.common.execption.SSOBusinessException;
+import com.pig4cloud.pig.admin.common.ssoutil.LocalTokenHolder;
+import com.pig4cloud.pig.admin.common.ssoutil.SnowFlakeUtil;
+import com.pig4cloud.pig.admin.model.SSOPrivilege;
+import com.pig4cloud.pig.admin.service.IRemoteService;
 import com.pig4cloud.pig.admin.service.SysMenuService;
+import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -41,13 +54,113 @@ import java.util.Set;
  */
 @Service
 @RequiredArgsConstructor
-public class SysMenuServiceImpl  implements SysMenuService {
+public class SysMenuServiceImpl implements SysMenuService {
 
+	@Autowired
+	private CacheManager cacheManager;
+	@Autowired
+	private IRemoteService remoteService;
+
+	private SnowFlakeUtil idWorker = new SnowFlakeUtil();
 
 	@Override
 	//@Cacheable(value = CacheConstants.MENU_DETAILS, key = "#roleId  + '_menu'", unless = "#result == null")
-	public List<MenuVO> findMenuByRoleId(Integer roleId) {
-		throw new SSOBusinessException(ResponseCodeEnum.NOT_SUPPORT);
+	public List<MenuTree> findMenuByRoleId(Integer roleId) {
+		// 获取所有的菜单
+		// 1.拿到用户的token，换serverToken
+		// 2.请求所有的权限信息，解析menu
+		// 3.封装返回
+		String token = LocalTokenHolder.getToken();
+		if (StringUtils.isEmpty(token)) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		String serverToken = getServerToken(token);
+		if (StringUtils.isEmpty(serverToken)) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		Map<String, String> localLoginInfo = toLocalLogin(serverToken);
+		Map ossClientInfoMap = getSSOClientInfo();
+		List<SSOPrivilege> ssoPrivilege = remoteService.getSSOMenus(serverToken, localLoginInfo, ossClientInfoMap);
+		List<MenuTree> list = new ArrayList<>();
+		processMenu(ssoPrivilege, list);
+		//throw new SSOBusinessException(ResponseCodeEnum.NOT_SUPPORT);
+		return list;
+	}
+
+	/**
+	 * 也是按层遍历
+	 *
+	 * @param ssoPrivileges
+	 * @param list
+	 */
+	public void processMenu(List<SSOPrivilege> ssoPrivileges, List<MenuTree> list) {
+		if (CollectionUtils.isEmpty(ssoPrivileges)) {
+			return;
+		}
+		for (SSOPrivilege privilege : ssoPrivileges) {
+			MenuTree menuTree = new MenuTree();
+			menuTree.setIcon(privilege.getExtPropertyInfo() != null ? privilege.getExtPropertyInfo().getPrivilege_Property_ICON() : "");
+			menuTree.setLabel(privilege.getPrivilegeName());
+			menuTree.setName(privilege.getPrivilegeName());
+			menuTree.setType("0");
+			menuTree.setId(idWorker.getIntId());
+			menuTree.setPermission(privilege.getPrivilegeCode());
+			menuTree.setPath(privilege.getExtPropertyInfo() != null ? privilege.getExtPropertyInfo().getPrivilege_Property_URL() : "");
+			menuTree.setSort(privilege.getSequence());
+			menuTree.setChildren(processMenuTreeChild(privilege, menuTree.getId()));
+			if (!CollectionUtils.isEmpty(privilege.getSsoPrivileges())) {
+				menuTree.setHasChildren(true);
+			}
+			list.add(menuTree);
+		}
+	}
+
+	private List<TreeNode> processMenuTreeChild(SSOPrivilege privilege, Integer parentId) {
+		List<TreeNode> ans = new ArrayList<>();
+		if (Objects.isNull(privilege) || CollectionUtils.isEmpty(privilege.getSsoPrivileges())) {
+			return ans;
+		}
+		for (SSOPrivilege child : privilege.getSsoPrivileges()) {
+			MenuTree menuTree = new MenuTree();
+			menuTree.setIcon(child.getExtPropertyInfo() != null ? child.getExtPropertyInfo().getPrivilege_Property_ICON() : "");
+			menuTree.setLabel(child.getPrivilegeName());
+			menuTree.setId(idWorker.getIntId());
+			menuTree.setParentId(parentId);
+			menuTree.setName(child.getPrivilegeName());
+			menuTree.setType("0");
+			menuTree.setPermission(child.getPrivilegeCode());
+			menuTree.setPath(child.getExtPropertyInfo() != null ? child.getExtPropertyInfo().getPrivilege_Property_URL() : "");
+			menuTree.setSort(child.getSequence());
+			menuTree.setChildren(processMenuTreeChild(child, menuTree.getId()));
+			if (!CollectionUtils.isEmpty(child.getSsoPrivileges())) {
+				menuTree.setHasChildren(true);
+			}
+			ans.add(menuTree);
+		}
+		return ans;
+	}
+
+	private String getServerToken(String localToken) {
+		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
+		if (Objects.isNull(serverTokenCache) || Objects.isNull(serverTokenCache.get(localToken))
+				|| Objects.isNull(serverTokenCache.get(localToken).get())) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		String serverToken = (String) serverTokenCache.get(localToken).get();
+		return serverToken;
+	}
+
+	// 本地登录使用的信息
+	private Map<String, String> toLocalLogin(String serverToken) {
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_INFO);
+		return (Map<String, String>) cache.get(serverToken).get();
+	}
+
+	// 拿ssoClientInfo
+	private Map getSSOClientInfo() {
+		Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
+		Map ossClientInfoMap = (Map) ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO).get();
+		return ossClientInfoMap;
 	}
 
 	/**

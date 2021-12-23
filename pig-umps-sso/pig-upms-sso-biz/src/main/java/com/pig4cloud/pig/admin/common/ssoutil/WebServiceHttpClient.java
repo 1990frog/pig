@@ -46,6 +46,7 @@ public class WebServiceHttpClient {
 			soapEntity.getSoapMessage().writeTo(out);
 			InputStream inputStream = con.getInputStream();
 			String res = IOUtils.toString(inputStream, "UTF-8");
+			System.out.println("res -> " + res);
 			JSONObject jsonObject = UserWebServiceResponse.xmlToJson(res, soapEntity.getType());
 			return jsonObject;
 		} catch (Exception e) {
@@ -57,7 +58,7 @@ public class WebServiceHttpClient {
 	// f524b714-0ac6-459c-acfe-d5042b10f6b5
 	// http://address/api/SSOService/GetUser?token=xxx
 	public static void main(String[] args) throws Exception {
-		String token = "f524b714-0ac6-459c-acfe-d5042b10f6b5";
+		String token = "c6d6a561-6a98-41c0-a97b-55f05d648836";
 		String appName = "授权管理系统";
 		String appCode = "Centralism";
 		String usrl = "http://192.168.0.147:9011/sso/api/SSOService/GetUser?token=" + token;

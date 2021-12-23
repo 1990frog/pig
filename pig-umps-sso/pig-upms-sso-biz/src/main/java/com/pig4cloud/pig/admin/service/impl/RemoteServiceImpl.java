@@ -15,6 +15,7 @@ import com.pig4cloud.pig.admin.service.IRemoteService;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class RemoteServiceImpl implements IRemoteService {
 	public List<SSORoleInfo> getSSORoleInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
 		String username = serverInfoMap.get("username");
 		if (StringUtils.isEmpty(username)) {
-			throw new RuntimeException("用户信息为空，请重新登录");
+			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
 		}
 		String userCode = username.split("@@")[0];
 		SoapEntity soapEntity = new SoapEntity();
@@ -64,6 +65,24 @@ public class RemoteServiceImpl implements IRemoteService {
 	 */
 	@Override
 	public List<SSOPrivilege> getSSOPrivilege(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
+		JSONObject permissionInfo = getSSOUserInfo(serverToken, serverInfoMap, ssoClientInfo);
+		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
+		List<SSOPrivilege> privileges = roleInfoParse.parse(permissionInfo, SSOPrivilege.class, SoapTypeEnum.SOAP_PER);
+		return privileges;
+	}
+
+	@Override
+	public List<SSOPrivilege> getSSOMenus(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
+		JSONObject permissionInfo = getSSOUserInfo(serverToken, serverInfoMap, ssoClientInfo);
+		// 这里需要按照另外的解析方式。。。
+		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
+		List<SSOPrivilege> privileges = new ArrayList<>();
+		// 一层一层的去解析
+		roleInfoParse.parseSSOMenu(permissionInfo, privileges);
+		return privileges;
+	}
+
+	private JSONObject getSSOUserInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
 		String username = serverInfoMap.get("username");
 		if (StringUtils.isEmpty(username)) {
 			throw new RuntimeException("用户信息为空，请重新登录");
@@ -84,9 +103,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		soapEntity.setType(SoapTypeEnum.SOAP_PER);
 		UserWebServiceRequest.buildMessage(soapEntity);
 		JSONObject permissionInfo = WebServiceHttpClient.post(soapEntity);
-		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
-		List<SSOPrivilege> privileges = roleInfoParse.parse(permissionInfo, SSOPrivilege.class, SoapTypeEnum.SOAP_PER);
-		return privileges;
+		return permissionInfo;
 	}
 
 	private String getWsdlUrl(String serverUrl) {

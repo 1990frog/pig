@@ -109,6 +109,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		if (StringUtils.isEmpty(token)) {
 			// 可能从header传入，也可能是queryString
 			token = request.getHeaders().containsKey("tk") ? request.getHeaders().getFirst("tk") : null;
+			log.info("sso 获取token 参数 <tk>  开始，{}", token);
 			if (StringUtils.isEmpty(token)) {
 				MultiValueMap<String, String> queryParams = request.getQueryParams();
 				token = (queryParams == null || queryParams.isEmpty()) ? null : queryParams.getFirst("tk");

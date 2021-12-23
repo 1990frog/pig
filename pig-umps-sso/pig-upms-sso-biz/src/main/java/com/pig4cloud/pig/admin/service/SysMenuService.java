@@ -16,7 +16,6 @@
 
 package com.pig4cloud.pig.admin.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.api.entity.SysMenu;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
@@ -40,7 +39,7 @@ public interface SysMenuService {
 	 * @param roleId 角色ID
 	 * @return 菜单列表
 	 */
-	List<MenuVO> findMenuByRoleId(Integer roleId);
+	List<MenuTree> findMenuByRoleId(Integer roleId);
 
 	/**
 	 * 级联删除菜单

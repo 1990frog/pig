@@ -2,9 +2,11 @@ package com.pig4cloud.pig.admin.common.ssoutil;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.model.SSOPermissionExtPropertyInfo;
 import com.pig4cloud.pig.admin.model.SSOPrivilege;
+import com.pig4cloud.pig.admin.service.impl.SysMenuServiceImpl;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -47,6 +49,115 @@ public class UserRoleInfoParse {
 				break;
 			case SOAP_ORG:
 				break;
+		}
+		return res;
+	}
+
+	// 宽度优先遍历，按层遍历
+	public void parseSSOMenu(JSONObject source, List<SSOPrivilege> ans) {
+		// 1. 解析 Privileges
+		if (Objects.isNull(source) || !source.containsKey("Privileges")) {
+			return;
+		}
+		JSONObject privileges = source.getJSONObject("Privileges");
+		if (Objects.isNull(privileges) || !privileges.containsKey("Privilege")) {
+			return;
+		}
+		// 2.解析 Privilege 可能是一个object，可能是一个array
+		try {
+			// 这一层的
+			JSONArray privilegeArrays = privileges.getJSONArray("Privilege");
+			if (Objects.isNull(privilegeArrays) || privilegeArrays.size() <= 0) {
+				return;
+			}
+			// 这一层的遍历
+			for (int i = 0; i < privilegeArrays.size(); i++) {
+				JSONObject privilege = (JSONObject) privilegeArrays.get(i);
+				if (Objects.isNull(privilege)) {
+					continue;
+				}
+				// 解析每一个Privilege参数
+				SSOPrivilege res = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(privilege), SSOPrivilege.class);
+				if (privilege.containsKey("ExtPropertyValues")) {
+					JSONObject extPropertyValues = privilege.getJSONObject("ExtPropertyValues");
+					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
+							com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+					res.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
+				}
+				// 找子类
+				List<SSOPrivilege> childs = processChild(privilege);
+				res.setSsoPrivileges(childs);
+				ans.add(res);
+			}
+		} catch (ClassCastException classCastException) {
+			JSONObject privilegeObject = privileges.getJSONObject("Privilege");
+			SSOPrivilege resObj = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(privilegeObject), SSOPrivilege.class);
+			if (privilegeObject.containsKey("ExtPropertyValues")) {
+				JSONObject extPropertyValues = privilegeObject.getJSONObject("ExtPropertyValues");
+				SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
+						com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+				resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
+				List<SSOPrivilege> childs = processChild(privilegeObject);
+				resObj.setSsoPrivileges(childs);
+				ans.add(resObj);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private List<SSOPrivilege> processChild(JSONObject privilege) {
+		List<SSOPrivilege> res = new ArrayList<>();
+		// 1. 解析 Privileges
+		if (Objects.isNull(privilege) || !privilege.containsKey("Privileges")) {
+			return res;
+		}
+		JSONObject privileges = privilege.getJSONObject("Privileges");
+		if (Objects.isNull(privileges) || !privileges.containsKey("Privilege")) {
+			return res;
+		}
+		// 这儿也有一层
+		try {
+			JSONArray privilegeArrays = privileges.getJSONArray("Privilege");
+			if (Objects.isNull(privilegeArrays) || privilegeArrays.size() <= 0) {
+				return res;
+			}
+			// 这一层的遍历
+			Iterator<Object> iterator = privilegeArrays.stream().iterator();
+			if (Objects.isNull(iterator)) {
+				return res;
+			}
+			while (iterator.hasNext()) {
+				JSONObject next = (JSONObject) iterator.next();
+				if (Objects.isNull(next)) {
+					continue;
+				}
+				// 解析每一个Privilege参数
+				SSOPrivilege resObj = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(next), SSOPrivilege.class);
+				if (privilege.containsKey("ExtPropertyValues")) {
+					JSONObject extPropertyValues = privilege.getJSONObject("ExtPropertyValues");
+					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
+							com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+					resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
+				}
+				List<SSOPrivilege> ssoPrivileges = processChild(next);
+				resObj.setSsoPrivileges(ssoPrivileges);
+				res.add(resObj);
+			}
+		} catch (ClassCastException classCastException) {
+			JSONObject privilegeObject = privileges.getJSONObject("Privilege");
+			SSOPrivilege resObj = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(privilegeObject), SSOPrivilege.class);
+			if (privilegeObject.containsKey("ExtPropertyValues")) {
+				JSONObject extPropertyValues = privilegeObject.getJSONObject("ExtPropertyValues");
+				SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
+						com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+				resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
+				List<SSOPrivilege> childs = processChild(privilegeObject);
+				resObj.setSsoPrivileges(childs);
+				res.add(resObj);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return res;
 	}
@@ -540,10 +651,23 @@ public class UserRoleInfoParse {
 				"\t\t]\n" +
 				"\t}\n" +
 				"}");
-		List<SSOPrivilege> list = new ArrayList<>();
+		/*List<SSOPrivilege> list = new ArrayList<>();
 		parse.parseByPermission(obj, SSOPrivilege.class, list);
 		for (SSOPrivilege info : list) {
 			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(info));
+		}*/
+		List<SSOPrivilege> list = new ArrayList<>();
+		SysMenuServiceImpl sysMenuService = new SysMenuServiceImpl();
+		parse.parseSSOMenu(obj, list);
+	/*	for (SSOPrivilege li : list) {
+			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
+			System.out.println();
+		}*/
+		List<MenuTree> menuTrees = new ArrayList<>();
+		sysMenuService.processMenu(list, menuTrees);
+		for (MenuTree li : menuTrees) {
+			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
+			System.out.println();
 		}
 		/*SSORoleInfo ssoRoleInfo =;
 		System.out.println(ssoRoleInfo.getRoleCode());

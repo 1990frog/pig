@@ -134,8 +134,8 @@ public class UserRoleInfoParse {
 				}
 				// 解析每一个Privilege参数
 				SSOPrivilege resObj = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(next), SSOPrivilege.class);
-				if (privilege.containsKey("ExtPropertyValues")) {
-					JSONObject extPropertyValues = privilege.getJSONObject("ExtPropertyValues");
+				if (next.containsKey("ExtPropertyValues")) {
+					JSONObject extPropertyValues = next.getJSONObject("ExtPropertyValues");
 					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
 							com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
 					resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);

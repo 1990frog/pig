@@ -2,6 +2,7 @@ package com.pig4cloud.pig.admin.service.impl;
 
 import cn.hutool.json.JSONObject;
 import com.alibaba.cloud.commons.lang.StringUtils;
+import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.common.execption.SSOBusinessException;
@@ -127,13 +128,30 @@ public class RemoteServiceImpl implements IRemoteService {
 	public static void main(String[] args) throws Exception {
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setHost("http://192.168.0.147:9011");
-		soapEntity.setType(SoapTypeEnum.SOAP_ORG);
+		soapEntity.setType(SoapTypeEnum.SOAP_PER);
 		soapEntity.setUserCode("sys");
-		soapEntity.setAppName("授权管理系统");
-		soapEntity.setAppCode("Centralism");
+		soapEntity.setAppName("数据质量核查及分析系统");
+		soapEntity.setAppCode("DATA_QUALITY");
 		UserWebServiceRequest.buildMessage(soapEntity);
 		JSONObject post = WebServiceHttpClient.post(soapEntity);
+		System.out.println();
 		System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(post));
+		UserRoleInfoParse userRoleInfoParse = UserRoleInfoParse.getInstance();
+		List<SSOPrivilege> ans = new ArrayList<>();
+		userRoleInfoParse.parseSSOMenu(post, ans);
+		System.out.println("ans -> " + com.alibaba.fastjson.JSONObject.toJSONString(ans));
+		SysMenuServiceImpl sysMenuService = new SysMenuServiceImpl();
+	/*	for (SSOPrivilege li : list) {
+			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
+			System.out.println();
+		}*/
+		List<MenuTree> menuTrees = new ArrayList<>();
+		sysMenuService.processMenu(ans, menuTrees);
+		System.out.println();
+		for (MenuTree li : menuTrees) {
+			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
+			System.out.println();
+		}
 
 		//角色 {"AppRoles":{"AppRole":{"RoleCode":"Admin","RoleName":"管理员角色"}}}
 		//    {"AppRoles":{"AppRole":[{"RoleCode":"Admin","RoleName":"管理员角色"},{"RoleCode":"EveryOne","RoleName":"所有人角色"}]}}

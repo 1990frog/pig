@@ -43,6 +43,7 @@ public class UserWebServiceRequest {
 			SOAPHeaderElement soapHeaderElement = header.addHeaderElement(qName);
 			soapHeaderElement.addChildElement("CurrentOperateUserCode").setValue(soapEntity.getUserCode());
 			soapHeaderElement.addChildElement("CurrentAppName").setValue(soapEntity.getAppName());
+			soapHeaderElement.addChildElement("CurrentAppCode").setValue(soapEntity.getAppCode());
 			soapHeaderElement.addChildElement("Sign").setValue(buildSign(soapEntity));
 			soapHeaderElement.addChildElement("timeStamp").setValue(soapEntity.getTimeStamp() + "");
 

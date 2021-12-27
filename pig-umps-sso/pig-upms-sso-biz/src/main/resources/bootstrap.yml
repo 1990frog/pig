@@ -3,7 +3,8 @@ server:
 
 spring:
   application:
-    name: @artifactId@
+    #name: @artifactId@
+    name: pig-upms-biz
   cloud:
     nacos:
       discovery:

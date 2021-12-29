@@ -4,7 +4,6 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -21,6 +20,7 @@ public class SSOClientInfo {
 	private boolean enable = false;
 
 	//private String appName;
+	private String ssoHost;
 
 	private List<String> apps;
 

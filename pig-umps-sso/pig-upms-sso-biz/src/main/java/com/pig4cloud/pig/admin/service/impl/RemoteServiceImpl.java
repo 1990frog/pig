@@ -47,6 +47,13 @@ public class RemoteServiceImpl implements IRemoteService {
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
 		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		if (StringUtils.isEmpty(wsdlUrl)) {
+			return null;
+		}
+		if (wsdlUrl.startsWith("http")) {
+			wsdlUrl = "hhtp://" + wsdlUrl;
+		}
+		soapEntity.setHost(wsdlUrl);
 		// 请求角色
 		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
 		UserWebServiceRequest.buildMessage(soapEntity);
@@ -99,6 +106,12 @@ public class RemoteServiceImpl implements IRemoteService {
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
 		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		if (StringUtils.isEmpty(wsdlUrl)) {
+			return null;
+		}
+		if (wsdlUrl.startsWith("http")) {
+			wsdlUrl = "hhtp://" + wsdlUrl;
+		}
 		soapEntity.setHost(wsdlUrl);
 		// 请求角色
 		// 请求权限

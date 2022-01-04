@@ -50,7 +50,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		if (StringUtils.isEmpty(wsdlUrl)) {
 			return null;
 		}
-		if (wsdlUrl.startsWith("http")) {
+		if (!wsdlUrl.startsWith("http")) {
 			wsdlUrl = "http://" + wsdlUrl;
 		}
 		soapEntity.setHost(wsdlUrl);
@@ -109,7 +109,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		if (StringUtils.isEmpty(wsdlUrl)) {
 			return null;
 		}
-		if (wsdlUrl.startsWith("http")) {
+		if (!wsdlUrl.startsWith("http")) {
 			wsdlUrl = "http://" + wsdlUrl;
 		}
 		soapEntity.setHost(wsdlUrl);

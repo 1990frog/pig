@@ -3,6 +3,7 @@ package com.pig4cloud.pig.admin.common.ssoutil;
 import cn.hutool.crypto.SecureUtil;
 import com.pig4cloud.pig.admin.common.constants.SSOWebServiceConstants;
 import com.pig4cloud.pig.admin.model.SoapEntity;
+import lombok.extern.slf4j.Slf4j;
 import sun.misc.BASE64Encoder;
 
 import javax.xml.namespace.QName;
@@ -25,6 +26,7 @@ import java.time.ZoneOffset;
  * @Description
  * @Date 2021/12/10 15:05
  **/
+@Slf4j
 public class UserWebServiceRequest {
 
 	public static void buildMessage(SoapEntity soapEntity) {
@@ -51,6 +53,7 @@ public class UserWebServiceRequest {
 			body.setPrefix(SSOWebServiceConstants.WEB_SERVICE_PREFIX);
 			//QName qName1 = new QName(SSOWebServiceConstants.WEB_SERVICE_NAMESPACE, "GetUserRoles", "");
 			buildBodyQName(body, soapEntity);
+			log.info("build soap message = {} ", soapMessage);
 			soapEntity.setSoapMessage(soapMessage);
 		} catch (Exception e) {
 			throw new RuntimeException("build soapmessage error", e);

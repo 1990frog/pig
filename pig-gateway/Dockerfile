@@ -1,19 +1,7 @@
-FROM moxm/java:1.8-full as builder
-WORKDIR /build
-ARG JAR_FILE=target/pig-gateway.jar
-COPY ${JAR_FILE} app.jar
-RUN java -Djarmode=layertools -jar app.jar extract && rm app.jar
+FROM java:8
+ENV TZ=Asia/Shanghai
+RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+COPY target/application-1.0-SNAPSHOT.jar /home/java/application-1.0-SNAPSHOT.jar
 
-FROM moxm/java:1.8-full
-LABEL maintainer="jclazz@outlook.com"
-ENV TZ=Asia/Shanghai JAVA_OPTS="-Xms128m -Xmx256m -Djava.security.egd=file:/dev/./urandom"
-WORKDIR pig-gateway
-
-COPY --from=builder /build/dependencies/ ./
-COPY --from=builder /build/snapshot-dependencies/ ./
-COPY --from=builder /build/spring-boot-loader/ ./
-COPY --from=builder /build/application/ ./
-
-EXPOSE 9999
-
-CMD sleep 60; java $JAVA_OPTS org.springframework.boot.loader.JarLauncher
+WORKDIR /home/java
+ENTRYPOINT java "-Djava.security.egd=file:/dev/./urandom" ${JAVA_OPTS:=-Xms1024m -Xmx1024m} -jar /home/java/application-1.0-SNAPSHOT.jar ${BOOT_OPTIONS:='--server.port=8080'}

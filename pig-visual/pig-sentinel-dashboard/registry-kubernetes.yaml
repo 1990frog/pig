@@ -3,23 +3,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pig-gateway
+  name: pig-sentinel-dashboard
   namespace: temp
   labels:
-    app: pig-gateway
+    app: pig-sentinel-dashboard
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pig-gateway
+      app: pig-sentinel-dashboard
   template:
     metadata:
       labels:
-        app: pig-gateway
+        app: pig-sentinel-dashboard
     spec:
       containers:
-        - name: pig-gateway
-          image: "dockerhub.clinbrain.com/pig-gateway:20220125_528632b3"
+        - name: pig-sentinel-dashboard
+          image: "dockerhub.clinbrain.com/pig-sentinel-dashboard:20220125_528632b3"
           imagePullPolicy: Always
           env:
             - name: NACOS_HOST
@@ -32,6 +32,7 @@ spec:
               value: "192.168.0.112"
             - name: pig-redis
               value: "192.168.0.112"
+
           volumeMounts:
             - name: config-volume
               mountPath: /home/java/application.properties
@@ -42,52 +43,82 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: pig-gateway-config
+            name: pig-sentinel-dashboard-config
 
 ### Application Service
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: pig-gateway
+  name: pig-sentinel-dashboard
   namespace: temp
 spec:
   type: NodePort
   ports:
-    - port: 14033
-      nodePort: 14033
+    - port: 14031
+      nodePort: 14031
       targetPort: 8080
   selector:
-    app: pig-gateway
+    app: pig-sentinel-dashboard
 
 ### Application Config MAP
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pig-gateway-config
+  name: pig-sentinel-dashboard-config
   namespace: temp
 data:
   bootstrap.yml: |
     server:
-      port: 8080
-
+      port: 5020
+      servlet:
+        encoding:
+          force: true
     spring:
       application:
         name: @artifactId@
       cloud:
-    #    inetutils:
-    #      preferred-networks: ${spring.cloud.nacos.discovery.server-addr}
         nacos:
           discovery:
             server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
-          config:
-            server-addr: ${spring.cloud.nacos.discovery.server-addr}
-            file-extension: yml
-            shared-configs:
-              - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
       profiles:
         active: @profiles.active@
+
+
+  application.yml: |
+    server:
+      port: 5003
+      servlet:
+        encoding:
+          force: true
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: '*'
+      endpoint:
+        health:
+          show-details: ALWAYS
+    logging:
+      level:
+        org:
+          springframework:
+            web: info
+      file:
+        name: logs/csp/sentinel-dashboard.log
+      pattern:
+        file: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+    auth:
+      username: sentinel
+      password: sentinel
+      filter:
+        exclude-urls: /,/auth/login,/auth/logout,/registry/machine,/version,/actuator/**,/details
+        exclude-url-suffixes: htm,html,js,css,map,ico,ttf,woff,png
+    sentinel:
+      dashboard:
+        version: @project.version@
+
 
   logback-spring.xml: |
     <?xml version="1.0" encoding="UTF-8"?>
@@ -95,14 +126,11 @@ data:
     	<springProperty scop="context" name="spring.application.name" source="spring.application.name" defaultValue=""/>
     	<property name="log.path" value="logs/${spring.application.name}"/>
     	<!-- 彩色日志格式 -->
-    	<property name="CONSOLE_LOG_PATTERN"
-    			  value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
+    	<property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
     	<!-- 彩色日志依赖的渲染类 -->
     	<conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
-    	<conversionRule conversionWord="wex"
-    					converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
-    	<conversionRule conversionWord="wEx"
-    					converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+    	<conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+    	<conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
     	<!-- Console log output -->
     	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
     		<encoder>
@@ -160,7 +188,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: temp
-  name: pig-gateway-reader
+  name: pig-sentinel-dashboard-reader
 rules:
   - apiGroups: [""]
     resources: ["pods","configmaps","services"]
@@ -170,12 +198,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: pig-gateway-reader
+  name: pig-sentinel-dashboard-reader
   namespace: temp
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: pig-gateway-reader
+  name: pig-sentinel-dashboard-reader
 subjects:
   - kind: ServiceAccount
     name: default

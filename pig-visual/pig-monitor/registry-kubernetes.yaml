@@ -3,23 +3,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pig-gateway
+  name: pig-monitor
   namespace: temp
   labels:
-    app: pig-gateway
+    app: pig-monitor
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pig-gateway
+      app: pig-monitor
   template:
     metadata:
       labels:
-        app: pig-gateway
+        app: pig-monitor
     spec:
       containers:
-        - name: pig-gateway
-          image: "dockerhub.clinbrain.com/pig-gateway:20220125_528632b3"
+        - name: pig-monitor
+          image: "dockerhub.clinbrain.com/pig-monitor:20220125_528632b3"
           imagePullPolicy: Always
           env:
             - name: NACOS_HOST
@@ -32,6 +32,7 @@ spec:
               value: "192.168.0.112"
             - name: pig-redis
               value: "192.168.0.112"
+
           volumeMounts:
             - name: config-volume
               mountPath: /home/java/application.properties
@@ -42,42 +43,40 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: pig-gateway-config
+            name: pig-monitor-config
 
 ### Application Service
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: pig-gateway
+  name: pig-monitor
   namespace: temp
 spec:
   type: NodePort
   ports:
-    - port: 14033
-      nodePort: 14033
+    - port: 14035
+      nodePort: 14035
       targetPort: 8080
   selector:
-    app: pig-gateway
+    app: pig-monitor
 
 ### Application Config MAP
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pig-gateway-config
+  name: pig-monitor-config
   namespace: temp
 data:
   bootstrap.yml: |
     server:
-      port: 8080
+      port: 5001
 
     spring:
       application:
         name: @artifactId@
       cloud:
-    #    inetutils:
-    #      preferred-networks: ${spring.cloud.nacos.discovery.server-addr}
         nacos:
           discovery:
             server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
@@ -88,6 +87,10 @@ data:
               - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
       profiles:
         active: @profiles.active@
+      autoconfigure:
+        exclude: com.pig4cloud.pig.common.core.config.JacksonConfiguration #排除全局Jackson配置，避免admin server时间显示问题
+
+
 
   logback-spring.xml: |
     <?xml version="1.0" encoding="UTF-8"?>
@@ -95,14 +98,11 @@ data:
     	<springProperty scop="context" name="spring.application.name" source="spring.application.name" defaultValue=""/>
     	<property name="log.path" value="logs/${spring.application.name}"/>
     	<!-- 彩色日志格式 -->
-    	<property name="CONSOLE_LOG_PATTERN"
-    			  value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
+    	<property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
     	<!-- 彩色日志依赖的渲染类 -->
     	<conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
-    	<conversionRule conversionWord="wex"
-    					converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
-    	<conversionRule conversionWord="wEx"
-    					converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+    	<conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+    	<conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
     	<!-- Console log output -->
     	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
     		<encoder>
@@ -160,7 +160,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: temp
-  name: pig-gateway-reader
+  name: pig-monitor-reader
 rules:
   - apiGroups: [""]
     resources: ["pods","configmaps","services"]
@@ -170,12 +170,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: pig-gateway-reader
+  name: pig-monitor-reader
   namespace: temp
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: pig-gateway-reader
+  name: pig-monitor-reader
 subjects:
   - kind: ServiceAccount
     name: default

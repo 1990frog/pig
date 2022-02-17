@@ -26,6 +26,12 @@ spec:
               value: 192.168.0.112
             - name: NACOS_PORT
               value: "8848"
+            - name: pig-register
+              value: "192.168.0.112"
+            - name: pig-mysql
+              value: "192.168.0.112"
+            - name: pig-redis
+              value: "192.168.0.112"
 
           volumeMounts:
             - name: config-volume

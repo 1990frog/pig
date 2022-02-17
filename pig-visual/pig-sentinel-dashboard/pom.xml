@@ -102,6 +102,26 @@
 					<skip>false</skip>
 				</configuration>
 			</plugin>
+
+			<!-- 复制 Jar to Application.jar  -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<target>
+								<copy file="target/${project.name}.jar" tofile="target/application-1.0-SNAPSHOT.jar"/>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>

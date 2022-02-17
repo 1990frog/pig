@@ -3,23 +3,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pig-gateway
+  name: pig-xxl-job-admin
   namespace: temp
   labels:
-    app: pig-gateway
+    app: pig-xxl-job-admin
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pig-gateway
+      app: pig-xxl-job-admin
   template:
     metadata:
       labels:
-        app: pig-gateway
+        app: pig-xxl-job-admin
     spec:
       containers:
-        - name: pig-gateway
-          image: "dockerhub.clinbrain.com/pig-gateway:20220125_528632b3"
+        - name: pig-xxl-job-admin
+          image: "dockerhub.clinbrain.com/pig-xxl-job-admin:20220125_528632b3"
           imagePullPolicy: Always
           env:
             - name: NACOS_HOST
@@ -32,6 +32,7 @@ spec:
               value: "192.168.0.112"
             - name: pig-redis
               value: "192.168.0.112"
+
           volumeMounts:
             - name: config-volume
               mountPath: /home/java/application.properties
@@ -42,52 +43,106 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: pig-gateway-config
+            name: pig-xxl-job-admin-config
 
 ### Application Service
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: pig-gateway
+  name: pig-xxl-job-admin
   namespace: temp
 spec:
   type: NodePort
   ports:
-    - port: 14033
-      nodePort: 14033
+    - port: 14034
+      nodePort: 14034
       targetPort: 8080
   selector:
-    app: pig-gateway
+    app: pig-xxl-job-admin
 
 ### Application Config MAP
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pig-gateway-config
+  name: pig-xxl-job-admin-config
   namespace: temp
 data:
   bootstrap.yml: |
+    # 此配置只适合开发测试环境，详细配置参考： http://t.cn/A64RaHJm
     server:
-      port: 8080
+      port: 5004
+      servlet:
+        context-path: /xxl-job-admin
 
     spring:
       application:
         name: @artifactId@
       cloud:
-    #    inetutils:
-    #      preferred-networks: ${spring.cloud.nacos.discovery.server-addr}
         nacos:
           discovery:
             server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
-          config:
-            server-addr: ${spring.cloud.nacos.discovery.server-addr}
-            file-extension: yml
-            shared-configs:
-              - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+            metadata:
+              management.context-path: ${server.servlet.context-path}/actuator
       profiles:
         active: @profiles.active@
+
+  application.yml: |
+    # xxl
+    xxl:
+      job:
+        i18n: zh_CN
+        logretentiondays: 30
+        triggerpool:
+          fast.max: 200
+          slow.max: 200
+
+    # mybatis
+    mybatis:
+      mapper-locations: classpath:/mybatis-mapper/*Mapper.xml
+
+    # spring
+    spring:
+      datasource:
+        url: jdbc:mysql://${MYSQL_HOST:pig-mysql}:${MYSQL_PORT:3306}/${MYSQL_DB:pig_job}?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        username: ${MYSQL_USER:root}
+        password: ${MYSQL_PWD:root}
+      mvc:
+        static-path-pattern: /static/**
+      freemarker:
+        suffix: .ftl
+        request-context-attribute: request
+        settings:
+          number_format: 0.##########
+      mail:
+        host: smtp.mxhichina.com
+        port: 465
+        from: xxxx@gitee.wang
+        username: xxxx@gitee.wang
+        password: xxxx
+        properties:
+          mail:
+            smtp:
+              auth: true
+              ssl.enable: true
+              starttls.enable: false
+              required: false
+    # spring boot admin 配置
+
+    management:
+      health:
+        mail:
+          enabled: false
+      endpoints:
+        web:
+          exposure:
+            include: '*'
+      endpoint:
+        health:
+          show-details: ALWAYS
+
 
   logback-spring.xml: |
     <?xml version="1.0" encoding="UTF-8"?>
@@ -154,13 +209,14 @@ data:
 
 
 
+
 ### Application Authority Role
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: temp
-  name: pig-gateway-reader
+  name: pig-xxl-job-admin-reader
 rules:
   - apiGroups: [""]
     resources: ["pods","configmaps","services"]
@@ -170,12 +226,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: pig-gateway-reader
+  name: pig-xxl-job-admin-reader
   namespace: temp
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: pig-gateway-reader
+  name: pig-xxl-job-admin-reader
 subjects:
   - kind: ServiceAccount
     name: default

@@ -18,9 +18,15 @@ spec:
         app: pig-auth
     spec:
       containers:
-        - name: provider-service
+        - name: pig-auth
           image: "dockerhub.clinbrain.com/pig-auth:20220125_528632b3"
           imagePullPolicy: Always
+          env:
+            - name: NACOS_HOST
+              value: 192.168.0.112
+            - name: NACOS_PORT
+              value: "8848"
+
           volumeMounts:
             - name: config-volume
               mountPath: /home/java/application.properties

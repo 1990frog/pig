@@ -55,6 +55,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -208,7 +209,8 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		final HttpEntity<String> entity = new HttpEntity<String>(headers);
 		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
 				HttpMethod.GET, entity, Map.class).getBody();
-		if (map != null && !map.keySet().isEmpty()) {
+		if (map != null && !map.keySet().isEmpty()
+			&& StrUtil.isNotBlank(Optional.ofNullable(map.get("Identity")).orElse("").toString())) {
 			cache.put(token, map);
 		}
 		return map;

@@ -3,6 +3,7 @@ package com.pig4cloud.pig.admin.common.ssoutil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.json.JSONObject;
 import com.pig4cloud.pig.admin.model.SoapEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
@@ -24,6 +25,7 @@ import java.time.ZoneOffset;
  * @Description
  * @Date 2021/12/10 14:31
  **/
+@Slf4j
 public class WebServiceHttpClient {
 
 	public static JSONObject post(SoapEntity soapEntity) {
@@ -46,8 +48,9 @@ public class WebServiceHttpClient {
 			soapEntity.getSoapMessage().writeTo(out);
 			InputStream inputStream = con.getInputStream();
 			String res = IOUtils.toString(inputStream, "UTF-8");
-			System.out.println("res -> " + res);
+			log.info("sso response = {}", res);
 			JSONObject jsonObject = UserWebServiceResponse.xmlToJson(res, soapEntity.getType());
+			log.info("sso 本地解析后 = {}", jsonObject);
 			return jsonObject;
 		} catch (Exception e) {
 

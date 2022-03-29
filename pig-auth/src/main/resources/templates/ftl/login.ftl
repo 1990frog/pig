@@ -22,7 +22,9 @@
         <input type="password" name="password" class="form-control" placeholder="密码" required>
         <button class="btn btn-lg btn-primary btn-block" type="submit">sign in</button>
         <#if error??>
+            <#escape x as x?html>
             <span style="color: red; ">${error}</span>
+            </#escape>
         </#if>
     </form>
 </div>

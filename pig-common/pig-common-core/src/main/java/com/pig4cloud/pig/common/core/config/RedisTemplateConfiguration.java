@@ -62,17 +62,25 @@ public class RedisTemplateConfiguration {
 	@Bean
 	public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
 		return new RedisCacheManager(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory),
-			RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ZERO),
-			this.getRedisCacheConfigurationMap());
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ZERO),
+				this.getRedisCacheConfigurationMap());
 
 	}
 
 	private Map<String, RedisCacheConfiguration> getRedisCacheConfigurationMap() {
 		Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>();
 		//SsoCache和BasicDataCache进行过期时间配置
-		redisCacheConfigurationMap.put(CacheConstants.SSO_CLIENT_CACHE,
-			RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30)));
+		redisCacheConfigurationMap.put(CacheConstants.SSO_SERVER_TOKEN_USER_CACHE,
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30)));
 
+		redisCacheConfigurationMap.put(CacheConstants.SSO_SERVER_LOCAL_TOKEN,
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
+		redisCacheConfigurationMap.put(CacheConstants.SSO_LOCAL_SERVER_TOKEN,
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
+		redisCacheConfigurationMap.put(CacheConstants.SSO_SERVER_INFO,
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
+		redisCacheConfigurationMap.put(CacheConstants.SSO_CLIENT_INFO,
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
 		return redisCacheConfigurationMap;
 	}
 

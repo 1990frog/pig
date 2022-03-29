@@ -14,38 +14,32 @@
 	</resultMap>
 
 	<sql id="sysClassSql">
-		`sysc`.sys_id,
-		`sysc`.sys_class,
-		`sysc`.`sys_name`,
-		`sysc`.url,
-		`sysc`.status,
-		`sysc`.operate_user,
-		`sysc`.create_time,
-		`sysc`.update_time
+		sys_id,
+		sys_class,
+		`sys_name`,
+		url,
+		`status`,
+		operate_user,
+		create_time,
+		update_time
 	</sql>
 
 	<select id="selectPage" resultMap="baseResultMap">
 		SELECT
-		sys_id,
-		sys_class,
-		sys_name,
-		url,
-		status,
-		operate_user,
-		create_time,
-		update_time
+			<include refid="sysClassSql"/>
 		FROM
 		sys_system
-		where 1 = 1
-		<if test="query.sysSystem != null and query.sysSystem != ''">
-			and sys_code LIKE CONCAT('%',#{query.sysCode},'%')
-		</if>
-		<if test="query.sysName != null and query.sysName != ''">
-			and sys_name LIKE CONCAT('%',#{query.sysName},'%')
-		</if>
-		<if test="query.status != null and query.status != ''">
-			and status  = #{query.sysName}
-		</if>
-		ORDER BY create_time DESC
+		<where>
+			<if test="query.sysClass != null and query.sysClass != ''">
+				sys_class LIKE CONCAT('%',#{query.sysClass},'%')
+			</if>
+			<if test="query.sysName != null and query.sysName != ''">
+				and sys_name LIKE CONCAT('%',#{query.sysName},'%')
+			</if>
+			<if test="query.status != null and query.status != ''">
+				and `status`  = #{query.status}
+			</if>
+		</where>
+		ORDER BY update_time DESC
 	</select>
 </mapper>

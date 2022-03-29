@@ -71,4 +71,11 @@ public interface SysMenuService extends IService<SysMenu> {
 	 */
 	List<MenuTree> filterMenu(Set<MenuVO> menuSet, Integer parentId);
 
+
+	/**
+	 * 查询当前角色绑定得菜单
+	 * @return
+	 */
+	List<MenuVO> findMenuInfoByRoleId(Integer roleId);
+
 }

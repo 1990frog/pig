@@ -28,7 +28,16 @@ public class SysClassController {
 
 
 	private final SysClassService sysClassService;
+	@GetMapping("/sysClass")
+	public R sysClass() {
+		return R.ok(sysClassService.list());
+	}
 
+	@GetMapping("/all")
+	@PreAuthorize("@pms.hasPermission('sys_sys_search')")
+	public R all() {
+		return R.ok(sysClassService.list());
+	}
 	/**
 	 * 分页获取系统信息
 	 */

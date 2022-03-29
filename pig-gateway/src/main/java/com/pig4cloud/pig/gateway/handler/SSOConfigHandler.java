@@ -16,6 +16,7 @@
 
 package com.pig4cloud.pig.gateway.handler;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.pig4cloud.captcha.ArithmeticCaptcha;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
@@ -61,7 +62,7 @@ public class SSOConfigHandler implements HandlerFunction<ServerResponse> {
 		FastByteArrayOutputStream os = new FastByteArrayOutputStream();
 		Map<String,Object> resultMap = new HashMap<>();
 		Map<String,String> appNameMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[0]));
-		String sysClass = serverRequest.headers().firstHeader("sysClass");
+		String sysClass = serverRequest.queryParam("sysClass").orElse(serverRequest.headers().firstHeader("sysClass"));
 		resultMap.put("ssoEnable", ssoClientInfo.isEnable());
 		resultMap.put("serverUrl", ssoClientInfo.isEnable()? ssoClientInfo.getServerUrl() + appNameMap.get(sysClass): "");
 		try {

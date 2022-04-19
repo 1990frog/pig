@@ -214,14 +214,23 @@
 		</profile>
 	</profiles>
 
+	<repositories>
+		<repository>
+			<id>nexus</id>
+			<url>
+				http://package.clinbrain.com/repository/maven-public
+			</url>
+		</repository>
+	</repositories>
+
 	<distributionManagement>
 		<repository>
-			<id>release</id>
-			<url>http://node1:8099/repository/maven-releases/</url>
+			<id>maven-releases</id>
+			<url>http://package.clinbrain.com/repository/maven-release/</url>
 		</repository>
 		<snapshotRepository>
-			<id>snapshots</id>
-			<url>http://node1:8099/repository/maven-snapshots/</url>
+			<id>maven-snapshots</id>
+			<url>http://package.clinbrain.com/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 

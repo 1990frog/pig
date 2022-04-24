@@ -103,9 +103,9 @@ public class RemoteServiceImpl implements IRemoteService {
 		soapEntity.setToken(serverToken);
 
 		// 设置一下wsdl的路径
-		//String url = (String) ssoClientInfo.get("serverUrl");
-		//String wsdlUrl = getWsdlUrl(url);
-		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		String url = (String) ssoClientInfo.get("serverUrl");
+		String wsdlUrl = getWsdlUrl(url);
+//		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
 		if (StringUtils.isEmpty(wsdlUrl)) {
 			return null;
 		}

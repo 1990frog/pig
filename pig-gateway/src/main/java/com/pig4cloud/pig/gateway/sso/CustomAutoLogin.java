@@ -1,18 +1,8 @@
 package com.pig4cloud.pig.gateway.sso;
 
-import com.alibaba.fastjson.JSON;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.springframework.cache.CacheManager;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -25,11 +15,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Liaopan on 2020-08-25.
@@ -111,7 +97,7 @@ public class CustomAutoLogin {
 		}
 	}
 
-	private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
+	/*private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
 		StringBuilder builder = new StringBuilder("?");
 		formData.forEach((key, value) -> {
 			builder.append(key)
@@ -127,9 +113,9 @@ public class CustomAutoLogin {
 //		restTemplate.setRequestFactory(factory);
 //		return restTemplate.exchange(queryPath, HttpMethod.POST,
 //				new HttpEntity<MultiValueMap<String, String>>(null, headers), Map.class).getBody();
-	}
+	}*/
 
-	@SneakyThrows
+	/*@SneakyThrows
 	private Map<String, Object> post(String path, HttpHeaders headers) {
 		HttpEntity httpEntity = null;
 		HttpPost httpPost = null;
@@ -159,5 +145,5 @@ public class CustomAutoLogin {
 				httpPost.releaseConnection();
 			}
 		}
-	}
+	}*/
 }

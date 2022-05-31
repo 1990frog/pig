@@ -57,6 +57,7 @@
 		<docker.namespace>pig4cloud</docker.namespace>
 		<docker.username>username</docker.username>
 		<docker.password>password</docker.password>
+		<sentinel.transport.simple.http>1.8.0</sentinel.transport.simple.http>
 	</properties>
 
 	<dependencies>
@@ -137,6 +138,18 @@
 				<version>${spring-cloud-alibaba.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>com.alibaba.csp</groupId>
+				<artifactId>sentinel-transport-simple-http</artifactId>
+				<version>${sentinel.transport.simple.http}</version>
+				<exclusions>
+					<exclusion>
+						<artifactId>fastjson</artifactId>
+						<groupId>com.alibaba</groupId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

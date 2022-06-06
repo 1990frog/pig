@@ -148,12 +148,12 @@ public class RemoteServiceImpl implements IRemoteService {
 		soapEntity.setAppCode("DATA_QUALITY");
 		UserWebServiceRequest.buildMessage(soapEntity);
 		JSONObject post = WebServiceHttpClient.post(soapEntity);
-		System.out.println();
-		System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(post));
+		//System.out.println();
+		//System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(post));
 		UserRoleInfoParse userRoleInfoParse = UserRoleInfoParse.getInstance();
 		List<SSOPrivilege> ans = new ArrayList<>();
 		userRoleInfoParse.parseSSOMenu(post, ans);
-		System.out.println("ans -> " + com.alibaba.fastjson.JSONObject.toJSONString(ans));
+		//System.out.println("ans -> " + com.alibaba.fastjson.JSONObject.toJSONString(ans));
 		SysMenuServiceImpl sysMenuService = new SysMenuServiceImpl();
 	/*	for (SSOPrivilege li : list) {
 			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
@@ -161,10 +161,10 @@ public class RemoteServiceImpl implements IRemoteService {
 		}*/
 		List<MenuTree> menuTrees = new ArrayList<>();
 		sysMenuService.processMenu(ans, menuTrees);
-		System.out.println();
+		//System.out.println();
 		for (MenuTree li : menuTrees) {
-			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
-			System.out.println();
+			//System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
+			//System.out.println();
 		}
 
 		//角色 {"AppRoles":{"AppRole":{"RoleCode":"Admin","RoleName":"管理员角色"}}}

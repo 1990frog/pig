@@ -2,6 +2,7 @@ package com.pig4cloud.pig.admin.common.ssoutil;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.model.SSOPermissionExtPropertyInfo;
@@ -77,11 +78,10 @@ public class UserRoleInfoParse {
 					continue;
 				}
 				// 解析每一个Privilege参数
-				SSOPrivilege res = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(privilege), SSOPrivilege.class);
+				SSOPrivilege res = processString2Object(String.valueOf(privilege), SSOPrivilege.class);
 				if (privilege.containsKey("ExtPropertyValues")) {
 					JSONObject extPropertyValues = privilege.getJSONObject("ExtPropertyValues");
-					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
-							com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo = processString2Object(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
 					res.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
 				}
 				// 找子类
@@ -91,15 +91,18 @@ public class UserRoleInfoParse {
 			}
 		} catch (ClassCastException classCastException) {
 			JSONObject privilegeObject = privileges.getJSONObject("Privilege");
-			SSOPrivilege resObj = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(privilegeObject), SSOPrivilege.class);
-			if (privilegeObject.containsKey("ExtPropertyValues")) {
-				JSONObject extPropertyValues = privilegeObject.getJSONObject("ExtPropertyValues");
-				SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
-						com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
-				resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
-				List<SSOPrivilege> childs = processChild(privilegeObject);
-				resObj.setSsoPrivileges(childs);
-				ans.add(resObj);
+			try {
+				SSOPrivilege resObj = processString2Object(String.valueOf(privilegeObject), SSOPrivilege.class);
+				if (privilegeObject.containsKey("ExtPropertyValues")) {
+					JSONObject extPropertyValues = privilegeObject.getJSONObject("ExtPropertyValues");
+					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo = processString2Object(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+					resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
+					List<SSOPrivilege> childs = processChild(privilegeObject);
+					resObj.setSsoPrivileges(childs);
+					ans.add(resObj);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -133,11 +136,10 @@ public class UserRoleInfoParse {
 					continue;
 				}
 				// 解析每一个Privilege参数
-				SSOPrivilege resObj = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(next), SSOPrivilege.class);
+				SSOPrivilege resObj = processString2Object(String.valueOf(next), SSOPrivilege.class);
 				if (next.containsKey("ExtPropertyValues")) {
 					JSONObject extPropertyValues = next.getJSONObject("ExtPropertyValues");
-					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
-							com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo = processString2Object(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
 					resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
 				}
 				List<SSOPrivilege> ssoPrivileges = processChild(next);
@@ -145,16 +147,20 @@ public class UserRoleInfoParse {
 				res.add(resObj);
 			}
 		} catch (ClassCastException classCastException) {
-			JSONObject privilegeObject = privileges.getJSONObject("Privilege");
-			SSOPrivilege resObj = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(privilegeObject), SSOPrivilege.class);
-			if (privilegeObject.containsKey("ExtPropertyValues")) {
-				JSONObject extPropertyValues = privilegeObject.getJSONObject("ExtPropertyValues");
-				SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
-						com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
-				resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
-				List<SSOPrivilege> childs = processChild(privilegeObject);
-				resObj.setSsoPrivileges(childs);
-				res.add(resObj);
+			try {
+				JSONObject privilegeObject = privileges.getJSONObject("Privilege");
+				SSOPrivilege resObj = processString2Object(String.valueOf(privilegeObject), SSOPrivilege.class);
+				if (privilegeObject.containsKey("ExtPropertyValues")) {
+					JSONObject extPropertyValues = privilegeObject.getJSONObject("ExtPropertyValues");
+					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
+							processString2Object(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+					resObj.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
+					List<SSOPrivilege> childs = processChild(privilegeObject);
+					resObj.setSsoPrivileges(childs);
+					res.add(resObj);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -188,11 +194,11 @@ public class UserRoleInfoParse {
 					continue;
 				}
 				// 解析每一个Privilege参数
-				SSOPrivilege res = (SSOPrivilege) com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(next), clazz);
+				SSOPrivilege res = (SSOPrivilege) processString2Object(String.valueOf(next), clazz);
 				if (next.containsKey("ExtPropertyValues")) {
 					JSONObject extPropertyValues = next.getJSONObject("ExtPropertyValues");
 					SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
-							com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+							processString2Object(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
 					res.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
 				}
 				ans.add((T) res);
@@ -202,11 +208,11 @@ public class UserRoleInfoParse {
 			}
 		} catch (ClassCastException classCastException) {
 			JSONObject privilegeObject = privileges.getJSONObject("Privilege");
-			SSOPrivilege res = (SSOPrivilege) com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(privilegeObject), clazz);
+			SSOPrivilege res = (SSOPrivilege) processString2Object(String.valueOf(privilegeObject), clazz);
 			if (privilegeObject.containsKey("ExtPropertyValues")) {
 				JSONObject extPropertyValues = privilegeObject.getJSONObject("ExtPropertyValues");
 				SSOPermissionExtPropertyInfo ssoPermissionExtPropertyInfo =
-						com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
+						processString2Object(String.valueOf(extPropertyValues), SSOPermissionExtPropertyInfo.class);
 				res.setExtPropertyInfo(ssoPermissionExtPropertyInfo);
 			}
 			ans.add((T) res);
@@ -239,7 +245,7 @@ public class UserRoleInfoParse {
 			}
 			while (iterator.hasNext()) {
 				JSONObject appRole = (JSONObject) iterator.next();
-				T res = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(appRole), t);
+				T res = processString2Object(String.valueOf(appRole), t);
 				ans.add(res);
 			}
 		} catch (ClassCastException classCastException) {
@@ -248,10 +254,21 @@ public class UserRoleInfoParse {
 			if (Objects.isNull(appRole)) {
 				return;
 			}
-			T res = com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(appRole), t);
+			T res = processString2Object(String.valueOf(appRole), t);
 			ans.add(res);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	private <T> T processString2Object(String context, Class<T> clazz) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			String string = objectMapper.writeValueAsString(context);
+			return objectMapper.readValue(string, clazz);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException("类型转换异常 e ={} ", e);
 		}
 	}
 
@@ -666,7 +683,7 @@ public class UserRoleInfoParse {
 		List<MenuTree> menuTrees = new ArrayList<>();
 		sysMenuService.processMenu(list, menuTrees);
 		for (MenuTree li : menuTrees) {
-			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
+			//System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
 			System.out.println();
 		}
 		/*SSORoleInfo ssoRoleInfo =;

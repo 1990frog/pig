@@ -18,6 +18,7 @@
 
 package com.pig4cloud.pig.gateway.filter;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -43,10 +44,11 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import sun.misc.BASE64Encoder;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -105,11 +107,11 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		String token = request.getHeaders().getFirst("token");
 		String sysClass = request.getHeaders().getFirst("sysClass");
 		// 兼容华西的sso接入
-		if (StrUtil.isEmpty(token)) {
+		if (ObjectUtils.isEmpty(token)) {
 			// 可能从header传入，也可能是queryString
 			token = request.getHeaders().containsKey("tk") ? request.getHeaders().getFirst("tk") : null;
 			log.info("sso 获取token 参数 <tk>  开始，{}", token);
-			if (StrUtil.isEmpty(token)) {
+			if (ObjectUtils.isEmpty(token)) {
 				MultiValueMap<String, String> queryParams = request.getQueryParams();
 				token = (queryParams == null || queryParams.isEmpty()) ? null : queryParams.getFirst("tk");
 			}
@@ -118,7 +120,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		log.info("sso 登录流程 开始 token = {}", token);
 		log.info("sso 登录流程 开始 sysClass = {}", sysClass);
 		String errMsg = "无法验证token，请重新登录！";
-		if (!StrUtil.isEmpty(token)) {
+		if (!ObjectUtils.isEmpty(token)) {
 			Map<String, String> appNameMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[0]));
 			Map<String, String> appCodeMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[1]));
 			final Map userInfo = getUser(token, appNameMap.get(sysClass), appCodeMap.get(sysClass));
@@ -189,9 +191,8 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		formData.add("token", token);
 		//header = Base64(AppName)|TimeStamp|Sign
 		//Sign= MD5(Base64(AppName)|AppCode|TimeStamp|Token)
-		BASE64Encoder encoder = new BASE64Encoder();
 		byte[] textByte = appName.getBytes(StandardCharsets.UTF_8);
-		String base64AppName = encoder.encode(textByte);
+		String base64AppName = Base64.encode(textByte);
 
 		//初始化LocalDateTime对象
 		ZoneOffset zoneOffset = ZoneOffset.ofHours(0);
@@ -208,7 +209,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
 				HttpMethod.GET, entity, Map.class).getBody();
 		if (map != null && !map.keySet().isEmpty()
-				&& StrUtil.isNotBlank(Optional.ofNullable(map.get("Identity")).orElse("").toString())) {
+			&& StrUtil.isNotBlank(Optional.ofNullable(map.get("Identity")).orElse("").toString())) {
 			cache.put(token, map);
 		}
 		return map;
@@ -221,17 +222,14 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		Cache ssoClientInfoCache = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
 		if (ssoClientInfoCache == null || ssoClientInfoCache.get(CacheConstants.SSO_CLIENT_INFO) == null ||
 				ssoClientInfoCache.get(CacheConstants.SSO_CLIENT_INFO).get() == null) {
-			// Map map = JSONObject.parseObject(JSONObject.toJSONString(this.ssoClientInfo), Map.class);
-			// ssoClientInfoCache.put(CacheConstants.SSO_CLIENT_INFO, map);
 			ObjectMapper objectMapper = new ObjectMapper();
 			try {
 				String str = objectMapper.writeValueAsString(this.ssoClientInfo);
 				Map map = objectMapper.readValue(str, Map.class);
 				ssoClientInfoCache.put(CacheConstants.SSO_CLIENT_INFO, map);
 			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-				log.error("登录异常,类型转换异常 e={}", e);
-				throw new RuntimeException("登录异常,类型转换异常");
+				log.error("登录异常,类型转换异常", e);
+				throw new RuntimeException("登录异常,类型转换异常" + e.getMessage());
 			}
 		}
 	}

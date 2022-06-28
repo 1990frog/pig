@@ -20,6 +20,7 @@ package com.pig4cloud.pig.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
@@ -221,9 +222,9 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		Cache ssoClientInfoCache = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
 		if (ssoClientInfoCache == null || ssoClientInfoCache.get(CacheConstants.SSO_CLIENT_INFO) == null ||
 				ssoClientInfoCache.get(CacheConstants.SSO_CLIENT_INFO).get() == null) {
-			// Map map = JSONObject.parseObject(JSONObject.toJSONString(this.ssoClientInfo), Map.class);
-			// ssoClientInfoCache.put(CacheConstants.SSO_CLIENT_INFO, map);
-			ObjectMapper objectMapper = new ObjectMapper();
+			Map map = JSONObject.parseObject(JSONObject.toJSONString(this.ssoClientInfo), Map.class);
+			ssoClientInfoCache.put(CacheConstants.SSO_CLIENT_INFO, map);
+			/*ObjectMapper objectMapper = new ObjectMapper();
 			try {
 				String str = objectMapper.writeValueAsString(this.ssoClientInfo);
 				Map map = objectMapper.readValue(str, Map.class);
@@ -232,7 +233,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 				e.printStackTrace();
 				log.error("登录异常,类型转换异常 e={}", e);
 				throw new RuntimeException("登录异常,类型转换异常");
-			}
+			}*/
 		}
 	}
 

@@ -45,10 +45,10 @@ public class SysClassServiceImpl  extends ServiceImpl<SysClassMapper, SysSystem>
 			log.error("不允许修改系统标识");
 			return false;
 		}
-		if(StrUtil.isNotBlank(sysSystem.getSysName()) && !old.getSysName().equals(sysSystem.getSysName())){
+		/*if(StrUtil.isNotBlank(sysSystem.getSysName()) && !old.getSysName().equals(sysSystem.getSysName())){
 			log.error("名称为[{}]的系统已存在，修改失败", sysSystem.getSysClass());
 			return false;
-		}
+		}*/
 		sysSystem.setOperateUser(SecurityUtils.getUser().getUsername());
 		return baseMapper.updateById(sysSystem) == 1;
 	}

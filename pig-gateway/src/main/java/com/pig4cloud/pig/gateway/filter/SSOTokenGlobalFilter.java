@@ -84,7 +84,6 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 
 	private final CacheManager cacheManager;
 
-
 	private final ObjectMapper objectMapper;
 
 	/**

@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -15,7 +16,9 @@ import java.util.List;
 @Configuration
 @RefreshScope
 @ConfigurationProperties(prefix = "sso")
-public class SSOClientInfo {
+public class SSOClientInfo implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private boolean enable = false;
 

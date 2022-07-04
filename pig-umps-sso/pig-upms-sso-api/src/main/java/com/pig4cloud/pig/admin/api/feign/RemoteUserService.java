@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
  * @author lengleng
  * @date 2019/2/1
  */
-@FeignClient(contextId = "remoteUserService", value = ServiceNameConstants.UMPS_SSO_SERVICE,
+@FeignClient(contextId = "remoteUserService", value = ServiceNameConstants.UMPS_SERVICE,
 		fallbackFactory = RemoteUserServiceFallbackFactory.class)
 public interface RemoteUserService {
 

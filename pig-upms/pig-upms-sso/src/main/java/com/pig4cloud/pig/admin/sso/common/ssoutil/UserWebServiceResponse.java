@@ -1,8 +1,8 @@
 package com.pig4cloud.pig.admin.sso.common.ssoutil;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.XML;
-import com.alibaba.cloud.commons.lang.StringUtils;
 import com.pig4cloud.pig.admin.sso.common.constants.SSOWebServiceConstants;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 
@@ -17,7 +17,7 @@ import java.util.Objects;
 public class UserWebServiceResponse {
 
 	public static JSONObject xmlToJson(String xml, SoapTypeEnum type) {
-		if (StringUtils.isEmpty(xml)) {
+		if (StrUtil.isEmpty(xml)) {
 			return null;
 		}
 		try {
@@ -60,7 +60,7 @@ public class UserWebServiceResponse {
 			return null;
 		}
 		String str = roleResponse.getStr(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ROLE_RESULT);
-		if (StringUtils.isEmpty(str)) {
+		if (StrUtil.isEmpty(str)) {
 			return null;
 		}
 		// 再来转一次，来获取用户的信息
@@ -77,7 +77,7 @@ public class UserWebServiceResponse {
 			return null;
 		}
 		String str = roleResponse.getStr(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_PRIVILEGE_RESULT);
-		if (StringUtils.isEmpty(str)) {
+		if (StrUtil.isEmpty(str)) {
 			return null;
 		}
 		// 再来转一次，来获取用户的信息
@@ -94,7 +94,7 @@ public class UserWebServiceResponse {
 			return null;
 		}
 		String str = roleResponse.getStr(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ORG_RESULT);
-		if (StringUtils.isEmpty(str)) {
+		if (StrUtil.isEmpty(str)) {
 			return null;
 		}
 		// 再来转一次，来获取用户的信息

@@ -6,7 +6,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
 /**
  * @ClassName CorsMapping
  * @Author Duys
- * @Description TODO
+ * @Description
  * @Date 2022/7/21 17:49
  **/
 public class CorsMapping extends WebMvcConfigurationSupport {

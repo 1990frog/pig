@@ -1,6 +1,6 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
-import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -11,11 +11,12 @@ import javax.servlet.http.HttpServletResponse;
  * @Description
  * @Date 2022/7/21 17:42
  **/
-public class SSOUserInfoRequestInterceptor implements HandlerInterceptor {
+@Component
+public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor {
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-		return false;
+		return true;
 	}
 }

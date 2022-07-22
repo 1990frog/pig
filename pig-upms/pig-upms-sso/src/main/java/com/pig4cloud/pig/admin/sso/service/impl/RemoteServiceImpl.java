@@ -1,7 +1,7 @@
 package com.pig4cloud.pig.admin.sso.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
-import com.alibaba.cloud.commons.lang.StringUtils;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
@@ -33,7 +33,7 @@ public class RemoteServiceImpl implements IRemoteService {
 	@Override
 	public List<SSORoleInfo> getSSORoleInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
 		String username = serverInfoMap.get("username");
-		if (StringUtils.isEmpty(username)) {
+		if (StrUtil.isEmpty(username)) {
 			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
 		}
 		String userCode = username.split("@@")[0];
@@ -47,7 +47,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
 		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
-		if (StringUtils.isEmpty(wsdlUrl)) {
+		if (StrUtil.isEmpty(wsdlUrl)) {
 			return null;
 		}
 		if (!wsdlUrl.startsWith("http")) {
@@ -92,7 +92,7 @@ public class RemoteServiceImpl implements IRemoteService {
 
 	private JSONObject getSSOUserInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
 		String username = serverInfoMap.get("username");
-		if (StringUtils.isEmpty(username)) {
+		if (StrUtil.isEmpty(username)) {
 			throw new RuntimeException("用户信息为空，请重新登录");
 		}
 		String userCode = username.split("@@")[0];
@@ -106,7 +106,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
 		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
-		if (StringUtils.isEmpty(wsdlUrl)) {
+		if (StrUtil.isEmpty(wsdlUrl)) {
 			return null;
 		}
 		if (!wsdlUrl.startsWith("http")) {

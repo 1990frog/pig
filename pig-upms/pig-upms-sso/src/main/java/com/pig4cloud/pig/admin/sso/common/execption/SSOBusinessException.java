@@ -1,6 +1,6 @@
 package com.pig4cloud.pig.admin.sso.common.execption;
 
-import com.alibaba.cloud.commons.lang.StringUtils;
+import cn.hutool.core.util.StrUtil;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 
 import java.util.Optional;
@@ -25,7 +25,7 @@ public class SSOBusinessException extends RuntimeException {
 	public SSOBusinessException(final Integer code, String message) {
 		super(String.valueOf(code));
 		this.responseCode = ResponseCodeEnum.parse(code);
-		this.message = StringUtils.isBlank(message) ? responseCode.desc() : message;
+		this.message = StrUtil.isBlank(message) ? responseCode.desc() : message;
 	}
 
 	/**

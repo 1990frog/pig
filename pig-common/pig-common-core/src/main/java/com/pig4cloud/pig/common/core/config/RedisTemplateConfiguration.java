@@ -79,8 +79,8 @@ public class RedisTemplateConfiguration {
 				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
 		redisCacheConfigurationMap.put(CacheConstants.SSO_SERVER_INFO,
 				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
-		redisCacheConfigurationMap.put(CacheConstants.SSO_CLIENT_INFO,
-				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
+		/*redisCacheConfigurationMap.put(CacheConstants.SSO_CLIENT_INFO,
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));*/
 		return redisCacheConfigurationMap;
 	}
 

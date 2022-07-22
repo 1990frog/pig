@@ -8,7 +8,7 @@
 		<version>3.1.0</version>
 	</parent>
 
-	<artifactId>pig-upms-sso</artifactId>
+	<artifactId>pig-upms-sso-client</artifactId>
 
 	<description>pig 通用用户接入sso模块</description>
 	<packaging>pom</packaging>

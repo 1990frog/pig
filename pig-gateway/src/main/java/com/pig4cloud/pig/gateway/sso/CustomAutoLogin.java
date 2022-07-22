@@ -1,26 +1,9 @@
 package com.pig4cloud.pig.gateway.sso;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.CacheManager;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.security.crypto.codec.Base64;
-import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.util.Map;
-
 /**
  * Created by Liaopan on 2020-08-25.
  * 自定义登录，访问auth/token登录
- */
+ *//*
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -34,10 +17,10 @@ public class CustomAutoLogin {
 
 	public Map login(String username, String password, String token, String sysClass, String appName, String appCode) {
 		//String cacheKey = "user:" + token;
-		/*final Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_TOKEN_USER_CACHE);
+		*//*final Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_TOKEN_USER_CACHE);
 		if (cache != null && cache.get(token) != null) {
 			return (Map) cache.get(token).get();
-		}*/
+		}*//*
 
 		MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
 		parameters.add("username", username + "@@" + sysClass);
@@ -97,7 +80,7 @@ public class CustomAutoLogin {
 		}
 	}
 
-	/*private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
+	*//*private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
 		StringBuilder builder = new StringBuilder("?");
 		formData.forEach((key, value) -> {
 			builder.append(key)
@@ -113,9 +96,9 @@ public class CustomAutoLogin {
 //		restTemplate.setRequestFactory(factory);
 //		return restTemplate.exchange(queryPath, HttpMethod.POST,
 //				new HttpEntity<MultiValueMap<String, String>>(null, headers), Map.class).getBody();
-	}*/
+	}*//*
 
-	/*@SneakyThrows
+	*//*@SneakyThrows
 	private Map<String, Object> post(String path, HttpHeaders headers) {
 		HttpEntity httpEntity = null;
 		HttpPost httpPost = null;
@@ -145,5 +128,5 @@ public class CustomAutoLogin {
 				httpPost.releaseConnection();
 			}
 		}
-	}*/
-}
+	}*//*
+}*/

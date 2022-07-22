@@ -38,5 +38,6 @@
 		<module>pig-common-feign</module>
 		<module>pig-common-swagger</module>
 		<module>pig-common-test</module>
+		<module>pig-common-sso</module>
 	</modules>
 </project>

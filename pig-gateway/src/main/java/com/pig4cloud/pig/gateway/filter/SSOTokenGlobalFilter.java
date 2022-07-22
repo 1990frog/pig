@@ -18,46 +18,7 @@
 
 package com.pig4cloud.pig.gateway.filter;
 
-import cn.hutool.core.codec.Base64;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.SecureUtil;
-import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pig4cloud.pig.common.core.constant.CacheConstants;
-import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.gateway.sso.CustomAutoLogin;
-import com.pig4cloud.pig.gateway.sso.SSOClientInfo;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
-
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author lengleng
@@ -68,7 +29,7 @@ import java.util.stream.Collectors;
  * 1. 连接sso登录逻辑： 前端访问后台接口，header中带 token 参数（从sso平台登录后获取）
  * 过滤器通过token.去sso平台获取用户信息来验证token失效与否，不失效则模拟登录本平台，失效则清除信息。返回401错误
  * <p>
- */
+ *//*
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -86,14 +47,14 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 
 	private final ObjectMapper objectMapper;
 
-	/**
+	*//**
 	 * Process the Web request and (optionally) delegate to the next {@code WebFilter}
 	 * through the given {@link GatewayFilterChain}.
 	 *
 	 * @param exchange the current server exchange
 	 * @param chain    provides a way to delegate to the next filter
 	 * @return {@code Mono<Void>} to indicate when request processing is complete
-	 */
+	 *//*
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
@@ -215,16 +176,16 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		return map;
 	}
 
-	/**
+	*//**
 	 * 还需要把ssoClientInfo cache住，因为后面在用户模块中需要用到
-	 */
+	 *//*
 	private void cacheSsoClientInfo() {
 		Cache ssoClientInfoCache = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
 		if (ssoClientInfoCache == null || ssoClientInfoCache.get(CacheConstants.SSO_CLIENT_INFO) == null ||
 				ssoClientInfoCache.get(CacheConstants.SSO_CLIENT_INFO).get() == null) {
 			Map map = JSONObject.parseObject(JSONObject.toJSONString(this.ssoClientInfo), Map.class);
 			ssoClientInfoCache.put(CacheConstants.SSO_CLIENT_INFO, map);
-			/*ObjectMapper objectMapper = new ObjectMapper();
+			*//*ObjectMapper objectMapper = new ObjectMapper();
 			try {
 				String str = objectMapper.writeValueAsString(this.ssoClientInfo);
 				Map map = objectMapper.readValue(str, Map.class);
@@ -233,7 +194,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 				e.printStackTrace();
 				log.error("登录异常,类型转换异常 e={}", e);
 				throw new RuntimeException("登录异常,类型转换异常");
-			}*/
+			}*//*
 		}
 	}
 
@@ -243,9 +204,9 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 	}
 
 
-	/**
+	*//**
 	 * 失败了需要把前面步骤的缓存给清除掉
-	 */
+	 *//*
 	private void clearCache(String serverToken) {
 		// 双边映射
 		Cache serverToLocal = cacheManager.getCache(CacheConstants.SSO_SERVER_LOCAL_TOKEN);
@@ -264,4 +225,4 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		return -1;
 	}
 
-}
+}*/

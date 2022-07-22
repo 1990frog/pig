@@ -17,10 +17,12 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Request;
 import org.springframework.security.oauth2.provider.OAuth2RequestFactory;
 import org.springframework.security.oauth2.provider.TokenRequest;
+import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,13 +47,14 @@ public class CustomConfig {
 		cacheLocalLoginUserInfo(parameters);
 		OAuth2RequestFactory factory = config.getEndpoints().getOAuth2RequestFactory();
 		AuthorizationServerTokenServices services = config.getEndpoints().getDefaultAuthorizationServerTokenServices();
-		ClientDetails clientDetails = config.getEndpoints().getClientDetailsService().loadClientByClientId(CacheConstants.SSO_CLIENT_ID);
+		ClientDetails clientDetails = buildClientDetails(parameters);
+		//config.getEndpoints().getClientDetailsService().loadClientByClientId(CacheConstants.SSO_CLIENT_ID);
 		TokenRequest tokenRequest = createRequest(fillTokenParameters(parameters));
 		OAuth2Request storedOAuth2Request = factory.createOAuth2Request(clientDetails, tokenRequest);
 		OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(storedOAuth2Request, userAuthentication(tokenRequest));
 		OAuth2AccessToken accessToken = services.createAccessToken(oAuth2Authentication);
 		// 把localToken 和 serverToken 做一个缓存
-		cacheServerTokenAndLocalToken(parameters.get("token"), accessToken.getValue());
+		cacheServerTokenAndLocalToken(parameters.get("sysClass"), parameters.get("token"), accessToken.getValue());
 		return accessToken;
 	}
 
@@ -70,16 +73,28 @@ public class CustomConfig {
 		return tokenParam;
 	}
 
+	private ClientDetails buildClientDetails(Map<String, String> parameters) {
+		BaseClientDetails clientDetails = new BaseClientDetails();
+		clientDetails.setClientId(CacheConstants.SSO_CLIENT_ID);
+		clientDetails.setClientSecret(parameters.get("appCode") + parameters.get("username"));
+		clientDetails.setScope(Arrays.asList("server"));
+		clientDetails.setAuthorizedGrantTypes(Arrays.asList("password", "refresh_token", "authorization_code", "client_credentials"));
+		clientDetails.setAccessTokenValiditySeconds(30 * 60);
+		clientDetails.setRefreshTokenValiditySeconds(30 * 60);
+		return clientDetails;
+	}
+
 	/**
 	 * localToken 和 serverToken映射
 	 */
-	private void cacheServerTokenAndLocalToken(String serverToken, String localToken) {
+	private void cacheServerTokenAndLocalToken(String sysClass, String serverToken, String localToken) {
 		if (StringUtils.isEmpty(serverToken) || StringUtils.isEmpty(localToken)) {
 			return;
 		}
 		// OSS服务端需要使用的参数
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
-		cache.put(localToken, serverToken);
+		String key = localToken + "@@" + sysClass;
+		cache.put(key, serverToken);
 	}
 
 	/**
@@ -91,9 +106,10 @@ public class CustomConfig {
 			return;
 		}
 		String serverToken = parameters.get("token");
-		// OSS服务端需要使用的参数
+		// OSS服务端需要使用的参数 todo 开始把sysClass 也带上
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_INFO);
-		cache.put(serverToken, parameters);
+		String key = serverToken + "@@" + parameters.get("sysClass");
+		cache.put(key, parameters);
 	}
 
 	@SneakyThrows
@@ -109,7 +125,8 @@ public class CustomConfig {
 
 	private TokenRequest createRequest(Map<String, String> parameters) {
 		OAuth2RequestFactory factory = config.getEndpoints().getOAuth2RequestFactory();
-		ClientDetails clientDetails = config.getEndpoints().getClientDetailsService().loadClientByClientId(CacheConstants.SSO_CLIENT_ID);
+		ClientDetails clientDetails = buildClientDetails(parameters);
+		//config.getEndpoints().getClientDetailsService().loadClientByClientId(CacheConstants.SSO_CLIENT_ID);
 		return factory.createTokenRequest(parameters, clientDetails);
 	}
 }

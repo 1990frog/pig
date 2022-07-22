@@ -234,6 +234,7 @@ public class PigTokenEndpoint {
 		parameters.put("token", token);
 		parameters.put("appCode", appCode);
 		parameters.put("appName", appName);
+		parameters.put("sysClass", username.split("@@")[1]);
 		return customConfig.initToken(parameters);
 	}
 

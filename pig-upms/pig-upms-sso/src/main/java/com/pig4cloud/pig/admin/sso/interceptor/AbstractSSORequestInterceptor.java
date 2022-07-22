@@ -1,10 +1,10 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,8 +17,7 @@ import java.util.Map;
  * @Description
  * @Date 2022/7/22 14:23
  **/
-@Component
-public class AbstractSSORequestInterceptor implements HandlerInterceptor {
+public abstract class AbstractSSORequestInterceptor implements HandlerInterceptor, InitializingBean {
 
 	@Autowired
 	private CacheManager cacheManager;
@@ -27,9 +26,12 @@ public class AbstractSSORequestInterceptor implements HandlerInterceptor {
 	private Map ssoClientInfo;
 
 	@Override
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-		return true;
+	public void afterPropertiesSet() {
+		ssoClientInfo = getSSOClientInfo();
 	}
+
+	@Override
+	public abstract boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception;
 
 
 	// 拿ssoClientInfo
@@ -40,9 +42,6 @@ public class AbstractSSORequestInterceptor implements HandlerInterceptor {
 	}
 
 	public boolean getSSOEnable() {
-		if (ssoClientInfo == null) {
-			ssoClientInfo = getSSOClientInfo();
-		}
 		return ssoClientInfo.containsKey("enable") ? (boolean) ssoClientInfo.get("enable") : false;
 	}
 }

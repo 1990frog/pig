@@ -1,6 +1,7 @@
-package com.pig4cloud.pig.auth.config;
+package com.pig4cloud.pig.auth.sso;
 
 import com.alibaba.cloud.commons.lang.StringUtils;
+import com.pig4cloud.pig.auth.config.AuthorizationServerConfig;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ import java.util.Map;
 
 @Component
 @Slf4j
-public class CustomConfig {
+public class SSOTokenGranter {
 
 	@Autowired
 	private AuthorizationServerConfig config;
@@ -70,6 +71,7 @@ public class CustomConfig {
 		tokenParam.put("password", parameters.get("password"));
 		tokenParam.put("grant_type", parameters.get("grant_type"));
 		tokenParam.put("scope", parameters.get("scope"));
+		tokenParam.put("timestamp", parameters.get("timestamp"));
 		return tokenParam;
 	}
 

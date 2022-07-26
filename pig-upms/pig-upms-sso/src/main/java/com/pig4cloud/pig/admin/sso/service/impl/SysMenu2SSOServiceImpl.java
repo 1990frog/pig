@@ -6,17 +6,7 @@ import com.pig4cloud.pig.admin.api.dto.TreeNode;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
-import com.pig4cloud.pig.admin.sso.common.ssoutil.SnowFlakeUtil;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
-import com.pig4cloud.pig.admin.sso.service.IRemoteService;
-import com.pig4cloud.pig.common.core.constant.CacheConstants;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -32,18 +22,8 @@ import java.util.Objects;
  * @Date 2022/7/21 15:07
  **/
 @Component
-public class SysMenu2SSOServiceImpl {
+public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 
-	@Autowired
-	private CacheManager cacheManager;
-
-	@Autowired
-	private IRemoteService remoteService;
-
-	@Autowired
-	private TokenStore tokenStore;
-
-	private SnowFlakeUtil idWorker = new SnowFlakeUtil();
 
 
 	public List<MenuTree> findMenuByPrentId() {
@@ -70,13 +50,6 @@ public class SysMenu2SSOServiceImpl {
 		return list;
 	}
 
-	private String findUserName(String token) {
-		OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(token);
-		OAuth2Authentication auth2Authentication = tokenStore.readAuthentication(oAuth2AccessToken);
-		// 清空用户信息
-		UserDetails userDetails = (UserDetails) cacheManager.getCache(CacheConstants.USER_DETAILS).get(auth2Authentication.getName());
-		return userDetails.getUsername();
-	}
 
 	/**
 	 * 也是按层遍历
@@ -131,27 +104,7 @@ public class SysMenu2SSOServiceImpl {
 		return ans;
 	}
 
-	private String getServerToken(String localToken) {
-		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
-		if (Objects.isNull(serverTokenCache) || Objects.isNull(serverTokenCache.get(localToken))
-				|| Objects.isNull(serverTokenCache.get(localToken).get())) {
-			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
-		}
-		String serverToken = (String) serverTokenCache.get(localToken).get();
-		return serverToken;
-	}
 
-	// 本地登录使用的信息
-	private Map<String, String> toLocalLogin(String serverToken) {
-		Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_INFO);
-		return (Map<String, String>) cache.get(serverToken).get();
-	}
 
-	// 拿ssoClientInfo
-	private Map getSSOClientInfo() {
-		Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
-		Map ossClientInfoMap = (Map) ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO).get();
-		return ossClientInfoMap;
-	}
 
 }

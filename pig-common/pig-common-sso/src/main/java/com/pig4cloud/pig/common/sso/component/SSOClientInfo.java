@@ -1,4 +1,4 @@
-package com.pig4cloud.pig.common.sso.config;
+package com.pig4cloud.pig.common.sso.component;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;

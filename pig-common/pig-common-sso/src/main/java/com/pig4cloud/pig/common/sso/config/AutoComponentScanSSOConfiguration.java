@@ -1,4 +1,4 @@
-package com.pig4cloud.pig.common.sso.component;
+package com.pig4cloud.pig.common.sso.config;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -12,4 +12,5 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackages = {"com.pig4cloud.pig.common.sso"})
 @Configuration
 public class AutoComponentScanSSOConfiguration {
+
 }

@@ -13,23 +13,15 @@ import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.SnowFlakeUtil;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
 import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
-import com.pig4cloud.pig.admin.sso.service.IRemoteService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -50,19 +42,9 @@ import java.util.stream.Collectors;
  * @Date 2022/7/21 17:15
  **/
 @Component
-public class SysUser2SSOServiceImpl {
+public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 
-	@Autowired
-	private CacheManager cacheManager;
 
-	@Autowired
-	private RedisTemplate<String, Object> redisTemplate;
-
-	@Autowired
-	private IRemoteService remoteService;
-
-	@Autowired
-	private TokenStore tokenStore;
 
 	private PasswordEncoder ENCODER = new BCryptPasswordEncoder();
 	private SnowFlakeUtil idWorker = new SnowFlakeUtil();
@@ -174,7 +156,7 @@ public class SysUser2SSOServiceImpl {
 		sysUser.setDeptId(idWorker.getIntId());
 		sysUser.setDelFlag("0");
 		sysUser.setLockFlag("0");
-		sysUser.setUsername(userCode);
+		sysUser.setUsername(userCode + "@@" + sysClass);
 		sysUser.setSysClass(sysClass);
 		sysUser.setPassword(ENCODER.encode(serverInfoMap.get("password")));
 		UserInfo userInfo = new UserInfo();
@@ -225,69 +207,6 @@ public class SysUser2SSOServiceImpl {
 		return userDetails;
 	}
 
-
-	private Map<String, String> toLocalLogin(String serverToken) {
-		Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_INFO);
-		return (Map<String, String>) cache.get(serverToken).get();
-	}
-
-	private Map toServerLogin(String serverToken) {
-		Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_TOKEN_USER_CACHE);
-		if (cache != null && cache.get(serverToken) != null) {
-			return (Map) cache.get(serverToken).get();
-		}
-		return null;
-	}
-
-	private String getServerTokenByUserName(String key) {
-		Cache ssoClientInfoCache = cacheManager.getCache(CacheConstants.SSO_USER_SERVER_TOKEN);
-		return (String) ssoClientInfoCache.get(key).get();
-	}
-
-
-	private PigUser getPigUser(String userName, String sysClass) {
-		String key = userName + "@@" + sysClass;
-		Cache userDetailsCache = cacheManager.getCache(CacheConstants.USER_DETAILS);
-		if (!Objects.isNull(userDetailsCache) && !Objects.isNull(userDetailsCache.get(key))
-				&& !Objects.isNull(userDetailsCache.get(key))) {
-			return (PigUser) userDetailsCache.get(key).get();
-		}
-		return null;
-	}
-
-	public UserInfo getUserInfoByToken(String localToken) {
-		// 拿localToken换serverToken
-		String userName = findUserName(localToken);
-		//String key = "@@" + userName.split("@@")[1];
-		//String serverToken = getServerToken(localToken + key);
-		//Map<String, String> serverInfoMap = getLocalLoginUserInfo(serverToken + key);
-		Cache userInfoCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE);
-		if (!Objects.isNull(userInfoCache) && !Objects.isNull(userInfoCache.get(userName))
-				&& !Objects.isNull(userInfoCache.get(userName).get())) {
-			return (UserInfo) userInfoCache.get(userName).get();
-		} else {
-			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
-		}
-	}
-
-	private String findUserName(String token) {
-		OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(token);
-		OAuth2Authentication auth2Authentication = tokenStore.readAuthentication(oAuth2AccessToken);
-		// 清空用户信息
-		UserDetails userDetails = (UserDetails) cacheManager.getCache(CacheConstants.USER_DETAILS).get(auth2Authentication.getName());
-		return userDetails.getUsername();
-	}
-
-	private UserInfo getUserInfo(String userName, String sysClass) {
-		String key = userName + "@@" + sysClass;
-		Cache userInfoCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE);
-		if (!Objects.isNull(userInfoCache) && !Objects.isNull(userInfoCache.get(key))
-				&& !Objects.isNull(userInfoCache.get(key).get())) {
-			return (UserInfo) userInfoCache.get(key).get();
-		}
-		return null;
-	}
-
 	private Map<String, String> getLocalLoginUserInfo(String serverToken) {
 		Cache serverInfo = cacheManager.getCache(CacheConstants.SSO_SERVER_INFO);
 		if (Objects.isNull(serverInfo) || Objects.isNull(serverInfo.get(serverToken))
@@ -296,17 +215,6 @@ public class SysUser2SSOServiceImpl {
 		}
 		return (Map<String, String>) serverInfo.get(serverToken).get();
 	}
-
-	private String getServerToken(String localToken) {
-		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
-		if (Objects.isNull(serverTokenCache) || Objects.isNull(serverTokenCache.get(localToken))
-				|| Objects.isNull(serverTokenCache.get(localToken).get())) {
-			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
-		}
-		String serverToken = (String) serverTokenCache.get(localToken).get();
-		return serverToken;
-	}
-
 	/**
 	 * 分页查询用户信息（含有角色信息）
 	 *

@@ -53,7 +53,7 @@ public abstract class AbstractSSORequestInterceptor implements HandlerIntercepto
 		}
 	}
 
-	public boolean getSSOEnable() {
+	protected boolean getSSOEnable() {
 		getSSOClientInfo();
 		return ssoClientInfo == null ? false : (ssoClientInfo.containsKey("enable") ? (boolean) ssoClientInfo.get("enable") : false);
 	}

@@ -63,4 +63,9 @@ public interface RemoteUserService {
 	@GetMapping("/social/info/{inStr}")
 	R<UserInfo> social(@PathVariable("inStr") String inStr);
 
+
+	@Deprecated
+	@GetMapping({"/user/info"})
+	R<UserInfo> currentUserInfo(@RequestHeader("from") String var1);
+
 }

@@ -2,6 +2,7 @@ package com.pig4cloud.pig.admin.sso.interceptor;
 
 import cn.hutool.core.util.StrUtil;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -20,6 +21,7 @@ import java.util.Map;
  * @Description
  * @Date 2022/7/22 14:23
  **/
+@Slf4j
 public abstract class AbstractSSORequestInterceptor implements HandlerInterceptor, InitializingBean {
 
 	@Autowired
@@ -37,15 +39,23 @@ public abstract class AbstractSSORequestInterceptor implements HandlerIntercepto
 
 	// 拿ssoClientInfo
 	private void getSSOClientInfo() {
-		if (ssoClientInfo == null) {
-			Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
-			ssoClientInfo = (Map) ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO).get();
+		Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
+		if (ssoClientInfo == null && ossClientInfo != null) {
+			log.info("获取ssoClientInfo ");
+			Cache.ValueWrapper valueWrapper = ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO);
+			ssoClientInfo = valueWrapper == null ? null : (Map) valueWrapper.get();
+			return;
+		}
+		// 可能因为配置信息变更了
+		if (ssoClientInfo != null && (ossClientInfo == null || ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO) == null)) {
+			log.info("释放ssoClientInfo ");
+			ssoClientInfo = null;
 		}
 	}
 
 	public boolean getSSOEnable() {
 		getSSOClientInfo();
-		return ssoClientInfo.containsKey("enable") ? (boolean) ssoClientInfo.get("enable") : false;
+		return ssoClientInfo == null ? false : (ssoClientInfo.containsKey("enable") ? (boolean) ssoClientInfo.get("enable") : false);
 	}
 
 	// 来校验是否存在要过滤的

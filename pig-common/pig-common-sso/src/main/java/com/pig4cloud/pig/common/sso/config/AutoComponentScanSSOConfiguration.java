@@ -13,4 +13,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AutoComponentScanSSOConfiguration {
 
+	/*@Autowired
+	private RouterFunction routerFunction;
+	@Autowired
+	private SSOConfigHandler ssoConfigHandler;
+
+	@PostConstruct
+	public void init() {
+		routerFunction.andRoute(RequestPredicates.path("/sso").and(RequestPredicates.accept(MediaType.TEXT_PLAIN)), ssoConfigHandler);
+	}*/
 }

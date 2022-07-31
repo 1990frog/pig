@@ -32,4 +32,9 @@ public interface ServiceNameConstants {
 	 */
 	String UMPS_SERVICE = "pig-upms-biz";
 
+	/**
+	 * xxl_job_admin
+	 */
+	String XXL_JOB_ADMIN = "pig-xxl-job-admin";
+
 }

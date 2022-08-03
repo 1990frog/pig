@@ -150,7 +150,7 @@ public class JobInfoController {
 
 	@RequestMapping("/trigger")
 	@ResponseBody
-	// @PermissionLimit(limit = false)
+	@PermissionLimit(limit = false)
 	public ReturnT<String> triggerJob(int id, String executorParam, String addressList) {
 		// force cover job param
 		if (executorParam == null) {

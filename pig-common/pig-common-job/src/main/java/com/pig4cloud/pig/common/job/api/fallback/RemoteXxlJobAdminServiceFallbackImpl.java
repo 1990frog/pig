@@ -1,4 +1,3 @@
-
 package com.pig4cloud.pig.common.job.api.fallback;
 
 import com.pig4cloud.pig.common.job.api.RemoteXxlJobAdminService;
@@ -10,11 +9,11 @@ import org.springframework.stereotype.Component;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author caijingquan@clinbrain.com
- * @since 2022/8/1
+ * @since 2022/8/2x
  */
 @Slf4j
 @Component
@@ -22,7 +21,6 @@ public class RemoteXxlJobAdminServiceFallbackImpl implements RemoteXxlJobAdminSe
 
 	@Setter
 	private Throwable cause;
-
 
 	@Override
 	public ReturnT<String> add(XxlJobInfo jobInfo) {
@@ -35,12 +33,22 @@ public class RemoteXxlJobAdminServiceFallbackImpl implements RemoteXxlJobAdminSe
 	}
 
 	@Override
-	public ReturnT<String> pause(int id) {
+	public ReturnT<String> remove(int id) {
 		return null;
 	}
 
 	@Override
-	public ReturnT<String> start(int id) {
+	public ReturnT<String> pause(Integer id) {
+		return null;
+	}
+
+	@Override
+	public ReturnT<String> start(Integer id) {
+		return null;
+	}
+
+	@Override
+	public ReturnT<String> triggerJob(int id, String executorParam, String addressList) {
 		return null;
 	}
 }

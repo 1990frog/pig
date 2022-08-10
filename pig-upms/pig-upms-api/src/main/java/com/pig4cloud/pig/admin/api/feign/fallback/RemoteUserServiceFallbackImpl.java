@@ -64,8 +64,8 @@ public class RemoteUserServiceFallbackImpl implements RemoteUserService {
 	}
 
 	@Override
-	public R<UserInfo> currentUserInfo(String var1) {
-		log.error("feign 查询用户信息失败:currentUserInfo = {}", var1, cause);
+	public R<UserInfo> currentUserInfo(String var1,String var2) {
+		log.error("feign 查询用户信息失败:currentUserInfo={}, token = {}", var1, var2, cause);
 		return null;
 	}
 

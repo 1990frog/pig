@@ -25,6 +25,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author lengleng
@@ -65,7 +66,7 @@ public interface RemoteUserService {
 
 
 	@Deprecated
-	@GetMapping({"/user/info"})
-	R<UserInfo> currentUserInfo(@RequestHeader("from") String var1);
+	@GetMapping({"/inner/user/token/info"})
+	R<UserInfo> currentUserInfo(@RequestHeader(SecurityConstants.FROM) String var1, @RequestParam(name ="token")String token);
 
 }

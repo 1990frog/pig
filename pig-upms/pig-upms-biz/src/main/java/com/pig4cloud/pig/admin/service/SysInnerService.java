@@ -6,6 +6,7 @@ import com.pig4cloud.pig.admin.api.dto.MenuTreeDTO;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserRoleDTO;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
+import com.pig4cloud.pig.admin.api.entity.SysUser;
 
 import java.util.List;
 
@@ -96,4 +97,9 @@ public interface SysInnerService {
 	 * 内部使用
 	 */
 	Boolean deleteRole(SysRole sysRole);
+
+	/**
+	 * 内部获取用户
+	 */
+	SysUser findUserInfoByToken(String token);
 }

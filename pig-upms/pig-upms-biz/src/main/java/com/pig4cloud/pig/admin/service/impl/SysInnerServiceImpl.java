@@ -16,18 +16,26 @@ import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
+import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.service.SysInnerService;
 import com.pig4cloud.pig.admin.service.SysMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.admin.service.SysUserRoleService;
 import com.pig4cloud.pig.admin.service.SysUserService;
+import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.security.service.PigUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -67,6 +75,12 @@ public class SysInnerServiceImpl implements SysInnerService {
 
 	@Autowired
 	private SysUserService sysUserService;
+
+	@Autowired
+	private TokenStore tokenStore;
+
+	@Autowired
+	private CacheManager cacheManager;
 
 	private static final PasswordEncoder ENCODER = new BCryptPasswordEncoder();
 
@@ -343,6 +357,37 @@ public class SysInnerServiceImpl implements SysInnerService {
 		log.info("内部调用,删除角色信息,{}", sysRole);
 		boolean remove = sysRoleService.removeRoleById(sysRole.getRoleId());
 		return remove;
+	}
+
+	@Override
+	public SysUser findUserInfoByToken(String token) {
+		OAuth2AccessToken accessToken = tokenStore.readAccessToken(token);
+		if (accessToken == null || StrUtil.isBlank(accessToken.getValue())) {
+			return null;
+		}
+
+		OAuth2Authentication auth2Authentication = tokenStore.readAuthentication(accessToken);
+		PigUser pigUser = (PigUser) auth2Authentication.getPrincipal();
+		// 看看是否是sso登录的
+		// 如果不是，那么直接就是查库
+		Map info = null;
+		Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
+		if (ossClientInfo != null) {
+			Cache.ValueWrapper valueWrapper = ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO);
+			info = valueWrapper == null ? null : (Map) valueWrapper.get();
+		}
+		// 可能因为配置信息变更了
+		SysUser sysUser = new SysUser();
+		sysUser.setUsername(pigUser.getUsername());
+		sysUser.setSysClass(pigUser.getSysClass());
+		boolean enable = ((info != null) && info.containsKey("enable") && ((boolean) info.get("enable")));
+		if (enable) {// 开启了，拿不到电话
+			return sysUser;
+		}
+		// 否则查库
+		UserVO userVoById = sysUserService.getUserVoById(pigUser.getId());
+		sysUser.setPhone(userVoById.getPhone());
+		return sysUser;
 	}
 
 	private void processChild(Set<Integer> allMenuId, Map<Integer, List<SysMenu>> collect, SysMenu sysMenu) {

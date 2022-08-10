@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -84,6 +85,12 @@ public class InnerController {
 	@DeleteMapping(path = "/user/{userId}")
 	public R findUserRoleInfo(@PathVariable(value = "userId") Integer userId) {
 		return R.ok(sysInnerService.deleteUserByUserId(userId));
+	}
+
+	@Inner
+	@GetMapping(path = "/user/token/info")
+	public R findUserInfoByToken(@RequestParam(value = "token") String token) {
+		return R.ok(sysInnerService.findUserInfoByToken(token));
 	}
 
 	@Inner

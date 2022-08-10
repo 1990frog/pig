@@ -16,6 +16,7 @@
 
 package com.pig4cloud.pig.admin.api.feign;
 
+import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.feign.factory.RemoteUserServiceFallbackFactory;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
@@ -67,6 +68,6 @@ public interface RemoteUserService {
 
 	@Deprecated
 	@GetMapping({"/inner/user/token/info"})
-	R<UserInfo> currentUserInfo(@RequestHeader(SecurityConstants.FROM) String var1, @RequestParam(name ="token")String token);
+	R<SysUser> currentUserInfo(@RequestHeader(SecurityConstants.FROM) String var1, @RequestParam(name ="token")String token);
 
 }

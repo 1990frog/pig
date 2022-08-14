@@ -37,7 +37,6 @@
 		<dependency>
 			<groupId>com.xuxueli</groupId>
 			<artifactId>xxl-job-core</artifactId>
-			<version>${xxl-job.version}</version>
 		</dependency>
 		<!--提供服务发现能力-->
 		<dependency>
@@ -48,11 +47,6 @@
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-core</artifactId>
-		</dependency>
-		<!--feign 依赖-->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 		<!--断路器依赖-->
 		<dependency>

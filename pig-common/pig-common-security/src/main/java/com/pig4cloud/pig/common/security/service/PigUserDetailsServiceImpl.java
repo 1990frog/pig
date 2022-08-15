@@ -58,6 +58,7 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 
 	/**
 	 * 用户密码登录
+	 *
 	 * @param username 用户名
 	 * @return
 	 */
@@ -71,7 +72,7 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 		String[] params = username.split("@@");
 		String name = params[0];
 		String sysCode = params[1];
-		R<UserInfo> result = remoteUserService.infoNew(name,sysCode, SecurityConstants.FROM_IN);
+		R<UserInfo> result = remoteUserService.infoNew(name, sysCode, SecurityConstants.FROM_IN);
 		UserDetails userDetails = getUserDetails(result);
 		if (cache != null) {
 			cache.put(username, userDetails);
@@ -81,6 +82,7 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 
 	/**
 	 * 构建userdetails
+	 *
 	 * @param result 用户信息
 	 * @return
 	 */
@@ -99,7 +101,7 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 			// 获取资源
 			dbAuthsSet.addAll(Arrays.asList(info.getPermissions()));
 		}
-		// soo的权限
+		// sso的权限
 		if (ArrayUtil.isNotEmpty(info.getSsoRoles())) {
 			// 获取角色
 			Arrays.stream(info.getSsoRoles()).forEach(role -> dbAuthsSet.add(SecurityConstants.ROLE + role));
@@ -109,7 +111,7 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 		SysUser user = info.getSysUser();
 
 		// 构造security用户
-		return new PigUser(user.getUserId(), user.getDeptId(),user.getSysClass(), user.getUsername(),
+		return new PigUser(user.getUserId(), user.getDeptId(), user.getSysClass(), user.getUsername(),
 				SecurityConstants.BCRYPT + user.getPassword(),
 				StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL), true, true, true, authorities);
 	}

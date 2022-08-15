@@ -11,7 +11,8 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
-        metadata:
-          management.context-path: ${server.servlet.context-path}/actuator
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        file-extension: yml
   profiles:
     active: @profiles.active@

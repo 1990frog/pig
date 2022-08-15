@@ -59,7 +59,13 @@ public class SSOMenuRequestInterceptor extends AbstractSSORequestInterceptor {
 			log.info("sso 拦截请求返回 res={}", res);
 			String s = new String(res.getBytes(StandardCharsets.UTF_8));
 			writer.print(s);*/
-			JSONObject jsonObject = JSONUtil.parseObj(userMenu);
+			JSONObject jsonObject = JSONUtil.parseObj(userMenu, false);
+			if (!jsonObject.containsKey("status")) {
+				jsonObject.putOnce("status", jsonObject.get("code"));
+				jsonObject.putOnce("message", jsonObject.get("msg"));
+				jsonObject.remove("code");
+				jsonObject.remove("msg");
+			}
 			String res = JSONUtil.toJsonPrettyStr(jsonObject);
 
 			outputStream = response.getOutputStream();

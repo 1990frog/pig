@@ -63,7 +63,13 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 		}
 		try {
 			outputStream = response.getOutputStream();
-			JSONObject obj = JSONUtil.parseObj(userInfo);
+			JSONObject obj = JSONUtil.parseObj(userInfo, false);
+			if (!obj.containsKey("status")) {
+				obj.putOnce("status", obj.get("code"));
+				obj.putOnce("message", obj.get("msg"));
+				obj.remove("code");
+				obj.remove("msg");
+			}
 			String res = JSONUtil.toJsonPrettyStr(obj);
 			outputStream.write(res.getBytes(StandardCharsets.UTF_8));
 			response.setContentType("application/json;charset=utf-8");

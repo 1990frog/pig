@@ -1,8 +1,6 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.controller.SSOUserController;
 import com.pig4cloud.pig.common.core.util.R;
@@ -16,7 +14,6 @@ import org.springframework.web.servlet.HandlerMapping;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -63,15 +60,7 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 		}
 		try {
 			outputStream = response.getOutputStream();
-			JSONObject obj = JSONUtil.parseObj(userInfo, false);
-			if (!obj.containsKey("status")) {
-				obj.putOnce("status", obj.get("code"));
-				obj.putOnce("message", obj.get("msg"));
-				obj.remove("code");
-				obj.remove("msg");
-			}
-			String res = JSONUtil.toJsonPrettyStr(obj);
-			outputStream.write(res.getBytes(StandardCharsets.UTF_8));
+			outputStream.write(processResponse(userInfo));
 			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpStatus.OK.value());
 			return false;

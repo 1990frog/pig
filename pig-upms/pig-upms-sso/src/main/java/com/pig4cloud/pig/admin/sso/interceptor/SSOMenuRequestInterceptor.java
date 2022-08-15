@@ -1,8 +1,6 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.controller.SSOMenuController;
 import com.pig4cloud.pig.common.core.util.R;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Component;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.nio.charset.StandardCharsets;
 
 /**
  * @ClassName SSOMenuRequestInterceptor
@@ -53,23 +50,8 @@ public class SSOMenuRequestInterceptor extends AbstractSSORequestInterceptor {
 		try {
 			// 这里两个请求再sso开启的时候使用同一个处理
 			R userMenu = ssoMenuController.getUserMenu();
-			/*writer = response.getWriter();
-			JSONObject jsonObject = JSONUtil.parseObj(userMenu);
-			String res = JSONUtil.toJsonPrettyStr(jsonObject);
-			log.info("sso 拦截请求返回 res={}", res);
-			String s = new String(res.getBytes(StandardCharsets.UTF_8));
-			writer.print(s);*/
-			JSONObject jsonObject = JSONUtil.parseObj(userMenu, false);
-			if (!jsonObject.containsKey("status")) {
-				jsonObject.putOnce("status", jsonObject.get("code"));
-				jsonObject.putOnce("message", jsonObject.get("msg"));
-				jsonObject.remove("code");
-				jsonObject.remove("msg");
-			}
-			String res = JSONUtil.toJsonPrettyStr(jsonObject);
-
 			outputStream = response.getOutputStream();
-			outputStream.write(res.getBytes(StandardCharsets.UTF_8));
+			outputStream.write(processResponse(userMenu));
 			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpStatus.OK.value());
 			return false;

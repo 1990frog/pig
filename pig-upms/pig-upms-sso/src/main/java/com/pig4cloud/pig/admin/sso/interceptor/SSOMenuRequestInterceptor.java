@@ -1,7 +1,6 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.controller.SSOMenuController;
 import com.pig4cloud.pig.common.core.util.R;
@@ -11,9 +10,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
 
 /**
  * @ClassName SSOMenuRequestInterceptor
@@ -47,12 +46,12 @@ public class SSOMenuRequestInterceptor extends AbstractSSORequestInterceptor {
 		if (!(requestMatches(curRequestPath) && (HttpMethod.GET.name().equals(method) && getSSOEnable()))) {
 			return true;
 		}
-		PrintWriter writer = null;
+		ServletOutputStream outputStream = null;
 		try {
 			// 这里两个请求再sso开启的时候使用同一个处理
 			R userMenu = ssoMenuController.getUserMenu();
-			writer = response.getWriter();
-			writer.print(JSONUtil.parseObj(userMenu));
+			outputStream = response.getOutputStream();
+			outputStream.write(processResponse(userMenu));
 			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpStatus.OK.value());
 			return false;
@@ -60,8 +59,8 @@ public class SSOMenuRequestInterceptor extends AbstractSSORequestInterceptor {
 			log.error("sso登录，获取菜单失败！");
 			throw new SSOBusinessException("登录异常，获取用户菜单失败！");
 		} finally {
-			if (writer != null) {
-				writer.close();
+			if (outputStream != null) {
+				outputStream.close();
 			}
 		}
 	}

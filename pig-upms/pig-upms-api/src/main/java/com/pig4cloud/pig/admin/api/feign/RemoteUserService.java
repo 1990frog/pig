@@ -16,6 +16,7 @@
 
 package com.pig4cloud.pig.admin.api.feign;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.feign.factory.RemoteUserServiceFallbackFactory;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
@@ -27,6 +28,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 /**
  * @author lengleng
@@ -69,5 +72,22 @@ public interface RemoteUserService {
 	@Deprecated
 	@GetMapping({"/inner/user/token/info"})
 	R<SysUser> currentUserInfo(@RequestHeader(SecurityConstants.FROM) String var1, @RequestParam(name ="token")String token);
+
+	@GetMapping("/user/sys/list")
+	List<SysUser> sysUserList(@RequestParam("sysClass") String sysClass);
+
+	/**
+	 *
+	 * @param current
+	 * @param size
+	 * @param sysClass
+	 * @param keyword
+	 * @return 指定系统用户分页
+	 */
+	@GetMapping("/user/sys/page")
+	Page<SysUser> sysUserPage(@RequestParam("current") Long current,
+							  @RequestParam("size") Long size,
+							  @RequestParam("sysClass") String sysClass,
+							  @RequestParam(value = "keyword", required = false) String keyword);
 
 }

@@ -1,7 +1,10 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import com.pig4cloud.pig.common.core.util.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +14,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -71,5 +75,20 @@ public abstract class AbstractSSORequestInterceptor implements HandlerIntercepto
 			}
 		}
 		return result;
+	}
+
+	protected byte[] processResponse(R r) {
+		if (r == null) {
+			return new byte[0];
+		}
+		JSONObject obj = JSONUtil.parseObj(r, false);
+		if (!obj.containsKey("status")) {
+			obj.putOnce("status", obj.get("code"));
+			obj.putOnce("message", obj.get("msg"));
+			obj.remove("code");
+			obj.remove("msg");
+		}
+		String res = JSONUtil.toJsonPrettyStr(obj);
+		return res.getBytes(StandardCharsets.UTF_8);
 	}
 }

@@ -1,7 +1,6 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.controller.SSOUserController;
 import com.pig4cloud.pig.common.core.util.R;
@@ -12,9 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerMapping;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
 import java.util.Map;
 
 /**
@@ -49,7 +48,7 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 			return true;
 		}
 		R userInfo = null;
-		PrintWriter writer = null;
+		ServletOutputStream outputStream = null;
 		// 分发任务
 		if (curRequestPath.matches("/user/info")) {
 			userInfo = ssoUserController.info();
@@ -60,8 +59,8 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 			userInfo = ssoUserController.infoNew(username, sysClass);
 		}
 		try {
-			writer = response.getWriter();
-			writer.print(JSONUtil.parseObj(userInfo));
+			outputStream = response.getOutputStream();
+			outputStream.write(processResponse(userInfo));
 			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpStatus.OK.value());
 			return false;
@@ -69,8 +68,8 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 			log.error("sso登录，获取用户信息失败！");
 			throw new SSOBusinessException("登录异常，获取用户信息失败！");
 		} finally {
-			if (writer != null) {
-				writer.close();
+			if (outputStream != null) {
+				outputStream.close();
 			}
 		}
 	}

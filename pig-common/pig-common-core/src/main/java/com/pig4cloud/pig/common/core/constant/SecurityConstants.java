@@ -31,6 +31,7 @@ public interface SecurityConstants {
 	 * 前缀
 	 */
 	String PROJECT_PREFIX = "pig_";
+
 	/**
 	 * 用户系统标识
 	 */

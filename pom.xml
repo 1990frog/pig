@@ -116,7 +116,6 @@
 		<module>pig-gateway</module>
 		<module>pig-auth</module>
 		<module>pig-upms</module>
-		<module>pig-umps-sso</module>
 		<module>pig-common</module>
 		<module>pig-visual</module>
 	</modules>
@@ -160,6 +159,13 @@
 						<groupId>com.alibaba</groupId>
 					</exclusion>
 				</exclusions>
+			</dependency>
+
+			<!--xxl job-->
+			<dependency>
+				<groupId>com.xuxueli</groupId>
+				<artifactId>xxl-job-core</artifactId>
+				<version>${xxl-job.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

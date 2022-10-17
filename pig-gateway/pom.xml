@@ -87,6 +87,13 @@
 			<artifactId>pig-common-swagger</artifactId>
 		</dependency>
 
+		<!--sso登录引入jar -->
+		<dependency>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>pig-common-sso</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

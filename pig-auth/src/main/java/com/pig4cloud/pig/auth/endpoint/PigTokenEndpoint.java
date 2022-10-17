@@ -19,7 +19,6 @@ package com.pig4cloud.pig.auth.endpoint;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.pig4cloud.pig.auth.config.CustomConfig;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
@@ -58,7 +57,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,8 +77,6 @@ public class PigTokenEndpoint {
 	private final RedisTemplate redisTemplate;
 
 	private final CacheManager cacheManager;
-
-	private final CustomConfig customConfig;
 
 	/**
 	 * 认证页面
@@ -215,26 +211,6 @@ public class PigTokenEndpoint {
 			log.error("关闭cursor 失败");
 		}
 		return result;
-	}
-
-	@GetMapping("innerLogin")
-	public Object login(@RequestParam(name = "username") String username,
-						@RequestParam(name = "password") String password,
-						@RequestParam(name = "grant_type") String grant_type,
-						@RequestParam(name = "scope") String scope,
-						@RequestParam(name = "token") String token,
-						@RequestParam(name = "appCode") String appCode,
-						@RequestParam(name = "appName") String appName) {
-		Map<String, String> parameters = new HashMap<>();
-		parameters.put("username", username);
-		parameters.put("password", password);
-		parameters.put("grant_type", grant_type);
-		parameters.put("scope", scope);
-		// 准备做一个两边token的缓存
-		parameters.put("token", token);
-		parameters.put("appCode", appCode);
-		parameters.put("appName", appName);
-		return customConfig.initToken(parameters);
 	}
 
 }

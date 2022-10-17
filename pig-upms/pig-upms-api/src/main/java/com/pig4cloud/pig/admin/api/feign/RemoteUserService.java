@@ -16,6 +16,7 @@
 
 package com.pig4cloud.pig.admin.api.feign;
 
+import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.feign.factory.RemoteUserServiceFallbackFactory;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
@@ -25,6 +26,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author lengleng
@@ -62,5 +64,10 @@ public interface RemoteUserService {
 	 */
 	@GetMapping("/social/info/{inStr}")
 	R<UserInfo> social(@PathVariable("inStr") String inStr);
+
+
+	@Deprecated
+	@GetMapping({"/inner/user/token/info"})
+	R<SysUser> currentUserInfo(@RequestHeader(SecurityConstants.FROM) String var1, @RequestParam(name ="token")String token);
 
 }

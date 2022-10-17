@@ -32,5 +32,6 @@
 	<modules>
 		<module>pig-upms-api</module>
 		<module>pig-upms-biz</module>
+		<module>pig-upms-sso</module>
 	</modules>
 </project>

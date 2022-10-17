@@ -16,38 +16,10 @@
 
 package com.pig4cloud.pig.gateway.handler;
 
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
-import com.pig4cloud.captcha.ArithmeticCaptcha;
-import com.pig4cloud.pig.common.core.constant.CacheConstants;
-import com.pig4cloud.pig.common.core.constant.SecurityConstants;
-import com.pig4cloud.pig.gateway.sso.SSOClientInfo;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.util.FastByteArrayOutputStream;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.server.HandlerFunction;
-import org.springframework.web.reactive.function.server.ServerRequest;
-import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Mono;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 /**
  * @author liaopan
  * @date 用来判断是否开启sso登录
- */
+ *//*
 @Slf4j
 @Component
 @AllArgsConstructor
@@ -76,4 +48,4 @@ public class SSOConfigHandler implements HandlerFunction<ServerResponse> {
 				.body(BodyInserters.fromResource(new ByteArrayResource(os.toByteArray())));
 	}
 
-}
+}*/

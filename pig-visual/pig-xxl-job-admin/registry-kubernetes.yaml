@@ -19,20 +19,13 @@ spec:
     spec:
       containers:
         - name: pig-xxl-job-admin
-          image: "dockerhub.clinbrain.com/pig-xxl-job-admin:20220125_528632b3"
+          image: "dockerhub.clinbrain.com/pig-xxl-job-admin:20221017_528632b3"
           imagePullPolicy: Always
           env:
             - name: NACOS_HOST
-              value: 192.168.0.112
+              value: nacos-0.nacos-headless
             - name: NACOS_PORT
               value: "8848"
-            - name: pig-register
-              value: "192.168.0.112"
-            - name: pig-mysql
-              value: "192.168.0.112"
-            - name: pig-redis
-              value: "192.168.0.112"
-
           volumeMounts:
             - name: config-volume
               mountPath: /home/java/application.properties
@@ -72,21 +65,25 @@ metadata:
   namespace: data-middle-platform
 data:
   bootstrap.yml: |
-    # 此配置只适合开发测试环境，详细配置参考： http://t.cn/A64RaHJm
     server:
       port: 5004
       servlet:
         context-path: /xxl-job-admin
-
+    
     spring:
       application:
         name: @artifactId@
       cloud:
         nacos:
           discovery:
-            server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
-            metadata:
-              management.context-path: ${server.servlet.context-path}/actuator
+            server-addr: ${NACOS_HOST:nacos-0.nacos-headless}:${NACOS_PORT:8848}
+            namespace: data-middle-platform
+          config:
+            server-addr: ${spring.cloud.nacos.discovery.server-addr}
+            file-extension: yml
+            shared-configs:
+              - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+            namespace: data-middle-platform
       profiles:
         active: @profiles.active@
 

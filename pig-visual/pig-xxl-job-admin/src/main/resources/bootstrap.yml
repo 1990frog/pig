@@ -10,9 +10,13 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
+        server-addr: ${NACOS_HOST:nacos-0.nacos-headless}:${NACOS_PORT:8848}
+        namespace: data-middle-platform
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         file-extension: yml
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+        namespace: data-middle-platform
   profiles:
     active: @profiles.active@

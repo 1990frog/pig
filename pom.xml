@@ -52,8 +52,8 @@
 		<swagger.fox.version>3.0.0</swagger.fox.version>
 		<xxl-job.version>2.3.0</xxl-job.version>
 		<docker.plugin.version>0.32.0</docker.plugin.version>
-		<docker.host>http://192.168.0.100:2375</docker.host>
-		<docker.registry>192.168.0.100</docker.registry>
+		<docker.host>http://192.168.0.220:2375</docker.host>
+		<docker.registry>192.168.0.220</docker.registry>
 		<docker.namespace>pig4cloud</docker.namespace>
 		<docker.username>username</docker.username>
 		<docker.password>password</docker.password>
@@ -107,7 +107,6 @@
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.83</version>
 		</dependency>
 	</dependencies>
 
@@ -261,6 +260,7 @@
 			<id>maven-snapshots</id>
 			<url>http://package.clinbrain.com/repository/maven-snapshots/</url>
 		</snapshotRepository>
+
 	</distributionManagement>
 
 </project>

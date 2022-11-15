@@ -53,7 +53,7 @@ public @interface EnablePigFeignClients {
 	 *
 	 * @return the array of 'basePackages'.
 	 */
-	String[] basePackages() default {"com.pig4cloud.pig", "com.clinbrain.dip", "com.clinbrain.upload"};
+	String[] basePackages() default {"com.pig4cloud.pig", "com.clinbrain"};
 
 	/**
 	 * Type-safe alternative to {@link #basePackages()} for specifying the packages to

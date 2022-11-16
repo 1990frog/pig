@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * @author caijingquan@clinbrain.com
  * @since 2022/11/7
  */
-//@FeignClient(name = "${xxl.job.admin.addresses:http://pig-xxl-job-admin}")
 @FeignClient(contextId = "remoteXxlJobAdminService", value = ServiceNameConstants.XXL_JOB_ADMIN,
 		fallbackFactory = RemoteXxlJobAdminFallbackFactory.class)
 public interface RemoteXxlJobAdminService {

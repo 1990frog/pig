@@ -55,7 +55,7 @@ public interface ServiceNameConstants {
 	/**
 	 * 数据核查：文件管理服务
 	 */
-	String DQ_FILEMANAGER = "dq-filemanager-biz";
+	String DQ_FILE = "dq-file-biz";
 
 
 }

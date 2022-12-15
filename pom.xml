@@ -252,14 +252,14 @@
 	</repositories>
 
 	<distributionManagement>
-		<snapshotRepository>
-			<id>maven-snapshots</id>
-			<url>http://package.clinbrain.com/repository/maven-snapshots/</url>
-		</snapshotRepository>
 		<repository>
 			<id>maven-releases</id>
 			<url>http://package.clinbrain.com/repository/maven-releases/</url>
 		</repository>
+		<snapshotRepository>
+			<id>maven-snapshots</id>
+			<url>http://package.clinbrain.com/repository/maven-snapshots/</url>
+		</snapshotRepository>
 	</distributionManagement>
 
 </project>

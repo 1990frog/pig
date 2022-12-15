@@ -35,7 +35,7 @@
 
 	<properties>
 		<spring-boot.version>2.4.4</spring-boot.version>
-		<spring-cloud.version>2020.0.2</spring-cloud.version>
+		<spring-cloud.version>2020.0.6</spring-cloud.version>
 		<spring-cloud-alibaba.version>2020.0.RC1</spring-cloud-alibaba.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -47,7 +47,7 @@
 		<captcha.version>2.2.0</captcha.version>
 		<velocity.version>1.7</velocity.version>
 		<configuration.version>1.10</configuration.version>
-		<nacos.version>2.0.0</nacos.version>
+		<nacos.version>2.0.4</nacos.version>
 		<jasypt.version>2.1.0</jasypt.version>
 		<swagger.fox.version>3.0.0</swagger.fox.version>
 		<xxl-job.version>2.3.0</xxl-job.version>
@@ -260,7 +260,6 @@
 			<id>maven-snapshots</id>
 			<url>http://package.clinbrain.com/repository/maven-snapshots/</url>
 		</snapshotRepository>
-
 	</distributionManagement>
 
 </project>

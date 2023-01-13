@@ -85,7 +85,6 @@ data:
             namespace: data-middle-platform
       profiles:
         active: @profiles.active@
-    
 
 
   logback-spring.xml: |

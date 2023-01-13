@@ -72,6 +72,8 @@ public class MenuTree extends TreeNode implements Serializable {
 	 */
 	private Integer sort;
 
+	private String sysClass;
+
 	/**
 	 * 是否包含子节点
 	 *

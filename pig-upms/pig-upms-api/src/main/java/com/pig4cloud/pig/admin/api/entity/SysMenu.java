@@ -117,4 +117,7 @@ public class SysMenu extends Model<SysMenu> {
 	@TableLogic
 	private String delFlag;
 
+	@ApiModelProperty("菜单所属系统")
+	private String sysClass;
+
 }

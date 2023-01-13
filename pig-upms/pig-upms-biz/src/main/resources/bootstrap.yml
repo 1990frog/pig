@@ -8,7 +8,9 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
+        namespace: data-middle-platform
       config:
+        namespace: data-middle-platform
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         file-extension: yml
         shared-configs:

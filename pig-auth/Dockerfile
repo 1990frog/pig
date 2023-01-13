@@ -15,6 +15,6 @@ COPY --from=builder /build/snapshot-dependencies/ ./
 COPY --from=builder /build/spring-boot-loader/ ./
 COPY --from=builder /build/application/ ./
 
-EXPOSE 3000
+EXPOSE 8080
 
 CMD sleep 60; java $JAVA_OPTS org.springframework.boot.loader.JarLauncher

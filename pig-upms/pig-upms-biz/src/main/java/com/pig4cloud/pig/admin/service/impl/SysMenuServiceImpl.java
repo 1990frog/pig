@@ -17,6 +17,7 @@
 package com.pig4cloud.pig.admin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
@@ -30,18 +31,24 @@ import com.pig4cloud.pig.admin.service.SysMenuService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.enums.MenuTypeEnum;
+import com.pig4cloud.pig.common.security.service.PigUser;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.pig4cloud.pig.common.core.constant.CommonConstants.SUPER_ADMIN;
 
 /**
  * <p>
@@ -96,15 +103,21 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 	 */
 	@Override
 	public List<MenuTree> treeMenu(boolean lazy, Integer parentId) {
+		String sysClass = Optional.ofNullable(SecurityUtils.getUser()).map(PigUser::getSysClass).orElse(null);
+		final LambdaQueryWrapper<SysMenu> sysMenuLambdaQueryWrapper = Wrappers.<SysMenu>lambdaQuery().orderByAsc(SysMenu::getSort);
+		if(!SUPER_ADMIN.equalsIgnoreCase(sysClass)) {
+			sysMenuLambdaQueryWrapper.eq(SysMenu::getSysClass, sysClass);
+		}
 		if (!lazy) {
-			return buildTree(baseMapper.selectList(Wrappers.<SysMenu>lambdaQuery().orderByAsc(SysMenu::getSort)),
+			return buildTree(baseMapper.selectList(sysMenuLambdaQueryWrapper),
 					CommonConstants.MENU_TREE_ROOT_ID);
 		}
 
 		Integer parent = parentId == null ? CommonConstants.MENU_TREE_ROOT_ID : parentId;
+
 		return buildTree(
 				baseMapper.selectList(
-						Wrappers.<SysMenu>lambdaQuery().eq(SysMenu::getParentId, parent).orderByAsc(SysMenu::getSort)),
+						sysMenuLambdaQueryWrapper.eq(SysMenu::getParentId, parent)),
 				parent);
 	}
 
@@ -142,6 +155,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 			node.setIcon(menu.getIcon());
 			node.setType(menu.getType());
 			node.setSort(menu.getSort());
+			node.setSysClass(menu.getSysClass());
 			node.setHasChildren(false);
 			node.setKeepAlive(menu.getKeepAlive());
 			trees.add(node);

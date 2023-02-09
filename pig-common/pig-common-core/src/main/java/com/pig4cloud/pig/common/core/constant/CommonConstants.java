@@ -92,6 +92,8 @@ public interface CommonConstants {
 	 */
 	String SIZE = "size";
 
+	String SUPER_ADMIN = "SUPER";
+
 	enum System{
 
 		DZBL("DZBL","电子病例系统"),

@@ -37,4 +37,25 @@ public interface ServiceNameConstants {
 	 */
 	String XXL_JOB_ADMIN = "pig-xxl-job-admin";
 
+	/**
+	 * 数据核查：控制端
+	 */
+	String DQ_MASTER = "dq-master-biz";
+
+	/**
+	 * 数据核查：运行端
+	 */
+	String DQ_WORKER = "dq-worker";
+
+	/**
+	 * 数据核查：国家类上报
+	 */
+	String DQ_REPORT = "dq-report-biz";
+
+	/**
+	 * 数据核查：文件管理服务
+	 */
+	String DQ_FILE = "dq-file-biz";
+
+
 }

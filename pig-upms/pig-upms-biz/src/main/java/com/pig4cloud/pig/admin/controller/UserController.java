@@ -23,6 +23,7 @@ import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.service.SysUserService;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.Inner;
@@ -223,6 +224,40 @@ public class UserController {
 	@GetMapping("/list")
 	public R<List<UserVO>> listAncestorUsers(@RequestParam("ids") List<Integer> ids) {
 		return R.ok(userService.listUsersByUserIds(ids));
+	}
+
+	/**
+	 * @param sysClass 系统
+	 * @return 指定系统下全部用户
+	 * @author caijingquan@clinbrain.com
+	 */
+	@GetMapping("/sys/list")
+	public List<SysUser> sysUserList(@RequestParam("sysClass") String sysClass){
+		return userService.lambdaQuery()
+				.eq(SysUser::getSysClass,sysClass)
+				.eq(SysUser::getDelFlag,0)
+				.list();
+	}
+
+	/**
+	 *
+	 * @param current 页面
+	 * @param size 条数
+	 * @param sysClass 系统
+	 * @return 指定系统下全部用户（分页）
+	 * @author caijingquan@clinbrain.com
+	 */
+	@GetMapping("/sys/page")
+	Page<SysUser> sysUserPage(@RequestParam("current") Long current,
+							  @RequestParam("size") Long size,
+							  @RequestParam("sysClass") String sysClass,
+							  @RequestParam(value = "keyword", required = false) String keyword){
+		Page<SysUser> page = new Page<>(current,size);
+		userService.lambdaQuery()
+				.eq(SysUser::getSysClass,sysClass)
+				.eq(SysUser::getDelFlag,0)
+				.page(page);
+		return page;
 	}
 
 }

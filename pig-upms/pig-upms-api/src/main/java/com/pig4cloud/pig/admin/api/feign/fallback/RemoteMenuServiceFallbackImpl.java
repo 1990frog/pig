@@ -14,45 +14,35 @@
  * limitations under the License.
  */
 
-package com.pig4cloud.pig.admin.mapper;
+package com.pig4cloud.pig.admin.api.feign.fallback;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.pig4cloud.pig.admin.api.entity.SysMenu;
+import com.pig4cloud.pig.admin.api.feign.RemoteMenuService;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
-import org.apache.ibatis.annotations.Mapper;
+import com.pig4cloud.pig.common.core.util.R;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
  * <p>
- * 菜单权限表 Mapper 接口
+ * 
  * </p>
  *
- * @author lengleng
- * @since 2019/2/1
+ * @author caijingquan@clinbrain.com
+ * @since 2022/11/16
  */
-@Mapper
-public interface SysMenuMapper extends BaseMapper<SysMenu> {
+@Slf4j
+@Component
+public class RemoteMenuServiceFallbackImpl implements RemoteMenuService {
 
-	/**
-	 * 通过角色编号查询菜单
-	 * @param roleId 角色ID
-	 * @return
-	 */
-	List<MenuVO> listMenusByRoleId(Integer roleId);
+	@Setter
+	private Throwable cause;
 
-	/**
-	 * 通过角色ID查询权限
-	 * @param roleIds Ids
-	 * @return
-	 */
-	List<String> listPermissionsByRoleIds(String roleIds);
-
-	/**
-	 * 通过系统查询菜单
-	 * @param system
-	 * @return
-	 */
-	List<MenuVO> findMenuBySystem(String system);
-
+	@Override
+	public List<MenuVO> findMenuBySystem(String system) {
+		log.error("feign 查询菜单信息失败:system={}, error = {}", system, cause);
+		return null;
+	}
 }

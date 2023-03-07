@@ -71,6 +71,16 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 	}
 
 	/**
+	 * 
+	 * @param system 系统
+	 * @return
+	 */
+	@Override
+	public List<MenuVO> findMenuBySystem(String system) {
+		return baseMapper.findMenuBySystem(system);
+	}
+
+	/**
 	 * 级联删除菜单
 	 * @param id 菜单ID
 	 * @return true成功,false失败

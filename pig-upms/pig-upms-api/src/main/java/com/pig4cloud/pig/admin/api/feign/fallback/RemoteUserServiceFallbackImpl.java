@@ -16,6 +16,7 @@
 
 package com.pig4cloud.pig.admin.api.feign.fallback;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
@@ -23,6 +24,8 @@ import com.pig4cloud.pig.common.core.util.R;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * @author lengleng
@@ -67,6 +70,18 @@ public class RemoteUserServiceFallbackImpl implements RemoteUserService {
 	@Override
 	public R<SysUser> currentUserInfo(String var1, String var2) {
 		log.error("feign 查询用户信息失败:currentUserInfo={}, token = {}", var1, var2, cause);
+		return null;
+	}
+
+	@Override
+	public List<SysUser> sysUserList(String sysClass) {
+		log.error("feign 查询用户信息失败:currentUserInfo={}, token = {}", sysClass, cause);
+		return null;
+	}
+
+	@Override
+	public Page<SysUser> sysUserPage(Long current, Long size, String sysClass, String keyword) {
+		log.error("feign 查询用户信息失败:currentUserInfo={}, token = {}", sysClass, cause);
 		return null;
 	}
 

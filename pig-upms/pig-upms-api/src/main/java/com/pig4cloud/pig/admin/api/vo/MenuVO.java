@@ -94,6 +94,10 @@ public class MenuVO implements Serializable {
 	 */
 	private String delFlag;
 
+	private String sysClass;
+
+	private String roleCode;
+
 	@Override
 	public int hashCode() {
 		return menuId.hashCode();

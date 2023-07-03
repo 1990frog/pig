@@ -7,6 +7,7 @@ spring:
   cloud:
     nacos:
       discovery:
+        namespace: data-middle-platform
         server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
         namespace: data-middle-platform
       config:

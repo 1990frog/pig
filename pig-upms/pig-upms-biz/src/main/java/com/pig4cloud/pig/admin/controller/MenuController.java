@@ -46,6 +46,7 @@ public class MenuController {
 
 	/**
 	 * 返回当前用户的树形菜单集合
+	 *
 	 * @param parentId 父节点ID
 	 * @return 当前用户的树形菜单
 	 */
@@ -54,13 +55,15 @@ public class MenuController {
 
 		// 获取符合条件的菜单
 		Set<MenuVO> all = new HashSet<>();
+		// todo 多系统登录，各自拿各自的
 		SecurityUtils.getRoles().forEach(roleId -> all.addAll(sysMenuService.findMenuByRoleId(roleId)));
 		return R.ok(sysMenuService.filterMenu(all, parentId));
 	}
 
 	/**
 	 * 返回树形菜单集合
-	 * @param lazy 是否是懒加载
+	 *
+	 * @param lazy     是否是懒加载
 	 * @param parentId 父节点ID
 	 * @return 树形菜单
 	 */
@@ -71,6 +74,7 @@ public class MenuController {
 
 	/**
 	 * 返回角色的菜单集合
+	 *
 	 * @param roleId 角色ID
 	 * @return 属性集合
 	 */
@@ -82,6 +86,7 @@ public class MenuController {
 
 	/**
 	 * 通过ID查询菜单的详细信息
+	 *
 	 * @param id 菜单ID
 	 * @return 菜单详细信息
 	 */
@@ -92,6 +97,7 @@ public class MenuController {
 
 	/**
 	 * 新增菜单
+	 *
 	 * @param sysMenu 菜单信息
 	 * @return 含ID 菜单信息
 	 */
@@ -105,6 +111,7 @@ public class MenuController {
 
 	/**
 	 * 删除菜单
+	 *
 	 * @param id 菜单ID
 	 * @return success/false
 	 */
@@ -117,6 +124,7 @@ public class MenuController {
 
 	/**
 	 * 更新菜单
+	 *
 	 * @param sysMenu
 	 * @return
 	 */
@@ -130,6 +138,7 @@ public class MenuController {
 
 	/**
 	 * 返回当前用户的所有菜单集合
+	 *
 	 * @return 当前用户的菜单集合
 	 */
 	@GetMapping("/all")

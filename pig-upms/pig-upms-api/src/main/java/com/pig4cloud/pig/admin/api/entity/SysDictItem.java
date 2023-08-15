@@ -41,7 +41,7 @@ public class SysDictItem extends Model<SysDictItem> {
 	/**
 	 * 编号
 	 */
-	@TableId
+	//@TableId
 	@ApiModelProperty(value = "字典项id")
 	private Integer id;
 

@@ -59,6 +59,7 @@
 		<docker.password>password</docker.password>
 		<sentinel.transport.simple.http>1.8.0</sentinel.transport.simple.http>
 		<fastjson.version>1.2.83</fastjson.version>
+		<dm.version>8.1.2.192</dm.version>
 	</properties>
 
 	<dependencies>

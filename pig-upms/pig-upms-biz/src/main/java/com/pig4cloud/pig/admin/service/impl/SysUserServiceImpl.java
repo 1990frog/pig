@@ -25,7 +25,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysDept;
+import com.pig4cloud.pig.admin.api.entity.SysMenu;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
+import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
@@ -33,6 +35,7 @@ import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.mapper.SysUserMapper;
 import com.pig4cloud.pig.admin.service.SysDeptService;
 import com.pig4cloud.pig.admin.service.SysMenuService;
+import com.pig4cloud.pig.admin.service.SysRoleMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.admin.service.SysUserRoleService;
 import com.pig4cloud.pig.admin.service.SysUserService;
@@ -47,6 +50,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -74,8 +78,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	private final SysUserRoleService sysUserRoleService;
 
+	private final SysRoleMenuService sysRoleMenuService;
+
 	/**
 	 * 保存用户信息
+	 *
 	 * @param userDto DTO 对象
 	 * @return success/fail
 	 */
@@ -98,6 +105,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	/**
 	 * 通过查用户的全部信息
+	 *
 	 * @param sysUser 用户
 	 * @return
 	 */
@@ -112,19 +120,33 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 		// 设置权限列表（menu.permission）
 		Set<String> permissions = new HashSet<>();
-		roleIds.forEach(roleId -> {
+		/*roleIds.forEach(roleId -> {
 			List<String> permissionList = sysMenuService.findMenuByRoleId(roleId).stream()
 					.filter(menuVo -> StrUtil.isNotEmpty(menuVo.getPermission())).map(MenuVO::getPermission)
 					.collect(Collectors.toList());
 			permissions.addAll(permissionList);
-		});
+		});*/
+		for (Integer roleId : roleIds) {
+			List<SysRoleMenu> sysRoleMenus = sysRoleMenuService.lambdaQuery().eq(SysRoleMenu::getRoleId, roleId).list();
+			if (CollectionUtils.isEmpty(sysRoleMenus)) {
+				continue;
+			}
+			List<SysMenu> sysMenus = sysMenuService.lambdaQuery().in(SysMenu::getMenuId, sysRoleMenus.stream().map(SysRoleMenu::getMenuId).collect(Collectors.toList())).list();
+			if (CollectionUtils.isEmpty(sysMenus)) {
+				continue;
+			}
+			permissions.addAll(sysMenus.stream()
+					.filter(menuVo -> StrUtil.isNotEmpty(menuVo.getPermission())).map(SysMenu::getPermission)
+					.collect(Collectors.toList()));
+		}
 		userInfo.setPermissions(ArrayUtil.toArray(permissions, String.class));
 		return userInfo;
 	}
 
 	/**
 	 * 分页查询用户信息（含有角色信息）
-	 * @param page 分页对象
+	 *
+	 * @param page    分页对象
 	 * @param userDTO 参数列表
 	 * @return
 	 */
@@ -135,6 +157,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	/**
 	 * 通过ID查询用户信息
+	 *
 	 * @param id 用户ID
 	 * @return 用户信息
 	 */
@@ -145,6 +168,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	/**
 	 * 删除用户
+	 *
 	 * @param sysUser 用户
 	 * @return Boolean
 	 */
@@ -159,7 +183,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Override
 	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username + '@@' + #userDto.sysClass")
 	public Boolean updateUserInfo(UserDTO userDto) {
-		UserVO userVO = baseMapper.getUserVoByUsername(userDto.getUsername(),userDto.getSysClass());
+		UserVO userVO = baseMapper.getUserVoByUsername(userDto.getUsername(), userDto.getSysClass());
 
 		Assert.isTrue(ENCODER.matches(userDto.getPassword(), userVO.getPassword()), "原密码错误，修改失败");
 
@@ -198,6 +222,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	/**
 	 * 查询上级部门的用户信息
+	 *
 	 * @param username 用户名
 	 * @return R
 	 */
@@ -221,8 +246,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	public List<UserVO> listUsersByUserIds(List<Integer> ids) {
 		List<UserVO> list = new ArrayList<>();
 		ids.forEach(id -> {
-			UserVO item= baseMapper.getUserVoById(id);
-			if(item != null){
+			UserVO item = baseMapper.getUserVoById(id);
+			if (item != null) {
 				list.add(item);
 			}
 		});
@@ -231,6 +256,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	/**
 	 * 查询上级部门的用户信息
+	 *
 	 * @param username 用户名
 	 * @return R
 	 */

@@ -41,7 +41,7 @@ public class SysRole extends Model<SysRole> {
 
 	private static final long serialVersionUID = 1L;
 
-	@TableId(value = "role_id", type = IdType.AUTO)
+	//@TableId(value = "role_id", type = IdType.AUTO)
 	@ApiModelProperty(value = "角色编号")
 	private Integer roleId;
 

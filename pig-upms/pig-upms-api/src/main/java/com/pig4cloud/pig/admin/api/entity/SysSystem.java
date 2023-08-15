@@ -24,7 +24,7 @@ public class SysSystem extends Model<SysSystem> {
 
 	private static final long serialVersionUID = -1L;
 
-	@TableId(value = "sys_id", type = IdType.AUTO)
+	//@TableId(value = "sys_id", type = IdType.AUTO)
 	@ApiModelProperty(value = "主键id")
 	private Integer sysId;
 

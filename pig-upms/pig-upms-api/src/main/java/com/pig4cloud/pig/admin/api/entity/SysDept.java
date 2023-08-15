@@ -41,7 +41,7 @@ public class SysDept extends Model<SysDept> {
 
 	private static final long serialVersionUID = 1L;
 
-	@TableId(value = "dept_id", type = IdType.AUTO)
+	//@TableId(value = "dept_id", type = IdType.AUTO)
 	@ApiModelProperty(value = "部门id")
 	private Integer deptId;
 

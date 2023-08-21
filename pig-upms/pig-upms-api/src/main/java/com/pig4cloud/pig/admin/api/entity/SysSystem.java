@@ -26,6 +26,7 @@ public class SysSystem extends Model<SysSystem> {
 
 	//@TableId(value = "sys_id", type = IdType.AUTO)
 	@ApiModelProperty(value = "主键id")
+	@TableId
 	private Integer sysId;
 
 	@NotBlank(message = "系统名称 不能为空")

@@ -45,6 +45,7 @@ public class SysOauthClientDetails extends Model<SysOauthClientDetails> {
 	@NotBlank(message = "client_id 不能为空")
 	//@TableId(value = "client_id", type = IdType.INPUT)
 	@ApiModelProperty(value = "客户端id")
+	@TableId
 	private String clientId;
 
 	/**

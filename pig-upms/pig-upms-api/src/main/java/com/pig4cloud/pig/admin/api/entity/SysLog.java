@@ -47,6 +47,7 @@ public class SysLog implements Serializable {
 	//@TableId(value = "id", type = IdType.AUTO)
 	@ApiModelProperty(value = "日志编号")
 	@JsonSerialize(using = ToStringSerializer.class)
+	@TableId
 	private Long id;
 
 	/**

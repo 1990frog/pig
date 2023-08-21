@@ -43,6 +43,7 @@ public class SysDept extends Model<SysDept> {
 
 	//@TableId(value = "dept_id", type = IdType.AUTO)
 	@ApiModelProperty(value = "部门id")
+	@TableId
 	private Integer deptId;
 
 	/**

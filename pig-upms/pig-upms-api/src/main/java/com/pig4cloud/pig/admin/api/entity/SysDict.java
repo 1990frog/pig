@@ -42,7 +42,7 @@ public class SysDict extends Model<SysDict> {
 	/**
 	 * 编号
 	 */
-	//@TableId
+	@TableId
 	@ApiModelProperty(value = "字典编号")
 	private Integer id;
 

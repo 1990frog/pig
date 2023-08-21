@@ -47,6 +47,7 @@ public class SysMenu extends Model<SysMenu> {
 	 */
 	//@TableId(value = "menu_id", type = IdType.AUTO)
 	@ApiModelProperty(value = "菜单id")
+	@TableId
 	private Integer menuId;
 
 	/**

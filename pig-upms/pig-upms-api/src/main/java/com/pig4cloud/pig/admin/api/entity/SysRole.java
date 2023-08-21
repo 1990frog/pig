@@ -43,6 +43,7 @@ public class SysRole extends Model<SysRole> {
 
 	//@TableId(value = "role_id", type = IdType.AUTO)
 	@ApiModelProperty(value = "角色编号")
+	@TableId
 	private Integer roleId;
 
 	@NotBlank(message = "角色名称 不能为空")

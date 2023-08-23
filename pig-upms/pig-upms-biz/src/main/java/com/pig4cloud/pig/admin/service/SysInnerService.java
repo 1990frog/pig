@@ -7,6 +7,7 @@ import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserRoleDTO;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.vo.UserVO;
 
 import java.util.List;
 
@@ -102,4 +103,6 @@ public interface SysInnerService {
 	 * 内部获取用户
 	 */
 	SysUser findUserInfoByToken(String token);
+
+	List<UserVO> listUsersByUserIds(List<Integer> userIds);
 }

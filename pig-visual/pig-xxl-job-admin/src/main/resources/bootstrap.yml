@@ -10,7 +10,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: ${NACOS_HOST:nacos}:${NACOS_PORT:8848}
+        server-addr: ${NACOS_HOST:192.168.0.153}:${NACOS_PORT:8848}
         namespace: data-middle-platform
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}

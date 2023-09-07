@@ -6,7 +6,7 @@ server:
 
 spring:
   application:
-    name: @artifactId@
+    name: pig-xxl-job-admin
   cloud:
     nacos:
       discovery:

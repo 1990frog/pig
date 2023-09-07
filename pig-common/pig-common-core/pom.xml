@@ -26,6 +26,7 @@
 
 	<artifactId>pig-common-core</artifactId>
 	<packaging>jar</packaging>
+	<version>3.1.2</version>
 
 	<description>pig 公共工具类核心包</description>
 

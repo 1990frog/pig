@@ -1,4 +1,4 @@
-# 此配置只适合开发测试环境，详细配置参考： http://t.cn/A64RaHJm
+
 server:
   port: 5004
   servlet:
@@ -10,7 +10,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: ${NACOS_HOST:nacos-0.nacos-headless}:${NACOS_PORT:8848}
+        server-addr: ${NACOS_HOST:nacos}:${NACOS_PORT:8848}
         namespace: data-middle-platform
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}

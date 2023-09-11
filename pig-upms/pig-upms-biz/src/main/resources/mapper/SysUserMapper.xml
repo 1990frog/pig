@@ -65,20 +65,20 @@
 	</resultMap>
 
 	<sql id="userRoleSql">
-		`user`.user_id,
-		`user`.username,
-		`user`.sys_class,
-		`user`.`password`,
-		`user`.salt,
-		`user`.phone,
-		`user`.email,
-		`user`.avatar,
-		`user`.dept_id,
-		`user`.create_time AS ucreate_time,
-		`user`.update_time AS uupdate_time,
-		`user`.del_flag AS udel_flag,
-		`user`.lock_flag AS lock_flag,
-		`user`.dept_id AS deptId,
+		u.user_id,
+		u.username,
+		u.sys_class,
+		u.password,
+		u.salt,
+		u.phone,
+		u.email,
+		u.avatar,
+		u.dept_id,
+		u.create_time AS ucreate_time,
+		u.update_time AS uupdate_time,
+		u.del_flag AS udel_flag,
+		u.lock_flag AS lock_flag,
+		u.dept_id AS deptId,
 		r.role_id,
 		r.role_name,
 		r.role_code,
@@ -88,18 +88,18 @@
 	</sql>
 
 	<sql id="userRoleDeptSql">
-		`user`.user_id,
-		`user`.username,
-		`user`.sys_class,
-		`user`.`password`,
-		`user`.salt,
-		`user`.phone,
-		`user`.email,
-		`user`.avatar,
-		`user`.create_time AS ucreate_time,
-		`user`.update_time AS uupdate_time,
-		`user`.del_flag AS udel_flag,
-		`user`.lock_flag AS lock_flag,
+		u.user_id,
+		u.username,
+		u.sys_class,
+		u.password,
+		u.salt,
+		u.phone,
+		u.email,
+		u.avatar,
+		u.create_time AS ucreate_time,
+		u.update_time AS uupdate_time,
+		u.del_flag AS udel_flag,
+		u.lock_flag AS lock_flag,
 		r.role_id,
 		r.role_name,
 		r.role_code,
@@ -108,62 +108,62 @@
 		r.update_time AS rupdate_time,
 		d.name AS deptName,
 		d.dept_id AS deptId
-    </sql>
+	</sql>
 
 	<select id="getUserVoByUsername" resultMap="userVoResultMap">
 		SELECT
 		<include refid="userRoleSql"/>
 		FROM
-		sys_user AS `user`
-		LEFT JOIN sys_user_role AS ur ON ur.user_id = `user`.user_id
+		sys_user AS u
+		LEFT JOIN sys_user_role AS ur ON ur.user_id = u.user_id
 		LEFT JOIN sys_role AS r ON r.role_id = ur.role_id
-		WHERE `user`.username = #{username} AND `user`.sys_class = #{sysClass}
+		WHERE u.username = #{username} AND u.sys_class = #{sysClass}
 	</select>
 
 	<select id="getUserVoById" resultMap="userVoResultMap">
 		SELECT
 		<include refid="userRoleDeptSql"/>
 		FROM
-		sys_user AS `user`
-		LEFT JOIN sys_user_role AS ur ON ur.user_id = `user`.user_id
+		sys_user AS u
+		LEFT JOIN sys_user_role AS ur ON ur.user_id = u.user_id
 		LEFT JOIN sys_role AS r ON r.role_id = ur.role_id
-		LEFT JOIN sys_dept AS d ON d.dept_id = `user`.dept_id
+		LEFT JOIN sys_dept AS d ON d.dept_id = u.dept_id
 		WHERE
-		`user`.user_id = #{id}
+		u.user_id = #{id}
 	</select>
 
 	<select id="getUserVosPage" resultMap="baseResultMap">
 		SELECT
-		`user`.user_id,
-		`user`.username,
-		`user`.sys_class,
-		`user`.salt,
-		`user`.phone,
-		`user`.email,
-		`user`.avatar,
-		`user`.dept_id,
-		`user`.create_time AS ucreate_time,
-		`user`.update_time AS uupdate_time,
-		`user`.del_flag AS udel_flag,
-		`user`.lock_flag AS lock_flag,
-		`user`.dept_id AS deptId,
-		`user`.sys_class,
+		u.user_id,
+		u.username,
+		u.sys_class,
+		u.salt,
+		u.phone,
+		u.email,
+		u.avatar,
+		u.dept_id,
+		u.create_time AS ucreate_time,
+		u.update_time AS uupdate_time,
+		u.del_flag AS udel_flag,
+		u.lock_flag AS lock_flag,
+		u.dept_id AS deptId,
+		u.sys_class,
 		d.name AS deptName
 		FROM
-		sys_user AS `user`
-		LEFT JOIN sys_dept AS d ON d.dept_id = `user`.dept_id
+		sys_user AS u
+		LEFT JOIN sys_dept AS d ON d.dept_id = u.dept_id
 		<where>
-			`user`.del_flag = '0'
+			u.del_flag = '0'
 			<if test="query.username != null and query.username != ''">
-				and `user`.username LIKE CONCAT('%',#{query.username},'%')
+				and u.username LIKE CONCAT('%',#{query.username},'%')
 			</if>
 			<if test="query.sysClass != null and query.sysClass != ''">
-				and `user`.sys_class LIKE CONCAT('%',#{query.sysClass},'%')
+				and u.sys_class LIKE CONCAT('%',#{query.sysClass},'%')
 			</if>
 			<if test="query.keyword != null and query.keyword != ''">
-				and CONCAT(`user`.username,`user`.phone,`user`.email) LIKE CONCAT('%',#{query.keyword},'%')
+				and CONCAT(u.username,u.phone,u.email) LIKE CONCAT('%',#{query.keyword},'%')
 			</if>
 		</where>
-		ORDER BY `user`.create_time DESC
+		ORDER BY u.create_time DESC
 	</select>
 </mapper>

@@ -16,9 +16,9 @@
 	<sql id="sysClassSql">
 		sys_id,
 		sys_class,
-		`sys_name`,
+		sys_name,
 		url,
-		`status`,
+		status,
 		operate_user,
 		create_time,
 		update_time
@@ -37,7 +37,7 @@
 				and sys_name LIKE CONCAT('%',#{query.sysName},'%')
 			</if>
 			<if test="query.status != null and query.status != ''">
-				and `status`  = #{query.status}
+				and status  = #{query.status}
 			</if>
 		</where>
 		ORDER BY update_time DESC

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.constant.enums.ResultEnumBase;
 import io.netty.handler.codec.json.JsonObjectDecoder;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -97,6 +98,10 @@ public class R<T> implements Serializable {
 
 	public static <T> R<T> failed(T data) {
 		return restResult(data, CommonConstants.FAIL, null);
+	}
+
+	public static <T> R<T> failed(ResultEnumBase resultEnumBase) {
+		return restResult(null, resultEnumBase.getCode(), resultEnumBase.getMsg());
 	}
 
 	public static <T> R<T> failed(T data, String msg) {

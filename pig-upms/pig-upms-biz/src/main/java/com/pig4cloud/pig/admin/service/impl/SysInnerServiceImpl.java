@@ -390,6 +390,11 @@ public class SysInnerServiceImpl implements SysInnerService {
 		return sysUser;
 	}
 
+	@Override
+	public List<UserVO> listUsersByUserIds(List<Integer> userIds) {
+		return sysUserService.listUsersByUserIds(userIds);
+	}
+
 	private void processChild(Set<Integer> allMenuId, Map<Integer, List<SysMenu>> collect, SysMenu sysMenu) {
 		// 这里就是子
 		List<SysMenu> sysMenus = collect.get(sysMenu.getMenuId());

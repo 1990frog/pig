@@ -1,22 +1,21 @@
 server:
-  port: 9999
+  port: 8080
 
 spring:
   application:
     name: @artifactId@
   cloud:
-#    inetutils:
-#      preferred-networks: ${spring.cloud.nacos.discovery.server-addr}
     nacos:
       discovery:
+        server-addr: ${NACOS_HOST:nacos}:${NACOS_PORT:8848}
         namespace: data-middle-platform
-        server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
       config:
         namespace: data-middle-platform
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         file-extension: yml
         shared-configs:
           - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+        namespace: data-middle-platform
   profiles:
     active: @profiles.active@
 

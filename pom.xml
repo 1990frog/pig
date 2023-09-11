@@ -52,13 +52,14 @@
 		<swagger.fox.version>3.0.0</swagger.fox.version>
 		<xxl-job.version>2.3.0</xxl-job.version>
 		<docker.plugin.version>0.32.0</docker.plugin.version>
-		<docker.host>http://192.168.0.100:2375</docker.host>
-		<docker.registry>192.168.0.100</docker.registry>
+		<docker.host>http://192.168.0.220:2375</docker.host>
+		<docker.registry>192.168.0.220</docker.registry>
 		<docker.namespace>pig4cloud</docker.namespace>
 		<docker.username>username</docker.username>
 		<docker.password>password</docker.password>
 		<sentinel.transport.simple.http>1.8.0</sentinel.transport.simple.http>
 		<fastjson.version>1.2.83</fastjson.version>
+		<dm.version>8.1.2.192</dm.version>
 	</properties>
 
 	<dependencies>
@@ -107,12 +108,11 @@
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.83</version>
 		</dependency>
 	</dependencies>
 
 	<modules>
-		<module>pig-register</module>
+<!--		<module>pig-register</module>-->
 		<module>pig-gateway</module>
 		<module>pig-auth</module>
 		<module>pig-upms</module>

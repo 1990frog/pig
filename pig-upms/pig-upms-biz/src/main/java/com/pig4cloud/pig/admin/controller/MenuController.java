@@ -17,19 +17,26 @@
 package com.pig4cloud.pig.admin.controller;
 
 import com.pig4cloud.pig.admin.api.entity.SysMenu;
+import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
 import com.pig4cloud.pig.admin.service.SysMenuService;
+import com.pig4cloud.pig.admin.service.SysUserRoleService;
+import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,6 +52,10 @@ public class MenuController {
 
 	private final SysMenuService sysMenuService;
 
+	private final SysUserRoleService sysUserRoleService;
+
+	private final TokenStore tokenStore;
+
 	/**
 	 * 返回当前用户的树形菜单集合
 	 *
@@ -56,7 +67,16 @@ public class MenuController {
 
 		// 获取符合条件的菜单
 		Set<MenuVO> all = new HashSet<>();
-		SecurityUtils.getRoles().forEach(roleId -> all.addAll(sysMenuService.findMenuByRoleId(roleId)));
+		String token = LocalTokenHolder.getToken();
+		OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(token);
+		Map<String, Object> additionalInformation = oAuth2AccessToken.getAdditionalInformation();
+		Integer userId = (Integer) additionalInformation.get("user_id");
+		List<SysUserRole> sysUserRoles = sysUserRoleService.lambdaQuery().eq(SysUserRole::getUserId, userId).list();
+		if (CollectionUtils.isEmpty(sysUserRoles)) {
+			return R.failed("用户菜单获取失败!");
+		}
+		Set<Integer> roleIds = sysUserRoles.stream().map(SysUserRole::getRoleId).collect(Collectors.toSet());
+		roleIds.forEach(roleId -> all.addAll(sysMenuService.findMenuByRoleId(roleId)));
 		return R.ok(sysMenuService.filterMenu(all, parentId));
 	}
 

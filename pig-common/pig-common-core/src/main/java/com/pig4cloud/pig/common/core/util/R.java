@@ -111,3 +111,4 @@ public class R<T> implements Serializable {
 		return apiResult;
 	}
 }
+

@@ -83,6 +83,19 @@
 			<artifactId>lombok</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>pig-upms-sso</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+
+		<!--达梦JDBC包-->
+		<dependency>
+			<groupId>com.dameng</groupId>
+			<artifactId>DmJdbcDriver18</artifactId>
+			<version>${dm.version}</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * @ClassName InnerController
@@ -85,6 +86,12 @@ public class InnerController {
 	@DeleteMapping(path = "/user/{userId}")
 	public R findUserRoleInfo(@PathVariable(value = "userId") Integer userId) {
 		return R.ok(sysInnerService.deleteUserByUserId(userId));
+	}
+
+	@Inner
+	@PostMapping(path = "/user/list")
+	public R userList(@RequestBody List<Integer> userIds) {
+		return R.ok(sysInnerService.listUsersByUserIds(userIds));
 	}
 
 	@Inner

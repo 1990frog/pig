@@ -22,26 +22,32 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.api.entity.SysMenu;
+import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
 import com.pig4cloud.pig.admin.api.util.TreeUtils;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
 import com.pig4cloud.pig.admin.mapper.SysMenuMapper;
 import com.pig4cloud.pig.admin.mapper.SysRoleMenuMapper;
 import com.pig4cloud.pig.admin.service.SysMenuService;
+import com.pig4cloud.pig.admin.service.SysRoleMenuService;
+import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.enums.MenuTypeEnum;
 import com.pig4cloud.pig.common.security.service.PigUser;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -64,10 +70,30 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
 	private final SysRoleMenuMapper sysRoleMenuMapper;
 
+	private final SysRoleMenuService sysRoleMenuService;
+
 	@Override
 	@Cacheable(value = CacheConstants.MENU_DETAILS, key = "#roleId  + '_menu'", unless = "#result == null")
 	public List<MenuVO> findMenuByRoleId(Integer roleId) {
-		return baseMapper.listMenusByRoleId(roleId);
+		List<SysRoleMenu> sysRoleMenus = sysRoleMenuService.lambdaQuery().eq(SysRoleMenu::getRoleId, roleId).list();
+		if (CollectionUtils.isEmpty(sysRoleMenus)) {
+			return Collections.emptyList();
+		}
+		List<SysMenu> sysMenus = this.lambdaQuery()
+				.in(SysMenu::getMenuId, sysRoleMenus.stream().map(SysRoleMenu::getMenuId).collect(Collectors.toList()))
+				.eq(SysMenu::getDelFlag, "0")
+				.list();
+		if (CollectionUtils.isEmpty(sysMenus)) {
+			return Collections.emptyList();
+		}
+		List<MenuVO> ans = new ArrayList<>();
+		for (SysMenu sysMenu : sysMenus) {
+			MenuVO menuVO = new MenuVO();
+			BeanUtils.copyProperties(sysMenu, menuVO);
+			ans.add(menuVO);
+		}
+		//return baseMapper.listMenusByRoleId(roleId);
+		return ans;
 	}
 
 	/**
@@ -82,8 +108,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
 	/**
 	 * 级联删除菜单
+	 *
 	 * @param id 菜单ID
-	 * @return true成功,false失败
+	 * @return true成功, false失败
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
@@ -107,7 +134,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
 	/**
 	 * 构建树查询 1. 不是懒加载情况，查询全部 2. 是懒加载，根据parentId 查询 2.1 父节点为空，则查询ID -1
-	 * @param lazy 是否是懒加载
+	 *
+	 * @param lazy     是否是懒加载
 	 * @param parentId 父节点ID
 	 * @return
 	 */
@@ -115,7 +143,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 	public List<MenuTree> treeMenu(boolean lazy, Integer parentId) {
 		String sysClass = Optional.ofNullable(SecurityUtils.getUser()).map(PigUser::getSysClass).orElse(null);
 		final LambdaQueryWrapper<SysMenu> sysMenuLambdaQueryWrapper = Wrappers.<SysMenu>lambdaQuery().orderByAsc(SysMenu::getSort);
-		if(!SUPER_ADMIN.equalsIgnoreCase(sysClass)) {
+		if (!SUPER_ADMIN.equalsIgnoreCase(sysClass)) {
 			sysMenuLambdaQueryWrapper.eq(SysMenu::getSysClass, sysClass);
 		}
 		if (!lazy) {
@@ -133,7 +161,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
 	/**
 	 * 查询菜单
-	 * @param all 全部菜单
+	 *
+	 * @param all      全部菜单
 	 * @param parentId 父节点ID
 	 * @return
 	 */
@@ -147,6 +176,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
 	/**
 	 * 通过sysMenu创建树形节点
+	 *
 	 * @param menus
 	 * @param root
 	 * @return
@@ -174,9 +204,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 	}
 
 	/**
-	 *  自定义实现查询角色已经绑定的菜单
+	 * 自定义实现查询角色已经绑定的菜单
 	 */
-	public List<MenuVO> findMenuInfoByRoleId(Integer roleId){
+	public List<MenuVO> findMenuInfoByRoleId(Integer roleId) {
 		return baseMapper.listMenusByRoleId(roleId);
 	}
 

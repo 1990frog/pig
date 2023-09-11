@@ -24,8 +24,9 @@ public class SysSystem extends Model<SysSystem> {
 
 	private static final long serialVersionUID = -1L;
 
-	@TableId(value = "sys_id", type = IdType.AUTO)
+	//@TableId(value = "sys_id", type = IdType.AUTO)
 	@ApiModelProperty(value = "主键id")
+	@TableId
 	private Integer sysId;
 
 	@NotBlank(message = "系统名称 不能为空")

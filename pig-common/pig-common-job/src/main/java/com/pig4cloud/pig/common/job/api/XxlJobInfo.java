@@ -9,9 +9,15 @@ import java.util.Date;
  */
 public class XxlJobInfo {
 
-	private int id; // 主键ID
+	/**
+	 * 主键ID
+	 */
+	private int id;
 
-	private int jobGroup; // 执行器主键ID
+	/**
+	 * 执行器主键ID
+	 */
+	private int jobGroup;
 
 	private String jobDesc;
 
@@ -19,43 +25,100 @@ public class XxlJobInfo {
 
 	private Date updateTime;
 
-	private String author; // 负责人
+	/**
+	 * 负责人
+	 */
+	private String author;
 
-	private String alarmEmail; // 报警邮件
+	/**
+	 * 报警邮件
+	 */
+	private String alarmEmail;
 
-	private String scheduleType; // 调度类型
+	/**
+	 * 调度类型
+	 */
+	private String scheduleType;
 
-	private String scheduleConf; // 调度配置，值含义取决于调度类型
+	/**
+	 * 调度配置，值含义取决于调度类型
+	 */
+	private String scheduleConf;
 
-	private String misfireStrategy; // 调度过期策略
+	/**
+	 * 调度过期策略
+	 */
+	private String misfireStrategy;
 
-	private String executorRouteStrategy; // 执行器路由策略
+	/**
+	 * 执行器路由策略
+	 */
+	private String executorRouteStrategy;
 
-	private String executorHandler; // 执行器，任务Handler名称
+	/**
+	 * 执行器，任务Handler名称
+	 */
+	private String executorHandler;
 
-	private String executorParam; // 执行器，任务参数
+	/**
+	 * 执行器，任务参数
+	 */
+	private String executorParam;
 
-	private String executorBlockStrategy; // 阻塞处理策略
+	/**
+	 * 阻塞处理策略
+	 */
+	private String executorBlockStrategy;
 
-	private int executorTimeout; // 任务执行超时时间，单位秒
+	/**
+	 * 任务执行超时时间，单位秒
+	 */
+	private int executorTimeout;
 
-	private int executorFailRetryCount; // 失败重试次数
+	/**
+	 * 失败重试次数
+	 */
+	private int executorFailRetryCount;
 
-	private String glueType; // GLUE类型 #com.xxl.job.core.glue.GlueTypeEnum
+	/**
+	 * GLUE类型 #com.xxl.job.core.glue.GlueTypeEnum
+	 */
+	private String glueType;
 
-	private String glueSource; // GLUE源代码
+	/**
+	 * GLUE源代码
+	 */
+	private String glueSource;
 
-	private String glueRemark; // GLUE备注
+	/**
+	 * GLUE备注
+	 */
+	private String glueRemark;
 
-	private Date glueUpdatetime; // GLUE更新时间
+	/**
+	 * GLUE更新时间
+	 */
+	private Date glueUpdatetime;
 
-	private String childJobId; // 子任务ID，多个逗号分隔
+	/**
+	 * 子任务ID，多个逗号分隔
+	 */
+	private String childJobId;
 
-	private int triggerStatus; // 调度状态：0-停止，1-运行
+	/**
+	 * 调度状态：0-停止，1-运行
+	 */
+	private int triggerStatus;
 
-	private long triggerLastTime; // 上次调度时间
+	/**
+	 * 上次调度时间
+	 */
+	private long triggerLastTime;
 
-	private long triggerNextTime; // 下次调度时间
+	/**
+	 * 下次调度时间
+	 */
+	private long triggerNextTime;
 
 	public int getId() {
 		return id;

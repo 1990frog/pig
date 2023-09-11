@@ -42,6 +42,13 @@ public interface SysMenuService extends IService<SysMenu> {
 	List<MenuVO> findMenuByRoleId(Integer roleId);
 
 	/**
+	 * 通过系统查询菜单
+	 * @param system 系统
+	 * @return
+	 */
+	List<MenuVO> findMenuBySystem(String system);
+
+	/**
 	 * 级联删除菜单
 	 * @param id 菜单ID
 	 * @return true成功,false失败

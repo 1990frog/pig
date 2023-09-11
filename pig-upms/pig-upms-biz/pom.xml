@@ -35,6 +35,13 @@
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-upms-api</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>pig-upms-sso</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+
 		<!--安全模块-->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>

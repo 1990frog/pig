@@ -81,6 +81,18 @@ public class MenuController {
 	}
 
 	/**
+	 * 返回指定系统全部菜单集合
+	 *
+	 * @param system
+	 * @return
+	 */
+	@GetMapping("/system")
+	public List<MenuVO> getSystemMenu(String system) {
+		List<MenuVO> ret = sysMenuService.findMenuBySystem(system);
+		return ret;
+	}
+
+	/**
 	 * 返回树形菜单集合
 	 *
 	 * @param lazy     是否是懒加载

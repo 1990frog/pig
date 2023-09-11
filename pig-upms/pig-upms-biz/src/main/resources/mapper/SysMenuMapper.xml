@@ -48,6 +48,8 @@
 		<result column="create_time" property="createTime"/>
 		<result column="update_time" property="updateTime"/>
 		<result column="del_flag" property="delFlag"/>
+		<result column="sys_class" property="sysClass"/>
+		<result column="role_code" property="roleCode"/>
 	</resultMap>
 
 	<!--通过角色查询菜单信息-->
@@ -71,4 +73,16 @@
         FROM
         sys_menu m, sys_role_menu rm WHERE m.menu_id = rm.menu_id AND m.del_flag = 0 AND rm.role_id IN (#{roleIds})
     </select>
+
+	<!--通过系统查询菜单信息-->
+	<select id="findMenuBySystem" resultMap="MenuVoResultMap">
+		select sm.*, ss.sys_class,sr.role_code
+		from sys_role_menu srm
+				 join sys_menu sm on srm.menu_id = sm.menu_id
+				 left join sys_role sr on srm.role_id = sr.role_id
+				 left join sys_system ss on sr.sys_class = ss.sys_class
+		where sm.del_flag = 0
+		and ss.sys_class = #{system}
+		order by sm.sort desc
+	</select>
 </mapper>

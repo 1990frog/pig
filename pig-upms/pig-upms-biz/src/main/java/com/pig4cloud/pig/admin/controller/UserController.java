@@ -247,4 +247,38 @@ public class UserController {
 		return R.ok(userService.listUsersByUserIds(ids));
 	}
 
+	/**
+	 * @param sysClass 系统
+	 * @return 指定系统下全部用户
+	 * @author caijingquan@clinbrain.com
+	 */
+	@GetMapping("/sys/list")
+	public List<SysUser> sysUserList(@RequestParam("sysClass") String sysClass){
+		return userService.lambdaQuery()
+				.eq(SysUser::getSysClass,sysClass)
+				.eq(SysUser::getDelFlag,0)
+				.list();
+	}
+
+	/**
+	 *
+	 * @param current 页面
+	 * @param size 条数
+	 * @param sysClass 系统
+	 * @return 指定系统下全部用户（分页）
+	 * @author caijingquan@clinbrain.com
+	 */
+	@GetMapping("/sys/page")
+	Page<SysUser> sysUserPage(@RequestParam("current") Long current,
+							  @RequestParam("size") Long size,
+							  @RequestParam("sysClass") String sysClass,
+							  @RequestParam(value = "keyword", required = false) String keyword){
+		Page<SysUser> page = new Page<>(current,size);
+		userService.lambdaQuery()
+				.eq(SysUser::getSysClass,sysClass)
+				.eq(SysUser::getDelFlag,0)
+				.page(page);
+		return page;
+	}
+
 }

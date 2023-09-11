@@ -230,9 +230,10 @@ public class SysInnerServiceImpl implements SysInnerService {
 		BeanUtils.copyProperties(userDTO, sysUser);
 		sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
 		sysUser.setPassword(ENCODER.encode(userDTO.getPassword()));
-		int insert = sysUserService.getBaseMapper().insert(sysUser);
-		if (insert <= 0) {
-			return insert;
+		sysUser.setUserId(null);
+		boolean save = sysUserService.save(sysUser);
+		if (!save) {
+			return -1;
 		}
 		if (!CollectionUtils.isEmpty(userDTO.getRole())) {
 			List<SysUserRole> userRoleList = userDTO.getRole().stream().map(roleId -> {

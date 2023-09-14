@@ -6,7 +6,7 @@ server:
 
 spring:
   application:
-    name: pig-xxl-job-admin
+    name: xxl-job-admin
   cloud:
     nacos:
       discovery:

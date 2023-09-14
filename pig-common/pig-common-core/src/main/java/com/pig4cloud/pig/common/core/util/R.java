@@ -104,6 +104,10 @@ public class R<T> implements Serializable {
 		return restResult(null, resultEnumBase.getCode(), resultEnumBase.getMsg());
 	}
 
+	public static <T> R<T> failed(T data, int code, String msg) {
+		return restResult(data, code, msg);
+	}
+
 	public static <T> R<T> failed(T data, String msg) {
 		return restResult(data, CommonConstants.FAIL, msg);
 	}

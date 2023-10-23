@@ -71,14 +71,14 @@ public class RedisTemplateConfiguration {
 		Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>();
 		//SsoCache和BasicDataCache进行过期时间配置
 		redisCacheConfigurationMap.put(CacheConstants.SSO_SERVER_TOKEN_USER_CACHE,
-				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30)));
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(120)));
 
 		redisCacheConfigurationMap.put(CacheConstants.SSO_SERVER_LOCAL_TOKEN,
-				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(120)));
 		redisCacheConfigurationMap.put(CacheConstants.SSO_LOCAL_SERVER_TOKEN,
-				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(120)));
 		redisCacheConfigurationMap.put(CacheConstants.SSO_SERVER_INFO,
-				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));
+				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(120)));
 		/*redisCacheConfigurationMap.put(CacheConstants.SSO_CLIENT_INFO,
 				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)));*/
 		return redisCacheConfigurationMap;

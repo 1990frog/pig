@@ -14,6 +14,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -48,7 +49,8 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 			return true;
 		}
 		R userInfo = null;
-		ServletOutputStream outputStream = null;
+		ServletOutputStream outputStream = response.getOutputStream();
+		response.setContentType("application/json;charset=utf-8");
 		// 分发任务
 		if (curRequestPath.matches("/user/info")) {
 			userInfo = ssoUserController.info();
@@ -59,14 +61,16 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 			userInfo = ssoUserController.infoNew(username, sysClass);
 		}
 		try {
-			outputStream = response.getOutputStream();
 			outputStream.write(processResponse(userInfo));
-			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpStatus.OK.value());
 			return false;
 		} catch (Exception e) {
+			e.printStackTrace();
 			log.error("sso登录，获取用户信息失败！");
-			throw new SSOBusinessException("登录异常，获取用户信息失败！");
+			//throw new SSOBusinessException("登录异常，获取用户信息失败！");
+			outputStream.write("登录过期,请重新登录(GetInfo)!".getBytes(StandardCharsets.UTF_8));
+			response.setStatus(HttpStatus.UNAUTHORIZED.value());
+			return false;
 		} finally {
 			if (outputStream != null) {
 				outputStream.close();

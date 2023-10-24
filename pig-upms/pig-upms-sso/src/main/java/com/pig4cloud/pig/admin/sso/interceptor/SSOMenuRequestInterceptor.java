@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @ClassName SSOMenuRequestInterceptor
@@ -46,19 +47,21 @@ public class SSOMenuRequestInterceptor extends AbstractSSORequestInterceptor {
 		if (!(requestMatches(curRequestPath) && (HttpMethod.GET.name().equals(method) && getSSOEnable()))) {
 			return true;
 		}
-		ServletOutputStream outputStream = null;
+		ServletOutputStream outputStream = response.getOutputStream();
+		response.setContentType("application/json;charset=utf-8");
 		try {
 			// 这里两个请求再sso开启的时候使用同一个处理
 			R userMenu = ssoMenuController.getUserMenu();
-			outputStream = response.getOutputStream();
 			outputStream.write(processResponse(userMenu));
-			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpStatus.OK.value());
 			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
 			log.error("sso登录，获取菜单失败！");
-			throw new SSOBusinessException("登录异常，获取用户菜单失败！");
+			//throw new SSOBusinessException("登录异常，获取用户菜单失败！");
+			outputStream.write("登录过期,请重新登录(GetMenu)!".getBytes(StandardCharsets.UTF_8));
+			response.setStatus(HttpStatus.UNAUTHORIZED.value());
+			return false;
 		} finally {
 			if (outputStream != null) {
 				outputStream.close();

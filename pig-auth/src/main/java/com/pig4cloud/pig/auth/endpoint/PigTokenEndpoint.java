@@ -23,9 +23,11 @@ import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.service.PigUser;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.ConvertingCursor;
 import org.springframework.data.redis.core.Cursor;
@@ -59,6 +61,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author lengleng
@@ -155,6 +158,8 @@ public class PigTokenEndpoint {
 		// 清空 refresh token
 		OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
 		tokenStore.removeRefreshToken(refreshToken);
+		// 清理现场
+		clearSSOInfo(token, auth2Authentication);
 		return R.ok();
 	}
 
@@ -211,6 +216,45 @@ public class PigTokenEndpoint {
 			log.error("关闭cursor 失败");
 		}
 		return result;
+	}
+
+	private void clearSSOInfo(String localToken, OAuth2Authentication auth2Authentication) {
+		if (auth2Authentication == null || auth2Authentication.getUserAuthentication() == null) {
+			return;
+		}
+		PigUser pigUser = (PigUser) auth2Authentication.getUserAuthentication().getPrincipal();
+		if (pigUser == null) {
+			return;
+		}
+		String key = "@@" + pigUser.getSysClass();
+		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
+		if (Objects.isNull(serverTokenCache) || Objects.isNull(serverTokenCache.get(localToken + key))
+				|| Objects.isNull(serverTokenCache.get(localToken).get())) {
+			return;
+		}
+		String serverToken = (String) serverTokenCache.get(localToken + key).get();
+		if (StrUtil.isEmpty(serverToken)) {
+			return;
+		}
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_INFO);
+		if (cache != null && cache.get(serverToken + key) != null) {
+			cache.evict(serverToken + key);
+		}
+		// SSO_LOCAL_USER_INFO_CACHE
+		Cache cache1 = cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE);
+		if (cache1 != null && cache1.get(pigUser.getUserCode() + key) != null) {
+			cache1.evict(pigUser.getUserCode() + key);
+		}
+		// SSO_USER_ROLE_INFO = "sso_user_role_info:usercode";
+		Cache cache2 = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		if (cache2 != null && cache2.get(pigUser.getUserCode() + key) != null) {
+			cache2.evict(pigUser.getUserCode() + key);
+		}
+		// SSO_USER_PRI_INFO = "sso_user_pri_info:usercode";
+		Cache cache3 = cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO);
+		if (cache3 != null && cache3.get(pigUser.getUserCode() + key) != null) {
+			cache3.evict(pigUser.getUserCode() + key);
+		}
 	}
 
 }

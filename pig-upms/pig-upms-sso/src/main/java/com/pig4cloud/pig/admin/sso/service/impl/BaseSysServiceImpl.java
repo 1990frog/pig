@@ -1,5 +1,7 @@
 package com.pig4cloud.pig.admin.sso.service.impl;
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
@@ -16,6 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -104,11 +107,16 @@ public class BaseSysServiceImpl {
 	protected PigUser findUserByToken(String token) {
 		OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(token);
 		OAuth2Authentication auth2Authentication = tokenStore.readAuthentication(oAuth2AccessToken);
-		PigUser userDetails = (PigUser) cacheManager.getCache(CacheConstants.USER_DETAILS).get(auth2Authentication.getName()).get();
+		PigUser details = (PigUser) auth2Authentication.getUserAuthentication().getPrincipal();
+		// 获取sysClass
+		/*PigUser userDetails = (PigUser) cacheManager.getCache(CacheConstants.USER_DETAILS).get(auth2Authentication.getName()).get();
 		if (Objects.isNull(userDetails)) {
 			throw new SSOBusinessException("登录异常！请重新登录");
+		}*/
+		if (details == null) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
-		return userDetails;
+		return details;
 	}
 
 	protected UserInfo getUserInfo(String userName, String sysClass) {
@@ -128,12 +136,8 @@ public class BaseSysServiceImpl {
 		return ossClientInfoMap;
 	}
 
-	protected void cacheUserRoles(String key, List<SSORoleInfo> ssoUserInfos) {
-		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
-		cache.put(key, ssoUserInfos);
-	}
 
-	protected List<SSORoleInfo> getUserRoles(String key) {
+	protected String getUserRoles(String key) {
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
 		if (cache == null) {
 			return null;
@@ -141,15 +145,11 @@ public class BaseSysServiceImpl {
 		if (cache.get(key).get() == null) {
 			return null;
 		}
-		return (List<SSORoleInfo>) cache.get(key).get();
+		return (String) cache.get(key).get();
 	}
 
-	protected void cacheUserPrivileges(String key, List<SSOPrivilege> privileges) {
-		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO);
-		cache.put(key, privileges);
-	}
 
-	protected List<SSOPrivilege> getUserPrivileges(String key) {
+	protected String getUserPrivileges(String key) {
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO);
 		if (cache == null) {
 			return null;
@@ -157,6 +157,6 @@ public class BaseSysServiceImpl {
 		if (cache.get(key).get() == null) {
 			return null;
 		}
-		return (List<SSOPrivilege>) cache.get(key).get();
+		return (String) cache.get(key).get();
 	}
 }

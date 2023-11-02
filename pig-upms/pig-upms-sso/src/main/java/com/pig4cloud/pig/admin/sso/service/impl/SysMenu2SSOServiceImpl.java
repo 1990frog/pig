@@ -1,11 +1,16 @@
 package com.pig4cloud.pig.admin.sso.service.impl;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.api.dto.TreeNode;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
+import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
+import com.pig4cloud.pig.admin.sso.common.ssoutil.UserRoleInfoParse;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
 import com.pig4cloud.pig.common.security.service.PigUser;
 import org.springframework.stereotype.Component;
@@ -37,14 +42,20 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
 		PigUser pigUser = findUserByToken(token);
-		String key = token + "@@" + pigUser.getSysClass();
-		String serverToken = getServerToken(key);
+		String key = "@@" + pigUser.getSysClass();
+		String serverToken = getServerToken(token + key);
 		if (StringUtils.isEmpty(serverToken)) {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
 		Map<String, String> localLoginInfo = toLocalLogin(serverToken + key);
 		Map ossClientInfoMap = getSSOClientInfo();
-		List<SSOPrivilege> userPrivileges = getUserPrivileges(key);
+		String privileges = getUserPrivileges(pigUser.getUserCode() + key);
+		List<SSOPrivilege> userPrivileges = null;
+		if (!StrUtil.isEmpty(privileges)) {
+			UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
+			JSONObject object = JSONUtil.parseObj(privileges);
+			userPrivileges = roleInfoParse.parse(object, SSOPrivilege.class, SoapTypeEnum.SOAP_PER);
+		}
 		List<MenuTree> list = new ArrayList<>();
 		if (CollectionUtils.isEmpty(userPrivileges)) {
 			userPrivileges = remoteService.getSSOMenus(serverToken, localLoginInfo, ossClientInfoMap);

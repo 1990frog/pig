@@ -41,8 +41,9 @@ public interface RemoteUserService {
 
 	/**
 	 * 通过用户名查询用户、角色信息
+	 *
 	 * @param username 用户名
-	 * @param from 调用标志
+	 * @param from     调用标志
 	 * @return R
 	 */
 	@Deprecated
@@ -51,17 +52,19 @@ public interface RemoteUserService {
 
 	/**
 	 * 通过用户名查询用户、角色信息
+	 *
 	 * @param username 用户名
-	 * @param sysCode 系统标识
-	 * @param from 调用标志
+	 * @param sysCode  系统标识
+	 * @param from     调用标志
 	 * @return R
 	 */
 	@GetMapping("/user/info/{username}/{sysCode}")
-	R<UserInfo> infoNew(@PathVariable("username") String username,@PathVariable("sysCode") String sysCode, @RequestHeader(SecurityConstants.FROM) String from);
+	R<UserInfo> infoNew(@PathVariable("username") String username, @PathVariable("sysCode") String sysCode, @RequestHeader(SecurityConstants.FROM) String from);
 
 
 	/**
 	 * 通过社交账号查询用户、角色信息
+	 *
 	 * @param inStr appid@code
 	 * @return
 	 */
@@ -71,13 +74,12 @@ public interface RemoteUserService {
 
 	@Deprecated
 	@GetMapping({"/inner/user/token/info"})
-	R<SysUser> currentUserInfo(@RequestHeader(SecurityConstants.FROM) String var1, @RequestParam(name ="token")String token);
+	R<SysUser> currentUserInfo(@RequestHeader(SecurityConstants.FROM) String var1, @RequestParam(name = "token") String token);
 
 	@GetMapping("/user/sys/list")
 	List<SysUser> sysUserList(@RequestParam("sysClass") String sysClass);
 
 	/**
-	 *
 	 * @param current
 	 * @param size
 	 * @param sysClass
@@ -90,4 +92,9 @@ public interface RemoteUserService {
 							  @RequestParam("sysClass") String sysClass,
 							  @RequestParam(value = "keyword", required = false) String keyword);
 
+	@GetMapping("/user/page")
+	Page<SysUser> userPage(@RequestParam("current") Long current,
+						   @RequestParam("size") Long size,
+						   @RequestParam(value = "keyword", required = false) String keyword,
+						   @RequestHeader(SecurityConstants.FROM) String from);
 }

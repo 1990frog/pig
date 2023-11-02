@@ -2,6 +2,8 @@ package com.pig4cloud.pig.admin.sso.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.cloud.commons.lang.StringUtils;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
@@ -13,7 +15,12 @@ import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
 import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
 import com.pig4cloud.pig.admin.sso.model.SoapEntity;
 import com.pig4cloud.pig.admin.sso.service.IRemoteService;
+import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,14 +36,15 @@ import java.util.Map;
 @Service
 public class RemoteServiceImpl implements IRemoteService {
 
+	@Autowired
+	protected CacheManager cacheManager;
 
 	@Override
 	public List<SSORoleInfo> getSSORoleInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
-		String username = serverInfoMap.get("username");
-		if (StrUtil.isEmpty(username)) {
+		String userCode = serverInfoMap.get("userCode");
+		if (StrUtil.isEmpty(userCode)) {
 			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
 		}
-		String userCode = username.split("@@")[0];
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setAppCode(serverInfoMap.get("appCode"));
 		soapEntity.setAppName(serverInfoMap.get("appName"));
@@ -58,6 +66,14 @@ public class RemoteServiceImpl implements IRemoteService {
 		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
 		UserWebServiceRequest.buildMessage(soapEntity);
 		JSONObject roleInfo = WebServiceHttpClient.post(soapEntity);
+		if (roleInfo != null) {
+			String sysClass = serverInfoMap.get("sysClass");
+			if (StringUtils.isEmpty(userCode)) {
+				throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
+			}
+			String key = userCode + "@@" + sysClass;
+			cacheUserRoles(key, roleInfo);
+		}
 		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
 		List<SSORoleInfo> roleInfos = roleInfoParse.parse(roleInfo, SSORoleInfo.class, SoapTypeEnum.SOAP_ROLE);
 		return roleInfos;
@@ -74,6 +90,15 @@ public class RemoteServiceImpl implements IRemoteService {
 	@Override
 	public List<SSOPrivilege> getSSOPrivilege(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
 		JSONObject permissionInfo = getSSOUserInfo(serverToken, serverInfoMap, ssoClientInfo);
+		String userCode = serverInfoMap.get("userCode");
+		String sysClass = serverInfoMap.get("sysClass");
+		if (StringUtils.isEmpty(userCode)) {
+			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
+		}
+		String key = userCode + "@@" + sysClass;
+		if (permissionInfo != null) {
+			cacheUserPrivileges(key, permissionInfo);
+		}
 		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
 		List<SSOPrivilege> privileges = roleInfoParse.parse(permissionInfo, SSOPrivilege.class, SoapTypeEnum.SOAP_PER);
 		return privileges;
@@ -91,11 +116,10 @@ public class RemoteServiceImpl implements IRemoteService {
 	}
 
 	private JSONObject getSSOUserInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
-		String username = serverInfoMap.get("username");
-		if (StrUtil.isEmpty(username)) {
-			throw new RuntimeException("用户信息为空，请重新登录");
+		String userCode = serverInfoMap.get("userCode");
+		if (StrUtil.isEmpty(userCode)) {
+			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
 		}
-		String userCode = username.split("@@")[0];
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setAppCode(serverInfoMap.get("appCode"));
 		soapEntity.setAppName(serverInfoMap.get("appName"));
@@ -138,6 +162,23 @@ public class RemoteServiceImpl implements IRemoteService {
 		}
 	}
 
+	private void cacheUserPrivileges(String key, JSONObject privileges) {
+		if (CollectionUtils.isEmpty(privileges)) {
+			return;
+		}
+		String jsonStr = JSONUtil.toJsonStr(privileges);
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO);
+		cache.put(key, jsonStr);
+	}
+
+	protected void cacheUserRoles(String key, JSONObject ssoUserInfos) {
+		if (CollectionUtils.isEmpty(ssoUserInfos)) {
+			return;
+		}
+		String jsonStr = JSONUtil.toJsonStr(ssoUserInfos);
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		cache.put(key, jsonStr);
+	}
 
 	public static void main(String[] args) throws Exception {
 		SoapEntity soapEntity = new SoapEntity();

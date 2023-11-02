@@ -63,13 +63,13 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 			userInfo = ssoUserController.infoNew(username, sysClass);
 		} else if (curRequestPath.matches("/user/page")) {
 			Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-			String username = uriTemplateVars.get("username");
+			String keyword = uriTemplateVars.get("keyword");
 			String currentStr = uriTemplateVars.get("current");
 			String sizeStr = uriTemplateVars.get("size");
 			Long current = StrUtil.isEmpty(currentStr) ? 1 : Long.valueOf(currentStr);
 			Long size = StrUtil.isEmpty(sizeStr) ? 1 : Long.valueOf(sizeStr);
 			// current size
-			userInfo = ssoUserController.getUserPage(username, current, size);
+			userInfo = ssoUserController.getUserPage(keyword, current, size);
 		}
 		try {
 			outputStream.write(processResponse(userInfo));

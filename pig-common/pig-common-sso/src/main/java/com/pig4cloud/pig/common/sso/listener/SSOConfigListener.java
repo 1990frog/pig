@@ -70,6 +70,8 @@ public class SSOConfigListener extends AbstractConfigChangeListener {
 		cacheManager.getCache(CacheConstants.SSO_USER_SERVER_TOKEN).clear();
 		cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE).clear();
 		cacheManager.getCache(CacheConstants.USER_DETAILS).clear();
+		cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO).clear();
+		cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO).clear();
 		//Cache cache = cacheManager.getCache(CacheConstants.PROJECT_OAUTH_ACCESS);
 		Set keys = redisTemplate.keys(CacheConstants.PROJECT_OAUTH_ACCESS + "*");
 		if (!CollectionUtils.isEmpty(keys)) {

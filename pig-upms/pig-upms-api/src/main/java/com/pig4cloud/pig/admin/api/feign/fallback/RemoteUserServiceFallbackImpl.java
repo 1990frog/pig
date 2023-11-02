@@ -40,8 +40,9 @@ public class RemoteUserServiceFallbackImpl implements RemoteUserService {
 
 	/**
 	 * 通过用户名查询用户、角色信息
+	 *
 	 * @param username 用户名
-	 * @param from 内外标志
+	 * @param from     内外标志
 	 * @return R
 	 */
 	@Override
@@ -52,12 +53,13 @@ public class RemoteUserServiceFallbackImpl implements RemoteUserService {
 
 	@Override
 	public R<UserInfo> infoNew(String username, String sysCode, String from) {
-		log.error("feign 查询用户信息失败:{}-{}", username,sysCode, cause);
+		log.error("feign 查询用户信息失败:{}-{}", username, sysCode, cause);
 		return null;
 	}
 
 	/**
 	 * 通过社交账号查询用户、角色信息
+	 *
 	 * @param inStr appid@code
 	 * @return
 	 */
@@ -82,6 +84,12 @@ public class RemoteUserServiceFallbackImpl implements RemoteUserService {
 	@Override
 	public Page<SysUser> sysUserPage(Long current, Long size, String sysClass, String keyword) {
 		log.error("feign 查询用户信息失败:currentUserInfo={}, token = {}", sysClass, cause);
+		return null;
+	}
+
+	@Override
+	public Page<SysUser> userPage(Long current, Long size, String keyword, String from) {
+		log.error("feign 查询用户信息失败:currentUserInfo={}, token = {}", keyword, cause);
 		return null;
 	}
 

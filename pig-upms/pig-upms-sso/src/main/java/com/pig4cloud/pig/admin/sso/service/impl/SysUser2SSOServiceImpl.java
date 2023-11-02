@@ -155,7 +155,7 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		String key = userCode + "@@" + sysClass;
 		// 再拿一次
 		Cache userInfoCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE);
-		if (!Objects.isNull(userInfoCache) && !Objects.isNull(userInfoCache.get(key).get())) {
+		if (!Objects.isNull(userInfoCache) && !Objects.isNull(userInfoCache.get(key))) {
 			return (UserInfo) userInfoCache.get(key).get();
 		}
 		SysUser sysUser = new SysUser();
@@ -183,8 +183,6 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		if (userInfoCache != null) {
 			userInfoCache.put(key, userInfo);
 		}
-		cacheUserRoles(key, ssoUserInfos);
-		cacheUserPrivileges(key, privileges);
 		return userInfo;
 	}
 

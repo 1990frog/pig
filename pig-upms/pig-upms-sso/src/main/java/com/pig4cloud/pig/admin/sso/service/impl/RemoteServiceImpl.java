@@ -58,10 +58,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		if (StrUtil.isEmpty(wsdlUrl)) {
 			return null;
 		}
-		if (!wsdlUrl.startsWith("http")) {
-			wsdlUrl = "http://" + wsdlUrl;
-		}
-		soapEntity.setHost(wsdlUrl);
+		soapEntity.setHost(getWsdlUrl(wsdlUrl));
 		// 请求角色
 		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
 		UserWebServiceRequest.buildMessage(soapEntity);
@@ -133,10 +130,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		if (StrUtil.isEmpty(wsdlUrl)) {
 			return null;
 		}
-		if (!wsdlUrl.startsWith("http")) {
-			wsdlUrl = "http://" + wsdlUrl;
-		}
-		soapEntity.setHost(wsdlUrl);
+		soapEntity.setHost(getWsdlUrl(wsdlUrl));
 		// 请求角色
 		// 请求权限
 		soapEntity.setType(SoapTypeEnum.SOAP_PER);
@@ -145,21 +139,14 @@ public class RemoteServiceImpl implements IRemoteService {
 		return permissionInfo;
 	}
 
-	private String getWsdlUrl(String serverUrl) {
-		String wsdlUrl = null;
-		try {
-			URL url = new URL(serverUrl);
-			String host = url.getHost();
-			int port = url.getPort();
-			if (host.contains("http://")) {
-				wsdlUrl = host + ":" + port;
-			} else {
-				wsdlUrl = "http://" + host + ":" + port;
-			}
-			return wsdlUrl;
-		} catch (Exception e) {
-			throw new SSOBusinessException(ResponseCodeEnum.SYSTEM_ERROR);
+	private String getWsdlUrl(String wsdlUrl) {
+		if (StrUtil.isEmpty(wsdlUrl)) {
+			return null;
 		}
+		if (!wsdlUrl.startsWith("http")) {
+			wsdlUrl = "http://" + wsdlUrl;
+		}
+		return wsdlUrl;
 	}
 
 	private void cacheUserPrivileges(String key, JSONObject privileges) {

@@ -18,6 +18,7 @@ package com.pig4cloud.pig.admin.api.feign;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.api.feign.factory.RemoteUserServiceFallbackFactory;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
@@ -92,9 +93,9 @@ public interface RemoteUserService {
 							  @RequestParam("sysClass") String sysClass,
 							  @RequestParam(value = "keyword", required = false) String keyword);
 
-	@GetMapping("/user/page")
-	Page<SysUser> userPage(@RequestParam("current") Long current,
-						   @RequestParam("size") Long size,
-						   @RequestParam(value = "keyword", required = false) String keyword,
-						   @RequestHeader(SecurityConstants.FROM) String from);
+	@GetMapping("/user/extend/page")
+	Page<UserExtendInfo> userPage(@RequestParam("current") Long current,
+								  @RequestParam("size") Long size,
+								  @RequestParam(value = "keyword", required = false) String keyword,
+								  @RequestHeader(SecurityConstants.FROM) String from);
 }

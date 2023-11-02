@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
@@ -228,14 +229,24 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 	 *
 	 * @return
 	 */
-	public IPage<JSONObject> getUserWithRolePage(String userName, Long current, Long size) {
+	public IPage<UserExtendInfo> getUserWithRolePage(String userName, Long current, Long size) {
+		Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
+		Map ossClientInfoMap = (Map) ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO).get();
 		// 获取redis的可以
-		Page<JSONObject> result = new Page<>(current, size);
+		String wsdlUrl = (String) ossClientInfoMap.get("ssoHost");
+		if (StrUtil.isEmpty(wsdlUrl)) {
+			return null;
+		}
+		Page<UserExtendInfo> result = new Page<>(current, size);
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setCurrent(current);
 		soapEntity.setSize(size);
 		soapEntity.setUserName(userName);
+		soapEntity.setAppCode("");
+		soapEntity.setAppName("");
 		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE_TOTAL);
+		soapEntity.setHost(getWsdlUrl(wsdlUrl));
+		UserWebServiceRequest.buildMessage(soapEntity);
 		JSONObject total = WebServiceHttpClient.get(soapEntity);
 		if (total == null) {
 			return result;
@@ -255,9 +266,19 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 			if (user == null || user.size() <= 0) {
 				return result;
 			}
-			List<JSONObject> list = new ArrayList<>();
+			List<UserExtendInfo> list = new ArrayList<>();
 			for (int i = 0; i < user.size(); i++) {
-				list.add((JSONObject) user.get(i));
+				JSONObject object = (JSONObject) user.get(i);
+				UserExtendInfo sysUser = new UserExtendInfo();
+				sysUser.setUsername(object.getStr("UserName"));
+				sysUser.setPhone(object.getStr("Mobile"));
+				sysUser.setEmail(object.getStr("Email"));
+				sysUser.setUserType(object.getStr("UserType"));
+				sysUser.setUserCode(object.getStr("UserCode"));
+				sysUser.setUserTypeName(object.getStr("UserTypeName"));
+				sysUser.setDeptCode(object.getStr("DeptCode"));
+				sysUser.setDeptName(object.getStr("DeptName"));
+				list.add(sysUser);
 			}
 			result.setTotal(totalInt);
 			result.setRecords(list);
@@ -265,6 +286,16 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 			e.printStackTrace();
 		}
 		return result;
+	}
+
+	private String getWsdlUrl(String wsdlUrl) {
+		if (StrUtil.isEmpty(wsdlUrl)) {
+			return null;
+		}
+		if (!wsdlUrl.startsWith("http")) {
+			wsdlUrl = "http://" + wsdlUrl;
+		}
+		return wsdlUrl;
 	}
 
 	public IPage getUserWithRolePageOld(Page page, UserDTO userDTO) {

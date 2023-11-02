@@ -25,6 +25,7 @@ public class SSOInterceptorConfig implements WebMvcConfigurer {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(ssoUserInfoRequestInterceptor).addPathPatterns("/user/info/**");
+		registry.addInterceptor(ssoUserInfoRequestInterceptor).addPathPatterns("/user/extend/**");
 		registry.addInterceptor(ssoMenuRequestInterceptor).addPathPatterns("/menu");
 	}
 

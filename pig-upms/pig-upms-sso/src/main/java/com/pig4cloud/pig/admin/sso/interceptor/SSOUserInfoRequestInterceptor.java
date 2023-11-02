@@ -1,8 +1,6 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.controller.SSOUserController;
 import com.pig4cloud.pig.common.core.util.R;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +33,7 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 	@Override
 	public void afterPropertiesSet() {
 		urls.add("/user/info");
-		urls.add("/user/page");
+		urls.add("/user/extend/page");
 		urls.add("/user/info/(.+)/(.+)");
 	}
 
@@ -54,25 +52,27 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 		ServletOutputStream outputStream = response.getOutputStream();
 		response.setContentType("application/json;charset=utf-8");
 		// 分发任务
-		if (curRequestPath.matches("/user/info")) {
-			userInfo = ssoUserController.info();
-		} else if (curRequestPath.matches("/user/info/(.+)/(.+)")) {
-			Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-			String username = uriTemplateVars.get("username");
-			String sysClass = uriTemplateVars.get("sysClass");
-			userInfo = ssoUserController.infoNew(username, sysClass);
-		} else if (curRequestPath.matches("/user/page")) {
-			Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-			String keyword = uriTemplateVars.get("keyword");
-			String currentStr = uriTemplateVars.get("current");
-			String sizeStr = uriTemplateVars.get("size");
-			Long current = StrUtil.isEmpty(currentStr) ? 1 : Long.valueOf(currentStr);
-			Long size = StrUtil.isEmpty(sizeStr) ? 1 : Long.valueOf(sizeStr);
-			// current size
-			userInfo = ssoUserController.getUserPage(keyword, current, size);
-		}
 		try {
-			outputStream.write(processResponse(userInfo));
+			if (curRequestPath.matches("/user/info")) {
+				userInfo = ssoUserController.info();
+				outputStream.write(processResponse(userInfo));
+			} else if (curRequestPath.matches("/user/info/(.+)/(.+)")) {
+				Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+				String username = uriTemplateVars.get("username");
+				String sysClass = uriTemplateVars.get("sysClass");
+				userInfo = ssoUserController.infoNew(username, sysClass);
+				outputStream.write(processResponse(userInfo));
+			} else if (curRequestPath.matches("/user/extend/page")) {
+				Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+				String keyword = uriTemplateVars.get("keyword");
+				String currentStr = uriTemplateVars.get("current");
+				String sizeStr = uriTemplateVars.get("size");
+				Long current = StrUtil.isEmpty(currentStr) ? 1 : Long.valueOf(currentStr);
+				Long size = StrUtil.isEmpty(sizeStr) ? 20 : Long.valueOf(sizeStr);
+				// current size
+				userInfo = ssoUserController.getUserExtendPage(keyword, current, size);
+				outputStream.write(processResponsePage(userInfo));
+			}
 			response.setStatus(HttpStatus.OK.value());
 			return false;
 		} catch (Exception e) {

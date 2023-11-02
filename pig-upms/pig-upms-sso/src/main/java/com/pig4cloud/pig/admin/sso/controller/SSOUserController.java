@@ -39,7 +39,7 @@ public class SSOUserController {
 		return R.ok(sysUser2SSOService.getUserInfo(sysUser));
 	}
 
-	public R getUserPage(String userName, Long current, Long size) {
+	public R getUserExtendPage(String userName, Long current, Long size) {
 		return R.ok(sysUser2SSOService.getUserWithRolePage(userName, current, size));
 	}
 

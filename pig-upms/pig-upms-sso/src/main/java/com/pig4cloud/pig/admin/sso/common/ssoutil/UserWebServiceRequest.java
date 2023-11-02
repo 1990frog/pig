@@ -4,19 +4,16 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.pig4cloud.pig.admin.sso.common.constants.SSOWebServiceConstants;
 import com.pig4cloud.pig.admin.sso.model.SoapEntity;
-import com.sun.xml.internal.messaging.saaj.soap.name.NameImpl;
 import lombok.extern.slf4j.Slf4j;
 import sun.misc.BASE64Encoder;
 
 import javax.xml.namespace.QName;
 import javax.xml.soap.MessageFactory;
-import javax.xml.soap.Name;
 import javax.xml.soap.SOAPBody;
 import javax.xml.soap.SOAPConstants;
 import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPEnvelope;
 import javax.xml.soap.SOAPException;
-import javax.xml.soap.SOAPFactory;
 import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPHeaderElement;
 import javax.xml.soap.SOAPMessage;
@@ -47,7 +44,7 @@ public class UserWebServiceRequest {
 			header.setPrefix(SSOWebServiceConstants.WEB_SERVICE_PREFIX);
 			QName qName = new QName(SSOWebServiceConstants.WEB_SERVICE_NAMESPACE, SSOWebServiceConstants.WEB_SERVICE_REQUEST_HEADER, "");
 			SOAPHeaderElement soapHeaderElement = header.addHeaderElement(qName);
-			soapHeaderElement.addChildElement("CurrentOperateUserCode").setValue(soapEntity.getUserCode());
+			soapHeaderElement.addChildElement("CurrentOperateUserCode").setValue(StrUtil.isEmpty(soapEntity.getUserCode()) ? "" : soapEntity.getUserCode());
 			soapHeaderElement.addChildElement("CurrentAppName").setValue(soapEntity.getAppName());
 			soapHeaderElement.addChildElement("CurrentAppCode").setValue(soapEntity.getAppCode());
 			soapHeaderElement.addChildElement("Sign").setValue(buildSign(soapEntity));

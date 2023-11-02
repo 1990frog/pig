@@ -19,6 +19,7 @@ package com.pig4cloud.pig.admin.api.feign.fallback;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
 import com.pig4cloud.pig.common.core.util.R;
 import lombok.Setter;
@@ -88,7 +89,7 @@ public class RemoteUserServiceFallbackImpl implements RemoteUserService {
 	}
 
 	@Override
-	public Page<SysUser> userPage(Long current, Long size, String keyword, String from) {
+	public Page<UserExtendInfo> userPage(Long current, Long size, String keyword, String from) {
 		log.error("feign 查询用户信息失败:currentUserInfo={}, token = {}", keyword, cause);
 		return null;
 	}

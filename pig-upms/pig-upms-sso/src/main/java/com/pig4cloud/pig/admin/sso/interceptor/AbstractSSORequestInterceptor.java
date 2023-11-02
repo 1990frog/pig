@@ -91,4 +91,17 @@ public abstract class AbstractSSORequestInterceptor implements HandlerIntercepto
 		String res = JSONUtil.toJsonPrettyStr(obj);
 		return res.getBytes(StandardCharsets.UTF_8);
 	}
+
+	protected byte[] processResponsePage(R r) {
+		if (r == null) {
+			return new byte[0];
+		}
+		JSONObject obj = JSONUtil.parseObj(r, false);
+		if (obj.containsKey("data")) {
+			JSONObject data = obj.getJSONObject("data");
+			String res = JSONUtil.toJsonPrettyStr(data);
+			return res.getBytes(StandardCharsets.UTF_8);
+		}
+		return new byte[0];
+	}
 }

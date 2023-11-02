@@ -81,7 +81,7 @@ public interface CacheConstants {
 	 */
 	String SSO_CLIENT_INFO = "sso_client_info";
 
-	String SSO_USER_SERVER_TOKEN = "sso_user_server_token:username";
+	String SSO_USER_SERVER_TOKEN = "sso_user_server_token:usercode";
 
 	/**
 	 * 存的是serverToken对应的用户信息
@@ -90,12 +90,17 @@ public interface CacheConstants {
 	/**
 	 * userInfo
 	 */
-	String SSO_LOCAL_USER_INFO_CACHE = "sso_username_user_info:username";
+	String SSO_LOCAL_USER_INFO_CACHE = "sso_usercode_user_info:usercode";
 
 	/**
-	 * 缓存登录信息 ，用户名称@@sysclass
+	 * 缓存角色信息
 	 */
-	String SSO_USERNAME_INFO = "sso_username_info:username";
+	String SSO_USER_ROLE_INFO = "sso_user_role_info:usercode";
+
+	/**
+	 * 缓存权限信息
+	 */
+	String SSO_USER_PRI_INFO = "sso_user_pri_info:usercode";
 
 	String SSO_CLIENT_ID = "sso_client_id";
 

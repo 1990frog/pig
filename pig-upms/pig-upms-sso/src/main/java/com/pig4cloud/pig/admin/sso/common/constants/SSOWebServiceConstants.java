@@ -38,4 +38,9 @@ public interface SSOWebServiceConstants {
 	String WEB_SERVICE_RESPONSE_ORG = "GetUserOrgsResponse";
 	String WEB_SERVICE_RESPONSE_ORG_RESULT = "GetUserOrgsResult";
 
+
+	// 获取用户组织
+	String WEB_SERVICE_USER_PAGE = "/cws/UserWebService.asmx/QueryUsersByPager";
+	String WEB_SERVICE_USER_PAGE_TOTAL = "/cws/UserWebService.asmx/QueryUserCount";
+
 }

@@ -25,6 +25,8 @@ public class SSOTokenpoint {
 
 	@GetMapping()
 	public Object login(@RequestParam(name = "username") String username,
+						@RequestParam(name = "userCode") String userCode,
+						@RequestParam(name = "sysClass") String sysClass,
 						@RequestParam(name = "password") String password,
 						@RequestParam(name = "grant_type") String grant_type,
 						@RequestParam(name = "scope") String scope,
@@ -34,13 +36,14 @@ public class SSOTokenpoint {
 		Map<String, String> parameters = new HashMap<>();
 		parameters.put("username", username);
 		parameters.put("password", password);
+		parameters.put("userCode", userCode);
 		parameters.put("grant_type", grant_type);
 		parameters.put("scope", scope);
 		// 准备做一个两边token的缓存
 		parameters.put("token", token);
 		parameters.put("appCode", appCode);
 		parameters.put("appName", appName);
-		parameters.put("sysClass", username.split("@@")[1]);
+		parameters.put("sysClass", sysClass);
 		parameters.put("timestamp", String.valueOf(System.nanoTime()));
 		return ssoTokenGranter.initToken(parameters);
 	}

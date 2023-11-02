@@ -1,18 +1,22 @@
 package com.pig4cloud.pig.admin.sso.common.ssoutil;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.pig4cloud.pig.admin.sso.common.constants.SSOWebServiceConstants;
 import com.pig4cloud.pig.admin.sso.model.SoapEntity;
+import com.sun.xml.internal.messaging.saaj.soap.name.NameImpl;
 import lombok.extern.slf4j.Slf4j;
 import sun.misc.BASE64Encoder;
 
 import javax.xml.namespace.QName;
 import javax.xml.soap.MessageFactory;
+import javax.xml.soap.Name;
 import javax.xml.soap.SOAPBody;
 import javax.xml.soap.SOAPConstants;
 import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPEnvelope;
 import javax.xml.soap.SOAPException;
+import javax.xml.soap.SOAPFactory;
 import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPHeaderElement;
 import javax.xml.soap.SOAPMessage;
@@ -47,7 +51,7 @@ public class UserWebServiceRequest {
 			soapHeaderElement.addChildElement("CurrentAppName").setValue(soapEntity.getAppName());
 			soapHeaderElement.addChildElement("CurrentAppCode").setValue(soapEntity.getAppCode());
 			soapHeaderElement.addChildElement("Sign").setValue(buildSign(soapEntity));
-			soapHeaderElement.addChildElement("timeStamp").setValue(soapEntity.getTimeStamp() + "");
+			soapHeaderElement.addChildElement("TimeStamp").setValue(soapEntity.getTimeStamp() + "");
 
 			SOAPBody body = envelope.getBody();
 			body.setPrefix(SSOWebServiceConstants.WEB_SERVICE_PREFIX);
@@ -83,6 +87,22 @@ public class UserWebServiceRequest {
 				body.addChildElement(qName).addChildElement("userCode").setValue(soapEntity.getUserCode());
 				wsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_ORG;
 				break;
+			case SOAP_USER_PAGE:
+				String search = "<Search UserCode=\"\" UserName=\"%s\" IsDepth=\"false\" OrgCode=\"\" UserType=\"Normal\" />";
+				// <Pager CurrentPage="1" PageSize="20" />
+				String page = "<Pager CurrentPage=\"%s\" PageSize=\"%s\" />";
+				wsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_PAGE;
+				wsdlUrl += "?searchXml=" + String.format(search, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName()) + "&";
+				wsdlUrl += "pagerXml=" + String.format(page, soapEntity.getCurrent(), soapEntity.getSize()) + "&";
+				wsdlUrl += "orderField=Code&";
+				wsdlUrl += "isAscending=false";
+				break;
+			case SOAP_USER_PAGE_TOTAL:
+				String searchTotal = "<Search UserCode=\"\" UserName=\"%s\" IsDepth=\"false\" OrgCode=\"\" UserType=\"Normal\" />";
+				// <Pager CurrentPage="1" PageSize="20" />
+				wsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_PAGE_TOTAL;
+				wsdlUrl += "?searchXml=" + String.format(searchTotal, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName());
+				break;
 		}
 		soapEntity.setWdslUrl(soapEntity.getHost() + wsdlUrl);
 	}
@@ -101,5 +121,6 @@ public class UserWebServiceRequest {
 		String sign = SecureUtil.md5(buffer);
 		return sign;
 	}
+
 
 }

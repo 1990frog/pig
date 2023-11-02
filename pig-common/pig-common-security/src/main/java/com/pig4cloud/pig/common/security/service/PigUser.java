@@ -17,6 +17,7 @@
 package com.pig4cloud.pig.common.security.service;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -44,34 +45,55 @@ public class PigUser extends User {
 	 * 系统标识
 	 */
 	@Getter
-	String sysClass;
+	private String sysClass;
+
+	@Getter
+	@Setter
+	private String userCode;
+
+	/**
+	 * 用户类型：LOCAL、SSO
+	 */
+	@Getter
+	private String userType;
 
 	/**
 	 * Construct the <code>User</code> with the details required by
 	 * {@link DaoAuthenticationProvider}.
-	 * @param id 用户ID
-	 * @param deptId 部门ID
-	 * @param username the username presented to the
-	 * <code>DaoAuthenticationProvider</code>
-	 * @param password the password that should be presented to the
-	 * <code>DaoAuthenticationProvider</code>
-	 * @param enabled set to <code>true</code> if the user is enabled
-	 * @param accountNonExpired set to <code>true</code> if the account has not expired
+	 *
+	 * @param id                    用户ID
+	 * @param deptId                部门ID
+	 * @param username              the username presented to the
+	 *                              <code>DaoAuthenticationProvider</code>
+	 * @param password              the password that should be presented to the
+	 *                              <code>DaoAuthenticationProvider</code>
+	 * @param enabled               set to <code>true</code> if the user is enabled
+	 * @param accountNonExpired     set to <code>true</code> if the account has not expired
 	 * @param credentialsNonExpired set to <code>true</code> if the credentials have not
-	 * expired
-	 * @param accountNonLocked set to <code>true</code> if the account is not locked
-	 * @param authorities the authorities that should be granted to the caller if they
-	 * presented the correct username and password and the user is enabled. Not null.
+	 *                              expired
+	 * @param accountNonLocked      set to <code>true</code> if the account is not locked
+	 * @param authorities           the authorities that should be granted to the caller if they
+	 *                              presented the correct username and password and the user is enabled. Not null.
 	 * @throws IllegalArgumentException if a <code>null</code> value was passed either as
-	 * a parameter or as an element in the <code>GrantedAuthority</code> collection
+	 *                                  a parameter or as an element in the <code>GrantedAuthority</code> collection
 	 */
-	public PigUser(Integer id, Integer deptId,String sysClass, String username, String password, boolean enabled,
-			boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked,
-			Collection<? extends GrantedAuthority> authorities) {
+	public PigUser(Integer id, Integer deptId, String sysClass, String username, String password, boolean enabled,
+				   boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked,
+				   Collection<? extends GrantedAuthority> authorities) {
 		super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
 		this.id = id;
 		this.deptId = deptId;
 		this.sysClass = sysClass;
+		this.userType = "LOCAL";
+	}
+
+	public PigUser(String sysClass, String userCode, String username, String password, boolean enabled,
+				   boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked,
+				   Collection<? extends GrantedAuthority> authorities) {
+		super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
+		this.sysClass = sysClass;
+		this.userCode = userCode;
+		this.userType = "SSO";
 	}
 
 }

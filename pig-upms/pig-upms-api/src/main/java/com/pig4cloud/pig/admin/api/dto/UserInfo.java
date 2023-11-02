@@ -51,4 +51,9 @@ public class UserInfo implements Serializable {
 	 */
 	private String[] ssoRoles;
 
+	/**
+	 * 用户code
+	 */
+	private String userCode;
+
 }

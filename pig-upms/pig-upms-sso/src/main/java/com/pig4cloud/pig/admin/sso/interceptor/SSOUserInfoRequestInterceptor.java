@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.admin.sso.interceptor;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.controller.SSOUserController;
 import com.pig4cloud.pig.common.core.util.R;
@@ -34,6 +35,7 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 	@Override
 	public void afterPropertiesSet() {
 		urls.add("/user/info");
+		urls.add("/user/page");
 		urls.add("/user/info/(.+)/(.+)");
 	}
 
@@ -59,6 +61,15 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 			String username = uriTemplateVars.get("username");
 			String sysClass = uriTemplateVars.get("sysClass");
 			userInfo = ssoUserController.infoNew(username, sysClass);
+		} else if (curRequestPath.matches("/user/page")) {
+			Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+			String username = uriTemplateVars.get("username");
+			String currentStr = uriTemplateVars.get("current");
+			String sizeStr = uriTemplateVars.get("size");
+			Long current = StrUtil.isEmpty(currentStr) ? 1 : Long.valueOf(currentStr);
+			Long size = StrUtil.isEmpty(sizeStr) ? 1 : Long.valueOf(sizeStr);
+			// current size
+			userInfo = ssoUserController.getUserPage(username, current, size);
 		}
 		try {
 			outputStream.write(processResponse(userInfo));

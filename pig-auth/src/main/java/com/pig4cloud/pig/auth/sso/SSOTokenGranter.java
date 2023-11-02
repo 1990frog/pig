@@ -68,6 +68,8 @@ public class SSOTokenGranter {
 	public Map<String, String> fillTokenParameters(Map<String, String> parameters) {
 		Map<String, String> tokenParam = new HashMap<>();
 		tokenParam.put("username", parameters.get("username"));
+		tokenParam.put("userCode", parameters.get("userCode"));
+		tokenParam.put("sysClass", parameters.get("sysClass"));
 		tokenParam.put("password", parameters.get("password"));
 		tokenParam.put("grant_type", parameters.get("grant_type"));
 		tokenParam.put("scope", parameters.get("scope"));
@@ -78,11 +80,11 @@ public class SSOTokenGranter {
 	private ClientDetails buildClientDetails(Map<String, String> parameters) {
 		BaseClientDetails clientDetails = new BaseClientDetails();
 		clientDetails.setClientId(CacheConstants.SSO_CLIENT_ID);
-		clientDetails.setClientSecret(parameters.get("appCode") + parameters.get("username"));
+		clientDetails.setClientSecret(parameters.get("appCode") + "@@" + parameters.get("userCode"));
 		clientDetails.setScope(Arrays.asList("server"));
 		clientDetails.setAuthorizedGrantTypes(Arrays.asList("password", "refresh_token", "authorization_code", "client_credentials"));
-		clientDetails.setAccessTokenValiditySeconds(30 * 60);
-		clientDetails.setRefreshTokenValiditySeconds(30 * 60);
+		clientDetails.setAccessTokenValiditySeconds(120 * 60);
+		clientDetails.setRefreshTokenValiditySeconds(120 * 60);
 		return clientDetails;
 	}
 
@@ -117,9 +119,9 @@ public class SSOTokenGranter {
 	@SneakyThrows
 	private Authentication userAuthentication(TokenRequest tokenRequest) {
 		Map<String, String> parameters = new LinkedHashMap(tokenRequest.getRequestParameters());
-		String username = parameters.get("username");
+		String username = parameters.get("userCode") + "@@" + parameters.get("sysClass");
 		String password = parameters.get("password");
-		parameters.remove("password");
+		//parameters.remove("password");
 		Authentication userAuth = new UsernamePasswordAuthenticationToken(username, password);
 		((AbstractAuthenticationToken) userAuth).setDetails(parameters);
 		return this.manager.authenticate(userAuth);

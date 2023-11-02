@@ -7,6 +7,7 @@ import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
+import com.pig4cloud.pig.common.security.service.PigUser;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -25,7 +26,6 @@ import java.util.Objects;
 public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 
 
-
 	public List<MenuTree> findMenuByPrentId() {
 		// 获取所有的菜单
 		// 1.拿到用户的token
@@ -36,17 +36,20 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 		if (StringUtils.isEmpty(token)) {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
-		String userName = findUserName(token);
-		String key = "@@" + userName.split("@@")[1];
-		String serverToken = getServerToken(token + key);
+		PigUser pigUser = findUserByToken(token);
+		String key = token + "@@" + pigUser.getSysClass();
+		String serverToken = getServerToken(key);
 		if (StringUtils.isEmpty(serverToken)) {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
 		Map<String, String> localLoginInfo = toLocalLogin(serverToken + key);
 		Map ossClientInfoMap = getSSOClientInfo();
-		List<SSOPrivilege> ssoPrivilege = remoteService.getSSOMenus(serverToken, localLoginInfo, ossClientInfoMap);
+		List<SSOPrivilege> userPrivileges = getUserPrivileges(key);
 		List<MenuTree> list = new ArrayList<>();
-		processMenu(ssoPrivilege, list);
+		if (CollectionUtils.isEmpty(userPrivileges)) {
+			userPrivileges = remoteService.getSSOMenus(serverToken, localLoginInfo, ossClientInfoMap);
+		}
+		processMenu(userPrivileges, list);
 		return list;
 	}
 
@@ -103,8 +106,6 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 		}
 		return ans;
 	}
-
-
 
 
 }

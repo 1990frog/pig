@@ -85,6 +85,12 @@
 			<artifactId>DmJdbcDriver18</artifactId>
 			<version>${dm.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>pig-common-core</artifactId>
+			<version>3.1.4</version>
+		</dependency>
 	</dependencies>
 
 	<build>

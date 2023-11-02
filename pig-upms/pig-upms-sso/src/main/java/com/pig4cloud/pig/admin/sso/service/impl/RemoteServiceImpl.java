@@ -142,12 +142,15 @@ public class RemoteServiceImpl implements IRemoteService {
 	public static void main(String[] args) throws Exception {
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setHost("http://192.168.0.147:9011");
-		soapEntity.setType(SoapTypeEnum.SOAP_PER);
+		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
 		soapEntity.setUserCode("sys");
-		soapEntity.setAppName("数据质量核查及分析系统");
-		soapEntity.setAppCode("DATA_QUALITY");
+		soapEntity.setAppName("数据质量核查与分析软件");
+		soapEntity.setAppCode("DATA_QUALIT");
+		soapEntity.setToken("1d0c9ef8-46ea-44e6-81a4-733628300041");
+		soapEntity.setCurrent(1l);
+		soapEntity.setSize(20l);
 		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject post = WebServiceHttpClient.post(soapEntity);
+		JSONObject post = WebServiceHttpClient.get(soapEntity);
 		//System.out.println();
 		//System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(post));
 		UserRoleInfoParse userRoleInfoParse = UserRoleInfoParse.getInstance();

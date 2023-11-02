@@ -1,6 +1,9 @@
 package com.pig4cloud.pig.admin.sso.service.impl;
 
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,11 +11,15 @@ import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
+import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.SnowFlakeUtil;
+import com.pig4cloud.pig.admin.sso.common.ssoutil.UserWebServiceRequest;
+import com.pig4cloud.pig.admin.sso.common.ssoutil.WebServiceHttpClient;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
 import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
+import com.pig4cloud.pig.admin.sso.model.SoapEntity;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
@@ -43,7 +50,6 @@ import java.util.stream.Collectors;
  **/
 @Component
 public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
-
 
 
 	private PasswordEncoder ENCODER = new BCryptPasswordEncoder();
@@ -100,9 +106,9 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 	 */
 	public UserInfo getUserInfo(SysUser sysUser) {
 		// 内部调用的时候没有token
-		if (sysUser == null || StringUtils.isEmpty(sysUser.getUsername())
-				|| StringUtils.isEmpty(sysUser.getSysClass())) {
-			String token = LocalTokenHolder.getToken();
+		String token = LocalTokenHolder.getToken();
+		if ((sysUser == null || StringUtils.isEmpty(sysUser.getUsername())
+				|| StringUtils.isEmpty(sysUser.getSysClass())) && !StrUtil.isEmpty(token)) {
 			// 这儿就用token去获取
 			return getUserInfoByToken(token);
 		} else {
@@ -134,33 +140,35 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		Map ossClientInfoMap = (Map) ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO).get();
 		List<SSORoleInfo> ssoRoleInfo = remoteService.getSSORoleInfo(serverToken, localLoginInfo, ossClientInfoMap);
 		List<SSOPrivilege> ssoPrivilege = remoteService.getSSOPrivilege(serverToken, localLoginInfo, ossClientInfoMap);
-		fillPigUser(localLoginInfo, ssoRoleInfo, ssoPrivilege);
-		return fillUserInfo(localLoginInfo, ssoRoleInfo, ssoPrivilege);
+		//PigUser pigUser = fillPigUser(localLoginInfo, ssoRoleInfo, ssoPrivilege);
+		UserInfo fillUserInfo = fillUserInfo(localLoginInfo, ssoRoleInfo, ssoPrivilege);
+		return fillUserInfo;
 	}
 
 	private UserInfo fillUserInfo(Map<String, String> serverInfoMap, List<SSORoleInfo> ssoUserInfos, List<SSOPrivilege> privileges) {
 		String username = serverInfoMap.get("username");
+		String userCode = serverInfoMap.get("userCode");
+		String sysClass = serverInfoMap.get("sysClass");
 		if (StringUtils.isEmpty(username)) {
 			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
 		}
+		String key = userCode + "@@" + sysClass;
 		// 再拿一次
 		Cache userInfoCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE);
-		if (!Objects.isNull(userInfoCache) && !Objects.isNull(userInfoCache.get(serverInfoMap.get("username")))
-				&& !Objects.isNull(userInfoCache.get(serverInfoMap.get("username")).get())) {
-			return (UserInfo) userInfoCache.get(serverInfoMap.get("username")).get();
+		if (!Objects.isNull(userInfoCache) && !Objects.isNull(userInfoCache.get(key).get())) {
+			return (UserInfo) userInfoCache.get(key).get();
 		}
-		String userCode = username.split("@@")[0];
-		String sysClass = username.split("@@")[1];
 		SysUser sysUser = new SysUser();
 		sysUser.setUserId(idWorker.getIntId());
 		sysUser.setDeptId(idWorker.getIntId());
 		sysUser.setDelFlag("0");
 		sysUser.setLockFlag("0");
-		sysUser.setUsername(userCode + "@@" + sysClass);
+		sysUser.setUsername(username);
 		sysUser.setSysClass(sysClass);
 		sysUser.setPassword(ENCODER.encode(serverInfoMap.get("password")));
 		UserInfo userInfo = new UserInfo();
 		userInfo.setSysUser(sysUser);
+		userInfo.setUserCode(userCode);
 		// 设置角色列表 （ID）
 		if (!org.springframework.util.CollectionUtils.isEmpty(ssoUserInfos)) {
 			userInfo.setSsoRoles(ArrayUtil.toArray(ssoUserInfos.stream().map(SSORoleInfo::getRoleCode).collect(Collectors.toList()), String.class));
@@ -173,18 +181,20 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 			userInfo.setPermissions(ArrayUtil.toArray(pris, String.class));
 		}
 		if (userInfoCache != null) {
-			userInfoCache.put(serverInfoMap.get("username"), userInfo);
+			userInfoCache.put(key, userInfo);
 		}
+		cacheUserRoles(key, ssoUserInfos);
+		cacheUserPrivileges(key, privileges);
 		return userInfo;
 	}
 
 	private PigUser fillPigUser(Map<String, String> serverInfoMap, List<SSORoleInfo> ssoUserInfos, List<SSOPrivilege> privileges) {
 		String username = serverInfoMap.get("username");
+		String userCode = serverInfoMap.get("userCode");
+		String sysClass = serverInfoMap.get("sysClass");
 		if (StringUtils.isEmpty(username)) {
 			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
 		}
-		String userCode = username.split("@@")[0];
-		String sysClass = username.split("@@")[1];
 		Set<String> dbAuthsSet = new HashSet<>();
 		//获取用户系统标识
 		dbAuthsSet.add(SecurityConstants.SYS_CLASS + sysClass);
@@ -200,8 +210,7 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		Collection<? extends GrantedAuthority> authorities = AuthorityUtils
 				.createAuthorityList(dbAuthsSet.toArray(new String[0]));
 
-		// userId 和 deptId 两边系统有所差异，这儿默认给一个
-		PigUser userDetails = new PigUser(idWorker.getIntId(), idWorker.getIntId(), sysClass, userCode,
+		PigUser userDetails = new PigUser(sysClass, userCode, username,
 				ENCODER.encode(serverInfoMap.get("password")),
 				true, true, true, true, authorities);
 		return userDetails;
@@ -215,14 +224,52 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		}
 		return (Map<String, String>) serverInfo.get(serverToken).get();
 	}
+
 	/**
 	 * 分页查询用户信息（含有角色信息）
 	 *
-	 * @param page    分页对象
-	 * @param userDTO 参数列表
 	 * @return
 	 */
-	public IPage getUserWithRolePage(Page page, UserDTO userDTO) {
+	public IPage<JSONObject> getUserWithRolePage(String userName, Long current, Long size) {
+		// 获取redis的可以
+		Page<JSONObject> result = new Page<>(current, size);
+		SoapEntity soapEntity = new SoapEntity();
+		soapEntity.setCurrent(current);
+		soapEntity.setSize(size);
+		soapEntity.setUserName(userName);
+		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE_TOTAL);
+		JSONObject total = WebServiceHttpClient.get(soapEntity);
+		if (total == null) {
+			return result;
+		}
+		Integer totalInt = total.getInt("content");
+		if (totalInt == null || totalInt.intValue() <= 0) {
+			return result;
+		}
+		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
+		UserWebServiceRequest.buildMessage(soapEntity);
+		JSONObject users = WebServiceHttpClient.get(soapEntity);
+		if (users == null) {
+			return result;
+		}
+		try {
+			JSONArray user = users.getJSONArray("User");
+			if (user == null || user.size() <= 0) {
+				return result;
+			}
+			List<JSONObject> list = new ArrayList<>();
+			for (int i = 0; i < user.size(); i++) {
+				list.add((JSONObject) user.get(i));
+			}
+			result.setTotal(totalInt);
+			result.setRecords(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	public IPage getUserWithRolePageOld(Page page, UserDTO userDTO) {
 		// 获取redis的可以
 		Set<String> keys = redisTemplate.keys(CacheConstants.USER_DETAILS + "*");
 		if (CollectionUtils.isEmpty(keys)) {

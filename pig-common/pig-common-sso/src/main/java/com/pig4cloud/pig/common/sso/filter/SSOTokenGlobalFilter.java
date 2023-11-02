@@ -89,16 +89,15 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 			Map<String, String> appCodeMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[1]));
 			// 走sso 获取用户信息
 			final Map userInfo = getUser(token, appNameMap.get(sysClass), appCodeMap.get(sysClass), sysClass);
-			Object userName;
-			if (userInfo != null && (userName = userInfo.get("Identity")) != null) {
+			if (userInfo != null && (userInfo.containsKey("Identity"))) {
 				// 这儿使用用户的真实userCode 和 appName
 				// 获取一下拿到的真实用户信息
 				// cache ssoClientInfo
 				cacheSsoClientInfo();
-				cacheServerToken((String) userName, sysClass, token);
+				cacheServerToken((String) userInfo.get("Identity"), sysClass, token);
 				//final Map loginMap = autoLogin.login(String.valueOf(ssoClientInfo.getDefaultUserCode()), ssoClientInfo.getCryptogram(), token,sysClass);
 				// appName 和 appCode 我也需要cache，后续要使用
-				final Map loginMap = login((String) userName, ssoClientInfo.getCryptogram(),
+				final Map loginMap = login((String) userInfo.get("UserName"), (String) userInfo.get("Identity"), ssoClientInfo.getCryptogram(),
 						token, sysClass, appNameMap.get(sysClass), appCodeMap.get(sysClass));
 				if (loginMap != null) {
 					ServerHttpResponse response = exchange.getResponse();
@@ -202,9 +201,9 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		}
 	}
 
-	private void cacheServerToken(String userName, String sysClass, String serverToken) {
+	private void cacheServerToken(String userCode, String sysClass, String serverToken) {
 		Cache ssoClientInfoCache = cacheManager.getCache(CacheConstants.SSO_USER_SERVER_TOKEN);
-		ssoClientInfoCache.put(userName + "@@" + sysClass, serverToken);
+		ssoClientInfoCache.put(userCode + "@@" + sysClass, serverToken);
 	}
 
 
@@ -225,9 +224,11 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 	}
 
 	// 走本地登录
-	public Map login(String username, String password, String token, String sysClass, String appName, String appCode) {
+	public Map login(String username, String userCode, String password, String token, String sysClass, String appName, String appCode) {
 		MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-		parameters.add("username", username + "@@" + sysClass);
+		parameters.add("username", username);
+		parameters.add("userCode", userCode);
+		parameters.add("sysClass", sysClass);
 		parameters.add("password", password);
 		parameters.add("grant_type", "password");
 		parameters.add("scope", "server");

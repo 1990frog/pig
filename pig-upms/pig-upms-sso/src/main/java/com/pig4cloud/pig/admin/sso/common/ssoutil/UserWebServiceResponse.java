@@ -1,7 +1,9 @@
 package com.pig4cloud.pig.admin.sso.common.ssoutil;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import cn.hutool.json.XML;
 import com.pig4cloud.pig.admin.sso.common.constants.SSOWebServiceConstants;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
@@ -49,6 +51,37 @@ public class UserWebServiceResponse {
 		} catch (Exception e) {
 			throw new RuntimeException("解析xml失败");
 		}
+	}
+
+	public static JSONObject xmlToJsonByString(String xml, SoapTypeEnum type) {
+		if (StrUtil.isEmpty(xml)) {
+			return null;
+		}
+		try {
+			JSONObject root = XML.toJSONObject(xml);
+			if (type.equals(SoapTypeEnum.SOAP_USER_PAGE)) {
+				JSONObject string = root.getJSONObject("string");
+				if (string == null) {
+					return null;
+				}
+				String content = string.getStr("content");
+				if (StrUtil.isEmpty(content)) {
+					return null;
+				}
+				JSONObject object = JSONUtil.xmlToJson(content);
+				if (object == null) {
+					return null;
+				}
+				return object.getJSONObject("Users");
+			}
+			if (type.equals(SoapTypeEnum.SOAP_USER_PAGE_TOTAL)) {
+				return root.getJSONObject("int");
+
+			}
+		} catch (Exception e) {
+
+		}
+		return null;
 	}
 
 	private static JSONObject parsUserRole(JSONObject json) {

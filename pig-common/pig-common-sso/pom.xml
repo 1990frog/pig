@@ -15,7 +15,7 @@
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-core</artifactId>
-			<version>3.1.0</version>
+			<version>3.1.4</version>
 		</dependency>
 		<!--gateway 网关依赖,内置webflux 依赖-->
 		<dependency>

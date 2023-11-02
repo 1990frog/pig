@@ -1,13 +1,20 @@
 package com.pig4cloud.pig.admin.sso.common.ssoutil;
 
 import cn.hutool.crypto.SecureUtil;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.XML;
 import com.pig4cloud.pig.admin.sso.model.SoapEntity;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.internal.http2.Http2;
 import org.apache.commons.io.IOUtils;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import sun.misc.BASE64Encoder;
 
 import java.io.InputStream;
@@ -18,6 +25,8 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @ClassName WebServiceHttpClient
@@ -53,7 +62,26 @@ public class WebServiceHttpClient {
 			log.info("sso 本地解析后 = {}", jsonObject);
 			return jsonObject;
 		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
+	public static JSONObject get(SoapEntity soapEntity) {
+
+		try {
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Host", soapEntity.getHost());
+			HttpEntity httpEntity = new HttpEntity(headers);
+			ResponseEntity<String> exchange = restTemplate.exchange(soapEntity.getWdslUrl(), HttpMethod.GET, httpEntity, String.class);
+			String res = exchange.getBody();
+			log.info("sso response = {}", res);
+			JSONObject jsonObject = UserWebServiceResponse.xmlToJsonByString(res, soapEntity.getType());
+			log.info("sso 本地解析后 = {}", jsonObject);
+			return jsonObject;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return null;
 	}

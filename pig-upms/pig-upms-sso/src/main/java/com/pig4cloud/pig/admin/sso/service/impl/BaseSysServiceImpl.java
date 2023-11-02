@@ -4,6 +4,8 @@ import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.SnowFlakeUtil;
+import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
+import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
 import com.pig4cloud.pig.admin.sso.service.IRemoteService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
@@ -15,6 +17,7 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -82,30 +85,30 @@ public class BaseSysServiceImpl {
 
 	protected UserInfo getUserInfoByToken(String localToken) {
 		// 拿localToken换serverToken
-		String userName = findUserName(localToken);
+		PigUser pigUser = findUserByToken(localToken);
+		String key = pigUser.getUserCode() + "@@" + pigUser.getSysClass();
 		//String key = "@@" + userName.split("@@")[1];
 		//String serverToken = getServerToken(localToken + key);
 		//Map<String, String> serverInfoMap = getLocalLoginUserInfo(serverToken + key);
 		Cache userInfoCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE);
-		if (!Objects.isNull(userInfoCache) && !Objects.isNull(userInfoCache.get(userName))
-				&& !Objects.isNull(userInfoCache.get(userName).get())) {
-			UserInfo userInfo = (UserInfo) userInfoCache.get(userName).get();
-			userInfo.getSysUser().setUsername(userName.contains("@@") ? userName.split("@@")[0] : userName);
-			return userInfo;
-		} else {
+		if (userInfoCache == null) {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
+		UserInfo userInfo = (UserInfo) userInfoCache.get(key).get();
+		if (userInfo == null) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		return userInfo;
 	}
 
-	protected String findUserName(String token) {
+	protected PigUser findUserByToken(String token) {
 		OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(token);
 		OAuth2Authentication auth2Authentication = tokenStore.readAuthentication(oAuth2AccessToken);
-		// 清空用户信息
 		PigUser userDetails = (PigUser) cacheManager.getCache(CacheConstants.USER_DETAILS).get(auth2Authentication.getName()).get();
 		if (Objects.isNull(userDetails)) {
 			throw new SSOBusinessException("登录异常！请重新登录");
 		}
-		return userDetails.getUsername();
+		return userDetails;
 	}
 
 	protected UserInfo getUserInfo(String userName, String sysClass) {
@@ -123,5 +126,37 @@ public class BaseSysServiceImpl {
 		Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
 		Map ossClientInfoMap = (Map) ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO).get();
 		return ossClientInfoMap;
+	}
+
+	protected void cacheUserRoles(String key, List<SSORoleInfo> ssoUserInfos) {
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		cache.put(key, ssoUserInfos);
+	}
+
+	protected List<SSORoleInfo> getUserRoles(String key) {
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		if (cache == null) {
+			return null;
+		}
+		if (cache.get(key).get() == null) {
+			return null;
+		}
+		return (List<SSORoleInfo>) cache.get(key).get();
+	}
+
+	protected void cacheUserPrivileges(String key, List<SSOPrivilege> privileges) {
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO);
+		cache.put(key, privileges);
+	}
+
+	protected List<SSOPrivilege> getUserPrivileges(String key) {
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO);
+		if (cache == null) {
+			return null;
+		}
+		if (cache.get(key).get() == null) {
+			return null;
+		}
+		return (List<SSOPrivilege>) cache.get(key).get();
 	}
 }

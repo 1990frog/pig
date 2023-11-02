@@ -34,16 +34,16 @@ public class SSOUserController {
 
 	public R infoNew(String username, String sysClass) {
 		SysUser sysUser = new SysUser();
-		sysUser.setUsername(username);
+		sysUser.setUsername(username); // 用的是userCode
 		sysUser.setSysClass(sysClass);
 		return R.ok(sysUser2SSOService.getUserInfo(sysUser));
 	}
 
-	public R getUserPage(Page page, UserDTO userDTO) {
-		return R.ok(sysUser2SSOService.getUserWithRolePage(page, userDTO));
+	public R getUserPage(String userName, Long current, Long size) {
+		return R.ok(sysUser2SSOService.getUserWithRolePage(userName, current, size));
 	}
 
 	public R getUserPageList(Page page, UserDTO userDTO) {
-		return R.ok(sysUser2SSOService.getUserWithRolePage(page, userDTO));
+		return R.ok(sysUser2SSOService.getUserWithRolePageOld(page, userDTO));
 	}
 }

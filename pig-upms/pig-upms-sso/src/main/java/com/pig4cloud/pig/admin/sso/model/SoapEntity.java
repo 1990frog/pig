@@ -19,6 +19,10 @@ public class SoapEntity {
 	private String appCode;
 	private String appName;
 	private String userCode;
+	private String userName;
+	private Long current;
+	private Long size;
+	private boolean isAscending;
 	private Long timeStamp;
 	private String wdslUrl;
 	private String sign;

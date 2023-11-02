@@ -109,11 +109,12 @@ public class PigUserDetailsServiceImpl implements UserDetailsService {
 		Collection<? extends GrantedAuthority> authorities = AuthorityUtils
 				.createAuthorityList(dbAuthsSet.toArray(new String[0]));
 		SysUser user = info.getSysUser();
-
-		// 构造security用户
-		return new PigUser(user.getUserId(), user.getDeptId(), user.getSysClass(), user.getUsername(),
+		PigUser pigUser = new PigUser(user.getUserId(), user.getDeptId(), user.getSysClass(), user.getUsername(),
 				SecurityConstants.BCRYPT + user.getPassword(),
 				StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL), true, true, true, authorities);
+		// 构造security用户
+		pigUser.setUserCode(info.getUserCode());
+		return pigUser;
 	}
 
 }

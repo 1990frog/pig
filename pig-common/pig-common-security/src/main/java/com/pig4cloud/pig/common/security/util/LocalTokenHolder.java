@@ -1,4 +1,4 @@
-package com.pig4cloud.pig.admin.sso.common.ssoutil;
+package com.pig4cloud.pig.common.security.util;
 
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;

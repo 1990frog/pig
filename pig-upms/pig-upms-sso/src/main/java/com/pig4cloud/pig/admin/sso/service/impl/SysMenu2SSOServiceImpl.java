@@ -9,7 +9,7 @@ import com.pig4cloud.pig.admin.api.dto.TreeNode;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
-import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
+import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.UserRoleInfoParse;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
 import com.pig4cloud.pig.common.security.service.PigUser;

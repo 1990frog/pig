@@ -17,16 +17,25 @@
 package com.pig4cloud.pig.common.security.util;
 
 import cn.hutool.core.util.StrUtil;
+import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import lombok.experimental.UtilityClass;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 安全工具类
@@ -62,11 +71,35 @@ public class SecurityUtils {
 		if (authentication == null) {
 			return null;
 		}
+		CacheManager cacheManager = SpringContextFactory.getApplicationContext().getBean(CacheManager.class);
+		if (cacheManager != null) {
+			Map map = null;
+			Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
+			if (cache != null && cache.get(CacheConstants.SSO_CLIENT_INFO) != null) {
+				map = (Map) cache.get(CacheConstants.SSO_CLIENT_INFO).get();
+			}
+			if (map != null) {
+				Boolean enable = (Boolean) map.get("enable");
+				if (enable != null && enable.booleanValue()) {
+					return getUserNew(cacheManager);
+				}
+			}
+		}
 		return getUser(authentication);
+	}
+
+	private PigUser getUserNew(CacheManager cacheManager) {
+		String token = LocalTokenHolder.getToken();
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
+		if (cache != null && cache.get(token) != null) {
+			return (PigUser) cache.get(token).get();
+		}
+		return null;
 	}
 
 	/**
 	 * 获取用户角色信息
+	 *
 	 * @return 角色集合
 	 */
 	public List<Integer> getRoles() {

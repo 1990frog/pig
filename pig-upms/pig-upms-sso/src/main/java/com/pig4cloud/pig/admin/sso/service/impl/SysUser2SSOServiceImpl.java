@@ -14,7 +14,7 @@ import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
-import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
+import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.SnowFlakeUtil;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.UserWebServiceRequest;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.WebServiceHttpClient;

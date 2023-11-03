@@ -21,7 +21,7 @@ import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
 import com.pig4cloud.pig.admin.service.SysMenuService;
 import com.pig4cloud.pig.admin.service.SysUserRoleService;
-import com.pig4cloud.pig.admin.sso.common.ssoutil.LocalTokenHolder;
+import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;

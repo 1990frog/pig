@@ -55,7 +55,7 @@ public class SSOTokenGranter {
 		OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(storedOAuth2Request, userAuthentication(tokenRequest));
 		OAuth2AccessToken accessToken = services.createAccessToken(oAuth2Authentication);
 		// 把localToken 和 serverToken 做一个缓存
-		cacheServerTokenAndLocalToken(parameters.get("sysClass"), parameters.get("token"), accessToken.getValue());
+		cacheServerTokenAndLocalToken(oAuth2Authentication.getUserAuthentication().getPrincipal(), accessToken.getValue());
 		return accessToken;
 	}
 
@@ -91,14 +91,13 @@ public class SSOTokenGranter {
 	/**
 	 * localToken 和 serverToken映射
 	 */
-	private void cacheServerTokenAndLocalToken(String sysClass, String serverToken, String localToken) {
-		if (StringUtils.isEmpty(serverToken) || StringUtils.isEmpty(localToken)) {
+	private void cacheServerTokenAndLocalToken(Object o, String localToken) {
+		if (StringUtils.isEmpty(localToken)) {
 			return;
 		}
 		// OSS服务端需要使用的参数
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
-		String key = localToken + "@@" + sysClass;
-		cache.put(key, serverToken);
+		cache.put(localToken, o);
 	}
 
 	/**

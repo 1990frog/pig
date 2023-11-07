@@ -57,7 +57,7 @@ public class SSOMenuRequestInterceptor extends AbstractSSORequestInterceptor {
 			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
-			log.error("sso登录，获取菜单失败！");
+			log.error("sso登录，获取菜单失败！info={}", e);
 			//throw new SSOBusinessException("登录异常，获取用户菜单失败！");
 			outputStream.write("登录过期,请重新登录(GetMenu)!".getBytes(StandardCharsets.UTF_8));
 			response.setStatus(HttpStatus.UNAUTHORIZED.value());

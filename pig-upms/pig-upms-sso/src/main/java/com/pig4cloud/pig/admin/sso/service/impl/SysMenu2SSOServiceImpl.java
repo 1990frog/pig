@@ -55,14 +55,17 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 		String privileges = getUserPrivileges(pigUser.getUserCode() + key);
 		List<SSOPrivilege> userPrivileges = null;
 		if (!StrUtil.isEmpty(privileges)) {
+			log.info("从缓存获取数据");
 			UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
 			JSONObject object = JSONUtil.parseObj(privileges);
 			userPrivileges = roleInfoParse.parse(object, SSOPrivilege.class, SoapTypeEnum.SOAP_PER);
 		}
 		List<MenuTree> list = new ArrayList<>();
 		if (CollectionUtils.isEmpty(userPrivileges)) {
+			log.info("从远端获取数据");
 			userPrivileges = remoteService.getSSOMenus(serverToken, localLoginInfo, ossClientInfoMap);
 		}
+		log.info("处理返回");
 		processMenu(userPrivileges, list);
 		return list;
 	}

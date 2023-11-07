@@ -13,6 +13,7 @@ import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.UserRoleInfoParse;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
 import com.pig4cloud.pig.common.security.service.PigUser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -28,6 +29,7 @@ import java.util.Objects;
  * @Date 2022/7/21 15:07
  **/
 @Component
+@Slf4j
 public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 
 
@@ -45,6 +47,7 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 		String key = "@@" + pigUser.getSysClass();
 		String serverToken = getServerToken(token);
 		if (StringUtils.isEmpty(serverToken)) {
+			log.info("获取serverToken失败");
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
 		Map<String, String> localLoginInfo = toLocalLogin(serverToken + key);

@@ -11,6 +11,7 @@ import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
 import com.pig4cloud.pig.admin.sso.service.IRemoteService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -30,7 +31,7 @@ import java.util.Objects;
  * @Description
  * @Date 2022/7/26 10:29
  **/
-
+@Slf4j
 public class BaseSysServiceImpl {
 	@Autowired
 	protected CacheManager cacheManager;
@@ -48,6 +49,7 @@ public class BaseSysServiceImpl {
 
 
 	protected String getServerToken(String localToken) {
+		log.info("本地token换取serverToken");
 		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_SERVER_LOCAL_TOKEN);
 		if (Objects.isNull(serverTokenCache) || Objects.isNull(serverTokenCache.get(localToken))
 				|| Objects.isNull(serverTokenCache.get(localToken).get())) {

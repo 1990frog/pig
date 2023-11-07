@@ -48,7 +48,7 @@ public class BaseSysServiceImpl {
 
 
 	protected String getServerToken(String localToken) {
-		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
+		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_SERVER_LOCAL_TOKEN);
 		if (Objects.isNull(serverTokenCache) || Objects.isNull(serverTokenCache.get(localToken))
 				|| Objects.isNull(serverTokenCache.get(localToken).get())) {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);

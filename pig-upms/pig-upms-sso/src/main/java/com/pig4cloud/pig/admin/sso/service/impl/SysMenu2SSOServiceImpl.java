@@ -43,7 +43,7 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 		}
 		PigUser pigUser = findUserByToken(token);
 		String key = "@@" + pigUser.getSysClass();
-		String serverToken = getServerToken(token + key);
+		String serverToken = getServerToken(token);
 		if (StringUtils.isEmpty(serverToken)) {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}

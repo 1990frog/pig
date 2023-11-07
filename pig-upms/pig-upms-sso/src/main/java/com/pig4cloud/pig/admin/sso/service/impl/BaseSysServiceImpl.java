@@ -145,6 +145,9 @@ public class BaseSysServiceImpl {
 		if (cache == null) {
 			return null;
 		}
+		if (cache.get(key) == null) {
+			return null;
+		}
 		if (cache.get(key).get() == null) {
 			return null;
 		}
@@ -155,6 +158,10 @@ public class BaseSysServiceImpl {
 	protected String getUserPrivileges(String key) {
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO);
 		if (cache == null) {
+			return null;
+		}
+		log.info("获取缓存权限信息");
+		if (cache.get(key) == null) {
 			return null;
 		}
 		if (cache.get(key).get() == null) {

@@ -54,6 +54,7 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 		Map ossClientInfoMap = getSSOClientInfo();
 		String privileges = getUserPrivileges(pigUser.getUserCode() + key);
 		List<SSOPrivilege> userPrivileges = null;
+		log.info("获取缓存权限信息结束");
 		if (!StrUtil.isEmpty(privileges)) {
 			log.info("从缓存获取数据");
 			UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();

@@ -30,6 +30,7 @@ import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.entity.SysUserRole;
+import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.api.vo.MenuVO;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.mapper.SysUserMapper;
@@ -54,9 +55,12 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -281,6 +285,56 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 			return false;
 		}
 		return this.lambdaUpdate().eq(SysUser::getUserId, userId).remove();
+	}
+
+	@Override
+	public Page<UserExtendInfo> getUserExtendPage(Page<SysUser> page, UserDTO userDTO) {
+		Page<UserExtendInfo> userExtendInfoPage = new Page<>(page.getCurrent(), page.getSize());
+		Page<SysUser> userPage = lambdaQuery()
+				.like(userDTO != null && !StrUtil.isEmpty(userDTO.getUsername()), SysUser::getUsername, userDTO.getUsername())
+				.eq(userDTO != null && !StrUtil.isEmpty(userDTO.getSysClass()), SysUser::getSysClass, userDTO.getSysClass())
+				.page(page);
+		List<SysUser> records = userPage.getRecords();
+		if (CollectionUtils.isEmpty(records)) {
+			return userExtendInfoPage;
+		}
+		List<Integer> deptIds = records.stream().map(SysUser::getDeptId).collect(Collectors.toList());
+		List<Integer> userIds = records.stream().map(SysUser::getUserId).collect(Collectors.toList());
+		List<SysDept> parents = sysDeptService.lambdaQuery().eq(SysDept::getParentId, 0).list();
+		List<SysDept> sysDepts = sysDeptService.lambdaQuery().in(!CollectionUtils.isEmpty(deptIds), SysDept::getDeptId, deptIds).list();
+		Map<Integer, SysDept> sysDeptMap = new HashMap<>();
+		if (!CollectionUtils.isEmpty(sysDepts)) {
+			sysDeptMap = sysDepts.stream().collect(Collectors.toMap(SysDept::getDeptId, Function.identity()));
+		}
+		List<SysUserRole> sysUserRoles = sysUserRoleService.lambdaQuery().in(!CollectionUtils.isEmpty(userIds), SysUserRole::getUserId, userIds).list();
+		Map<Integer, SysRole> sysRoleMap = new HashMap<>();
+		if (!CollectionUtils.isEmpty(sysUserRoles)) {
+			List<Integer> roleIds = sysUserRoles.stream().map(SysUserRole::getRoleId).distinct().collect(Collectors.toList());
+			List<SysRole> sysRoles = sysRoleService.lambdaQuery().in(!CollectionUtils.isEmpty(records), SysRole::getRoleId, roleIds).list();
+			if (!CollectionUtils.isEmpty(sysRoles)) {
+				sysRoleMap = sysRoles.stream().collect(Collectors.toMap(SysRole::getRoleId, Function.identity()));
+			}
+		}
+		List<UserExtendInfo> res = new ArrayList<>();
+		for (SysUser sysUser : records) {
+			UserExtendInfo userExtendInfo = new UserExtendInfo();
+			BeanUtils.copyProperties(sysUser, userExtendInfo);
+			SysDept sysDept = null;
+			if (sysUser.getDeptId() != null) {
+				sysDept = sysDeptMap.get(sysUser.getDeptId());
+			} else {
+				sysDept = parents.get(0);
+			}
+			userExtendInfo.setDeptName(sysDept != null ? sysDept.getName() : "");
+			userExtendInfo.setDeptCode(sysDept != null ? sysDept.getDeptId() + "" : "");
+			SysRole sysRole = sysRoleMap.get(sysUser.getUserId());
+			userExtendInfo.setUserType(sysRole != null ? sysRole.getRoleCode() : "");
+			userExtendInfo.setUserTypeName(sysRole != null ? sysRole.getRoleName() : "");
+			res.add(userExtendInfo);
+		}
+		userExtendInfoPage.setRecords(res);
+		userExtendInfoPage.setTotal(userPage.getTotal());
+		return userExtendInfoPage;
 	}
 
 }

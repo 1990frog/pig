@@ -17,10 +17,12 @@
 package com.pig4cloud.pig.admin.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
+import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.service.SysUserService;
 import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
@@ -282,8 +284,9 @@ public class UserController {
 
 	@Inner
 	@GetMapping("/extend/page")
-	public R getUserExtendPage(Page page, UserDTO userDTO) {
-		return R.ok(userService.getUserWithRolePage(page, userDTO));
+	public Page<UserExtendInfo> getUserExtendPage(Page page, UserDTO userDTO) {
+		Page<SysUser> userExtendInfoPage = new Page<>(page.getCurrent(), page.getSize());
+		return userService.getUserExtendPage(userExtendInfoPage, userDTO);
 	}
 
 }

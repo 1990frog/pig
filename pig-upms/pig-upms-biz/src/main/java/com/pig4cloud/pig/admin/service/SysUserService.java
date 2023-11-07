@@ -22,6 +22,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
 
 import java.util.List;
@@ -115,4 +116,6 @@ public interface SysUserService extends IService<SysUser> {
 	 * @return
 	 */
 	Boolean deleteUserByUserId(Integer userId);
+
+	Page<UserExtendInfo>  getUserExtendPage(Page<SysUser> page,UserDTO userDTO);
 }

@@ -1,5 +1,6 @@
 package com.pig4cloud.pig.admin.sso.model;
 
+import com.pig4cloud.pig.admin.sso.common.enums.SSOTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import lombok.Data;
 
@@ -14,6 +15,7 @@ import javax.xml.soap.SOAPMessage;
 @Data
 public class SoapEntity {
 	private String host;
+	private SSOTypeEnum ssoType;
 	private SoapTypeEnum type;
 	private String token;
 	private String appCode;

@@ -16,6 +16,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -36,9 +37,12 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -89,6 +93,8 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 			Map<String, String> appCodeMap = ssoClientInfo.getApps().stream().collect(Collectors.toMap(s -> s.split("\\|")[2], s -> s.split("\\|")[1]));
 			// 走sso 获取用户信息
 			final Map userInfo = getUser(token, appNameMap.get(sysClass), appCodeMap.get(sysClass), sysClass);
+			// 是否需要把appId和appCode存储
+			cacheAppCodeAndId(appCodeMap);
 			if (userInfo != null && (userInfo.containsKey("Identity"))) {
 				// 这儿使用用户的真实userCode 和 appName
 				// 获取一下拿到的真实用户信息
@@ -142,6 +148,43 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 			}
 		}
 		return chain.filter(exchange);
+	}
+
+	private void cacheAppCodeAndId(Map<String, String> appCodeMap) {
+		Integer type = ssoClientInfo.getType();
+		// 传统的sso不需要，
+		if (type == null || type.intValue() == 2) {
+			return;
+		}
+		try {
+			Set<String> appCodes = appCodeMap.values().stream().collect(Collectors.toSet());
+			String ssoHost = ssoClientInfo.getSsoHost();
+			String url = ssoHost != null && ssoHost.startsWith("http") ? ssoHost : "http://" + ssoHost;
+			url += (url.endsWith("/") ? "" : "/");
+			url += "cm/api/App/all";
+			ResponseEntity<List<Map<String, Object>>> exchange = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Map<String, Object>>>() {
+			});
+			if (exchange == null) {
+				return;
+			}
+			List<Map<String, Object>> body = exchange.getBody();
+			if (body == null || body.size() <= 0) {
+				return;
+			}
+			Map<String, Integer> appCodeAndId = new HashMap<>();
+			for (Map<String, Object> cur : body) {
+				String code = (String) cur.get("Code");
+				if (appCodes.contains(code)) {
+					appCodeAndId.put(code, (Integer) cur.get("ID"));
+				}
+			}
+			Cache cache = cacheManager.getCache(CacheConstants.SSO_APPCODE_ID);
+			cache.put("app", appCodeAndId);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.info("获取所有应用失败,info={}", e);
+		}
+
 	}
 
 	private Map getUser(String token, String appName, String appCode, String sysClass) {
@@ -226,7 +269,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 	// 走本地登录
 	public Map login(String username, String userCode, String password, String token, String sysClass, String appName, String appCode) {
 		MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-		parameters.add("username", username);
+		parameters.add("username", username + "@@" + sysClass);
 		parameters.add("userCode", userCode);
 		parameters.add("sysClass", sysClass);
 		parameters.add("password", password);

@@ -104,4 +104,6 @@ public interface CacheConstants {
 
 	String SSO_CLIENT_ID = "sso_client_id";
 
+	String SSO_APPCODE_ID = "sso_appcode_id";
+
 }

@@ -1,5 +1,7 @@
 package com.pig4cloud.pig.admin.sso.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
 import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
 
@@ -20,4 +22,10 @@ public interface IRemoteService {
 	List<SSOPrivilege> getSSOPrivilege(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo);
 
 	List<SSOPrivilege> getSSOMenus(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo);
+
+	Integer findUserCount(String userName, Map ssoClientInfo);
+
+	List<UserExtendInfo> findUserInfo(String userName, Long current, Long size, Map ssoClientInfo);
+
+	IPage<UserExtendInfo> findUserInfo(Long current, Long size, Map ssoClientInfo);
 }

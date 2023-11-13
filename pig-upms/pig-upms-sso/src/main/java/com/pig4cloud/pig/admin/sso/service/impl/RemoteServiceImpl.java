@@ -1,31 +1,47 @@
 package com.pig4cloud.pig.admin.sso.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.MenuTree;
+import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
+import com.pig4cloud.pig.admin.sso.common.enums.SSOTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.UserRoleInfoParse;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.UserWebServiceRequest;
+import com.pig4cloud.pig.admin.sso.common.ssoutil.UserWebServiceResponse;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.WebServiceHttpClient;
+import com.pig4cloud.pig.admin.sso.model.SSOPermissionExtPropertyInfo;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
 import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
 import com.pig4cloud.pig.admin.sso.model.SoapEntity;
 import com.pig4cloud.pig.admin.sso.service.IRemoteService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestTemplate;
 
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName RemoteServiceImpl
@@ -34,6 +50,7 @@ import java.util.Map;
  * @Date 2021/12/9 10:42
  **/
 @Service
+@Slf4j
 public class RemoteServiceImpl implements IRemoteService {
 
 	@Autowired
@@ -45,35 +62,17 @@ public class RemoteServiceImpl implements IRemoteService {
 		if (StrUtil.isEmpty(userCode)) {
 			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
 		}
-		SoapEntity soapEntity = new SoapEntity();
-		soapEntity.setAppCode(serverInfoMap.get("appCode"));
-		soapEntity.setAppName(serverInfoMap.get("appName"));
-		soapEntity.setUserCode(userCode);
-		soapEntity.setToken(serverToken);
-
-		// 设置一下wsdl的路径
-		//String url = (String) ssoClientInfo.get("serverUrl");
-		//String wsdlUrl = getWsdlUrl(url);
-		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
-		if (StrUtil.isEmpty(wsdlUrl)) {
-			return null;
+		String sysClass = serverInfoMap.get("sysClass");
+		String appCode = serverInfoMap.get("appCode");
+		String appName = serverInfoMap.get("appName");
+		boolean admin = isAdmin(serverToken, sysClass);
+		Integer type = (Integer) ssoClientInfo.get("type");
+		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
+		// 就需要获取,当前app下的所有的角色信息
+		if (admin && SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
+			return findSSORoleInfoByHttp(appCode, ssoClientInfo);
 		}
-		soapEntity.setHost(getWsdlUrl(wsdlUrl));
-		// 请求角色
-		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
-		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject roleInfo = WebServiceHttpClient.post(soapEntity);
-		if (roleInfo != null) {
-			String sysClass = serverInfoMap.get("sysClass");
-			if (StringUtils.isEmpty(userCode)) {
-				throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
-			}
-			String key = userCode + "@@" + sysClass;
-			cacheUserRoles(key, roleInfo);
-		}
-		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
-		List<SSORoleInfo> roleInfos = roleInfoParse.parse(roleInfo, SSORoleInfo.class, SoapTypeEnum.SOAP_ROLE);
-		return roleInfos;
+		return findSSORoleInfoBySoap(appCode, appName, userCode, sysClass, serverToken, ssoClientInfo);
 	}
 
 	/**
@@ -86,16 +85,27 @@ public class RemoteServiceImpl implements IRemoteService {
 	 */
 	@Override
 	public List<SSOPrivilege> getSSOPrivilege(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
-		JSONObject permissionInfo = getSSOUserInfo(serverToken, serverInfoMap, ssoClientInfo);
+
 		String userCode = serverInfoMap.get("userCode");
-		String sysClass = serverInfoMap.get("sysClass");
-		if (StringUtils.isEmpty(userCode)) {
+		if (StrUtil.isEmpty(userCode)) {
 			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
 		}
-		String key = userCode + "@@" + sysClass;
+		String appCode = serverInfoMap.get("appCode");
+		String appName = serverInfoMap.get("appName");
+		String sysClass = serverInfoMap.get("sysClass");
+		boolean admin = isAdmin(serverToken, sysClass);
+		Integer type = (Integer) ssoClientInfo.get("type");
+		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
+		if (admin && SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
+			return findSSOPerInfoByHttp(appCode, ssoClientInfo);
+		}
+		//String sysClass = serverInfoMap.get("sysClass");
+		//JSONObject permissionInfo = null;
+		/*String key = userCode + "@@" + sysClass;
 		if (permissionInfo != null) {
 			cacheUserPrivileges(key, permissionInfo);
-		}
+		}*/
+		JSONObject permissionInfo = getSSOUserInfo(userCode, appCode, appName, serverToken, ssoClientInfo);
 		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
 		List<SSOPrivilege> privileges = roleInfoParse.parse(permissionInfo, SSOPrivilege.class, SoapTypeEnum.SOAP_PER);
 		return privileges;
@@ -103,50 +113,193 @@ public class RemoteServiceImpl implements IRemoteService {
 
 	@Override
 	public List<SSOPrivilege> getSSOMenus(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
-		JSONObject permissionInfo = getSSOUserInfo(serverToken, serverInfoMap, ssoClientInfo);
+		String userCode = serverInfoMap.get("userCode");
+		String sysClass = serverInfoMap.get("sysClass");
+		String appCode = serverInfoMap.get("appCode");
+		String appName = serverInfoMap.get("appName");
+		boolean admin = isAdmin(serverToken, sysClass);
+		Integer type = (Integer) ssoClientInfo.get("type");
+		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
+		if (admin && SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
+			List<SSOPrivilege> ssoPrivileges = findSSOPerInfoByHttp(appCode, ssoClientInfo);
+			if (CollectionUtils.isEmpty(ssoPrivileges)) {
+				return null;
+			}
+			return buildTree(ssoPrivileges);
+		}
 		// 这里需要按照另外的解析方式。。。
 		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
 		List<SSOPrivilege> privileges = new ArrayList<>();
 		// 一层一层的去解析
+		JSONObject permissionInfo = getSSOUserInfo(userCode, appCode, appName, serverToken, ssoClientInfo);
 		roleInfoParse.parseSSOMenu(permissionInfo, privileges);
 		return privileges;
 	}
 
-	private JSONObject getSSOUserInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
-		String userCode = serverInfoMap.get("userCode");
-		if (StrUtil.isEmpty(userCode)) {
-			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
+	private List<SSOPrivilege> buildTree(List<SSOPrivilege> ssoPrivileges) {
+		Map<Integer, List<SSOPrivilege>> privilegeMap = ssoPrivileges.stream().collect(Collectors.groupingBy(SSOPrivilege::getParentId));
+		List<SSOPrivilege> parents = privilegeMap.get(-1);
+		for (SSOPrivilege privilege : parents) {
+			// 去找以当前id为父的下级
+			nextNode(privilege, privilegeMap);
 		}
+		return parents;
+	}
+
+	private void nextNode(SSOPrivilege parent, Map<Integer, List<SSOPrivilege>> privilegeMap) {
+		if (parent == null || parent.getId() == null) {
+			return;
+		}
+		List<SSOPrivilege> nexts = privilegeMap.get(parent.getId());
+		if (CollectionUtils.isEmpty(nexts)) {
+			return;
+		}
+		parent.setSsoPrivileges(nexts);
+		for (SSOPrivilege cur : nexts) {
+			nextNode(cur, privilegeMap);
+		}
+	}
+
+	@Override
+	public Integer findUserCount(String userName, Map ssoClientInfo) {
 		SoapEntity soapEntity = new SoapEntity();
-		soapEntity.setAppCode(serverInfoMap.get("appCode"));
-		soapEntity.setAppName(serverInfoMap.get("appName"));
+		soapEntity.setUserName(userName);
+		soapEntity.setAppCode("");
+		soapEntity.setAppName("");
+		soapEntity.setSsoType(findSSOType(ssoClientInfo));
+		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE_TOTAL);
+		processHostAndWsdl(soapEntity, ssoClientInfo);
+		UserWebServiceRequest.buildMessage(soapEntity);
+		JSONObject total = WebServiceHttpClient.get(soapEntity);
+		if (total == null) {
+			return null;
+		}
+		Integer totalInt = total.getInt("content");
+		if (totalInt == null || totalInt.intValue() <= 0) {
+			return null;
+		}
+		return totalInt;
+	}
+
+	@Override
+	public List<UserExtendInfo> findUserInfo(String userName, Long current, Long size, Map ssoClientInfo) {
+		SoapEntity soapEntity = new SoapEntity();
+		soapEntity.setCurrent(current);
+		soapEntity.setSize(size);
+		soapEntity.setUserName(userName);
+		soapEntity.setAppCode("");
+		soapEntity.setAppName("");
+		soapEntity.setSsoType(findSSOType(ssoClientInfo));
+		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
+		processHostAndWsdl(soapEntity, ssoClientInfo);
+		UserWebServiceRequest.buildMessage(soapEntity);
+		JSONObject users = WebServiceHttpClient.get(soapEntity);
+		if (users == null) {
+			return null;
+		}
+		try {
+			JSONArray user = users.getJSONArray("User");
+			if (user == null || user.size() <= 0) {
+				return null;
+			}
+			List<UserExtendInfo> list = new ArrayList<>();
+			for (int i = 0; i < user.size(); i++) {
+				JSONObject object = (JSONObject) user.get(i);
+				UserExtendInfo sysUser = new UserExtendInfo();
+				sysUser.setUsername(object.getStr("UserName"));
+				sysUser.setPhone(object.getStr("Mobile"));
+				sysUser.setEmail(object.getStr("Email"));
+				sysUser.setUserType(object.getStr("UserType"));
+				sysUser.setUserCode(object.getStr("UserCode"));
+				sysUser.setUserTypeName(object.getStr("UserTypeName"));
+				sysUser.setDeptCode(object.getStr("DeptCode"));
+				sysUser.setDeptName(object.getStr("DeptName"));
+				list.add(sysUser);
+			}
+			return list;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	@Override
+	public IPage<UserExtendInfo> findUserInfo(Long current, Long size, Map ssoClientInfo) {
+		IPage<UserExtendInfo> res = new Page<>(current, size);
+		try {
+			SoapEntity soapEntity = new SoapEntity();
+			soapEntity.setCurrent(current);
+			soapEntity.setSize(size);
+			soapEntity.setAppCode("");
+			soapEntity.setAppName("");
+			soapEntity.setSsoType(findSSOType(ssoClientInfo));
+			soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
+			UserWebServiceRequest.buildMessage(soapEntity);
+			JSONObject permissionInfo = WebServiceHttpClient.get(soapEntity);
+			JSONArray items = permissionInfo.getJSONArray("Items");
+			if (items == null || items.size() <= 0) {
+				return res;
+			}
+			List<UserExtendInfo> list = new ArrayList<>();
+			for (int i = 0; i < items.size(); i++) {
+				JSONObject object = (JSONObject) items.get(i);
+				UserExtendInfo sysUser = new UserExtendInfo();
+				sysUser.setUsername(object.getStr("Name"));
+				sysUser.setPhone(object.getStr("Mobile"));
+				sysUser.setEmail(object.getStr("Email"));
+				sysUser.setUserType(object.getStr("UserType"));
+				sysUser.setUserCode(object.getStr("Code"));
+				sysUser.setUserTypeName(object.getStr("UserTypeName"));
+				sysUser.setDeptCode(object.getStr("DeptOrgCode"));
+				sysUser.setDeptName(object.getStr("DeptOrgName"));
+				list.add(sysUser);
+			}
+			Integer total = permissionInfo.getInt("Total");
+			res.setRecords(list);
+			res.setTotal(total);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.info("分页获取用户信息失败,info={}", e);
+		}
+		return res;
+	}
+
+	private JSONObject getSSOUserInfo(String userCode, String appCode, String appName, String serverToken, Map ssoClientInfo) {
+		SoapEntity soapEntity = new SoapEntity();
+		soapEntity.setAppCode(appCode);
+		soapEntity.setAppName(appName);
 		soapEntity.setUserCode(userCode);
 		soapEntity.setToken(serverToken);
+		soapEntity.setSsoType(findSSOType(ssoClientInfo));
 
 		// 设置一下wsdl的路径
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
-		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
-		if (StrUtil.isEmpty(wsdlUrl)) {
-			return null;
-		}
-		soapEntity.setHost(getWsdlUrl(wsdlUrl));
+		processHostAndWsdl(soapEntity, ssoClientInfo);
 		// 请求角色
 		// 请求权限
 		soapEntity.setType(SoapTypeEnum.SOAP_PER);
 		UserWebServiceRequest.buildMessage(soapEntity);
 		JSONObject permissionInfo = WebServiceHttpClient.post(soapEntity);
+
 		return permissionInfo;
 	}
 
-	private String getWsdlUrl(String wsdlUrl) {
-		if (StrUtil.isEmpty(wsdlUrl)) {
-			return null;
+	private void processHostAndWsdl(SoapEntity soapEntity, Map ssoClientInfo) {
+		String hostUrl = (String) ssoClientInfo.get("ssoHost");
+		if (StrUtil.isEmpty(hostUrl)) {
+			throw new SSOBusinessException("sso获取信息失败,缺少host");
 		}
-		if (!wsdlUrl.startsWith("http")) {
-			wsdlUrl = "http://" + wsdlUrl;
+		if (!hostUrl.startsWith("http")) {
+			hostUrl = "http://" + hostUrl;
 		}
-		return wsdlUrl;
+		soapEntity.setWdslUrl(hostUrl);
+		String ipUrls = hostUrl.substring(hostUrl.indexOf("//") + 2);
+		String host = null;
+		if (ipUrls.contains("/")) {
+			host = "http://" + ipUrls.substring(0, ipUrls.indexOf("/"));
+		} else host = hostUrl;
+		soapEntity.setHost(host);
 	}
 
 	private void cacheUserPrivileges(String key, JSONObject privileges) {
@@ -167,40 +320,130 @@ public class RemoteServiceImpl implements IRemoteService {
 		cache.put(key, jsonStr);
 	}
 
-	public static void main(String[] args) throws Exception {
-		SoapEntity soapEntity = new SoapEntity();
-		soapEntity.setHost("http://192.168.0.147:9011");
-		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
-		soapEntity.setUserCode("sys");
-		soapEntity.setAppName("数据质量核查与分析软件");
-		soapEntity.setAppCode("DATA_QUALIT");
-		soapEntity.setToken("1d0c9ef8-46ea-44e6-81a4-733628300041");
-		soapEntity.setCurrent(1l);
-		soapEntity.setSize(20l);
-		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject post = WebServiceHttpClient.get(soapEntity);
-		//System.out.println();
-		//System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(post));
-		UserRoleInfoParse userRoleInfoParse = UserRoleInfoParse.getInstance();
-		List<SSOPrivilege> ans = new ArrayList<>();
-		userRoleInfoParse.parseSSOMenu(post, ans);
-		//System.out.println("ans -> " + com.alibaba.fastjson.JSONObject.toJSONString(ans));
-		//SysMenuServiceImpl sysMenuService = new SysMenuServiceImpl();
-	/*	for (SSOPrivilege li : list) {
-			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
-			System.out.println();
-		}*/
-		List<MenuTree> menuTrees = new ArrayList<>();
-		//sysMenuService.processMenu(ans, menuTrees);
-		//System.out.println();
-		for (MenuTree li : menuTrees) {
-			//System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(li));
-			//System.out.println();
+	private SSOTypeEnum findSSOType(Map ssoClientInfo) {
+		Integer type = (Integer) ssoClientInfo.get("type");
+		if (type == null || type.intValue() != 1 || type.intValue() != 2) {
+			type = 2;
 		}
-
-		//角色 {"AppRoles":{"AppRole":{"RoleCode":"Admin","RoleName":"管理员角色"}}}
-		//    {"AppRoles":{"AppRole":[{"RoleCode":"Admin","RoleName":"管理员角色"},{"RoleCode":"EveryOne","RoleName":"所有人角色"}]}}
-
+		return SSOTypeEnum.parse(type);
 	}
 
+	private boolean isAdmin(String serverToken, String sysClass) {
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_SERVER_TOKEN_USER_CACHE);
+		String key = serverToken + "@@" + sysClass;
+		if (cache == null || cache.get(key) == null) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		Map map = (Map) cache.get(key).get();
+		// 如果是
+		return map.containsKey("IsAdmin") && (boolean) map.get("IsAdmin");
+	}
+
+	private List<SSORoleInfo> findSSORoleInfoBySoap(String appCode, String appName, String userCode, String sysClass, String serverToken, Map ssoClientInfo) {
+		SoapEntity soapEntity = new SoapEntity();
+		soapEntity.setAppCode(appCode);
+		soapEntity.setAppName(appName);
+		soapEntity.setUserCode(userCode);
+		soapEntity.setToken(serverToken);
+		soapEntity.setSsoType(findSSOType(ssoClientInfo));
+		// 设置一下wsdl的路径
+		//String url = (String) ssoClientInfo.get("serverUrl");
+		//String wsdlUrl = getWsdlUrl(url);
+		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		if (StrUtil.isEmpty(wsdlUrl)) {
+			return null;
+		}
+		processHostAndWsdl(soapEntity, ssoClientInfo);
+		// 请求角色
+		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
+		UserWebServiceRequest.buildMessage(soapEntity);
+		JSONObject roleInfo = WebServiceHttpClient.post(soapEntity);
+		if (roleInfo != null) {
+			if (StringUtils.isEmpty(userCode)) {
+				throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
+			}
+		}
+		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
+		List<SSORoleInfo> roleInfos = roleInfoParse.parse(roleInfo, SSORoleInfo.class, SoapTypeEnum.SOAP_ROLE);
+		return roleInfos;
+	}
+
+	private List<SSORoleInfo> findSSORoleInfoByHttp(String appCode, Map ssoClientInfo) {
+		SoapEntity soapEntity = new SoapEntity();
+		//String url = (String) ssoClientInfo.get("serverUrl");
+		//String wsdlUrl = getWsdlUrl(url);
+		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		if (StrUtil.isEmpty(wsdlUrl)) {
+			return null;
+		}
+		processHostAndWsdl(soapEntity, ssoClientInfo);
+		// 请求角色
+		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
+		String wdslUrl = soapEntity.getWdslUrl();
+		wdslUrl += (wdslUrl.endsWith("/") ? "" : "/") + "cm/api/AppRole/listbyapp/" + appCode;
+		//UserWebServiceRequest.buildMessage(soapEntity);
+		soapEntity.setWdslUrl(wdslUrl);
+		JSONArray roleInfo = WebServiceHttpClient.getToArray(soapEntity);
+		List<SSORoleInfo> roleInfos = new ArrayList<>();
+		if (roleInfo == null) {
+			return roleInfos;
+		}
+		for (int i = 0; i < roleInfo.size(); i++) {
+			SSORoleInfo role = new SSORoleInfo();
+			JSONObject cur = (JSONObject) roleInfo.get(i);
+			role.setRoleCode((String) cur.get("Code"));
+			role.setRoleName((String) cur.get("Name"));
+			roleInfos.add(role);
+		}
+		return roleInfos;
+	}
+
+	private List<SSOPrivilege> findSSOPerInfoByHttp(String appCode, Map ssoClientInfo) {
+		SoapEntity soapEntity = new SoapEntity();
+		//String url = (String) ssoClientInfo.get("serverUrl");
+		//String wsdlUrl = getWsdlUrl(url);
+		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		if (StrUtil.isEmpty(wsdlUrl)) {
+			return null;
+		}
+		// 获取aapid
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_APPCODE_ID);
+		if (cache == null || cache.get("app") == null) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		Map apps = (Map) cache.get("app").get();
+		if (!apps.containsKey(appCode)) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		Integer appId = (Integer) apps.get(appCode);
+		processHostAndWsdl(soapEntity, ssoClientInfo);
+		// 请求角色
+		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
+		String wdslUrl = soapEntity.getWdslUrl();
+		wdslUrl += wdslUrl.endsWith("/") ? "" : "/";
+		wdslUrl += "cm/api/AppPrivilege/all/byapp/" + appId;
+		//UserWebServiceRequest.buildMessage(soapEntity);
+		soapEntity.setWdslUrl(wdslUrl);
+		JSONArray roleInfo = WebServiceHttpClient.getToArray(soapEntity);
+		List<SSOPrivilege> privileges = new ArrayList<>();
+		if (roleInfo == null) {
+			return privileges;
+		}
+		for (int i = 0; i < roleInfo.size(); i++) {
+			SSOPrivilege privilege = new SSOPrivilege();
+			JSONObject cur = (JSONObject) roleInfo.get(i);
+			privilege.setId(cur.getInt("ID"));
+			privilege.setParentId(cur.containsKey("Parent_ID") ? cur.getInt("Parent_ID") : -1);
+			privilege.setPrivilegeCode(cur.getStr("Code"));
+			privilege.setPrivilegeName(cur.getStr("Name"));
+			privilege.setSequence(cur.getInt("Sequence"));
+			SSOPermissionExtPropertyInfo permissionExtPropertyInfo = new SSOPermissionExtPropertyInfo();
+			permissionExtPropertyInfo.setPrivilege_Property_ICON(cur.getStr("Icon"));
+			permissionExtPropertyInfo.setPrivilege_Property_URL(cur.getStr("Url"));
+			permissionExtPropertyInfo.setPrivilege_Property_PrivilegeType(cur.getStr("PrivilegeType"));
+			privilege.setExtPropertyInfo(permissionExtPropertyInfo);
+			privileges.add(privilege);
+		}
+		return privileges;
+	}
 }

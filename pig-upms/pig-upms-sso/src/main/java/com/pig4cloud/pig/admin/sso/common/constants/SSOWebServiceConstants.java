@@ -18,29 +18,34 @@ public interface SSOWebServiceConstants {
 	//
 
 	String WEB_SERVICE_RESPONSE_ENVELOPE = "soap:Envelope";
+	String WEB_SERVICE_RESPONSE_ENVELOPE_1_1 = "s:Envelope";
 	String WEB_SERVICE_RESPONSE_BODY = "soap:Body";
 
+	String WEB_SERVICE_RESPONSE_BODY_1_1 = "s:Body";
+
 	// 获取用户角色
-	String WEB_SERVICE_USER_ROLE = "/cws/AppRoleWebService.asmx?wdsl";
+	String WEB_SERVICE_USER_ROLE = "/AppRoleWebService.asmx";
 	String WEB_SERVICE_USER_ROLE_REQUEST = "GetUserRoles";
 	String WEB_SERVICE_RESPONSE_ROLE = "GetUserRolesResponse";
 	String WEB_SERVICE_RESPONSE_ROLE_RESULT = "GetUserRolesResult";
 
 	// 获取用户权限
-	String WEB_SERVICE_USER_PRIVILEGE = "/cws/PrivilegeWebService.asmx?wdsl";
+	String WEB_SERVICE_USER_PRIVILEGE = "/PrivilegeWebService.asmx";
 	String WEB_SERVICE_USER_PRIVILEGE_REQUEST = "GetUserAccessAllPrivileges";
 	String WEB_SERVICE_RESPONSE_PRIVILEGE = "GetUserAccessAllPrivilegesResponse";
 	String WEB_SERVICE_RESPONSE_PRIVILEGE_RESULT = "GetUserAccessAllPrivilegesResult";
 
 	// 获取用户组织
-	String WEB_SERVICE_USER_ORG = "/cws/OrgWebService.asmx?wdsl";
+	String WEB_SERVICE_USER_ORG = "/OrgWebService.asmx";
 	String WEB_SERVICE_USER_ORG_REQUEST = "GetUserOrgs";
 	String WEB_SERVICE_RESPONSE_ORG = "GetUserOrgsResponse";
 	String WEB_SERVICE_RESPONSE_ORG_RESULT = "GetUserOrgsResult";
 
 
 	// 获取用户组织
-	String WEB_SERVICE_USER_PAGE = "/cws/UserWebService.asmx/QueryUsersByPager";
-	String WEB_SERVICE_USER_PAGE_TOTAL = "/cws/UserWebService.asmx/QueryUserCount";
+	String WEB_SERVICE_USER_PAGE = "/UserWebService.asmx/QueryUsersByPager";
+	String WEB_SERVICE_USER_PAGE_TOTAL = "/UserWebService.asmx/QueryUserCount";
+
+	String WEB_SERVICE_USER_PAGE_1_1 = "/cm/api/User/paged/v2";
 
 }

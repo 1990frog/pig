@@ -12,6 +12,7 @@ import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
+import com.pig4cloud.pig.admin.sso.common.enums.SSOTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
@@ -137,8 +138,7 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
 		//去远端拿信息了
-		Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
-		Map ossClientInfoMap = (Map) ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO).get();
+		Map ossClientInfoMap = getSSOClientInfo();
 		List<SSORoleInfo> ssoRoleInfo = remoteService.getSSORoleInfo(serverToken, localLoginInfo, ossClientInfoMap);
 		List<SSOPrivilege> ssoPrivilege = remoteService.getSSOPrivilege(serverToken, localLoginInfo, ossClientInfoMap);
 		//PigUser pigUser = fillPigUser(localLoginInfo, ssoRoleInfo, ssoPrivilege);
@@ -230,72 +230,24 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 	 * @return
 	 */
 	public IPage<UserExtendInfo> getUserWithRolePage(String userName, Long current, Long size) {
-		Cache ossClientInfo = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
-		Map ossClientInfoMap = (Map) ossClientInfo.get(CacheConstants.SSO_CLIENT_INFO).get();
-		// 获取redis的可以
-		String wsdlUrl = (String) ossClientInfoMap.get("ssoHost");
-		if (StrUtil.isEmpty(wsdlUrl)) {
-			return null;
-		}
+		Map ossClientInfoMap = getSSOClientInfo();
 		Page<UserExtendInfo> result = new Page<>(current, size);
-		SoapEntity soapEntity = new SoapEntity();
-		soapEntity.setCurrent(current);
-		soapEntity.setSize(size);
-		soapEntity.setUserName(userName);
-		soapEntity.setAppCode("");
-		soapEntity.setAppName("");
-		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE_TOTAL);
-		soapEntity.setHost(getWsdlUrl(wsdlUrl));
-		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject total = WebServiceHttpClient.get(soapEntity);
-		if (total == null) {
-			return result;
-		}
-		Integer totalInt = total.getInt("content");
-		if (totalInt == null || totalInt.intValue() <= 0) {
-			return result;
-		}
-		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
-		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject users = WebServiceHttpClient.get(soapEntity);
-		if (users == null) {
-			return result;
-		}
 		try {
-			JSONArray user = users.getJSONArray("User");
-			if (user == null || user.size() <= 0) {
+			Integer type = (Integer) ossClientInfoMap.get("type");
+			SSOTypeEnum ssoType = SSOTypeEnum.parse(type);
+			if (SSOTypeEnum.SOAP_1_2.equals(ssoType)) {
+				Integer userCount = remoteService.findUserCount(userName, ossClientInfoMap);
+				List<UserExtendInfo> userInfo = remoteService.findUserInfo(userName, current, size, ossClientInfoMap);
+				result.setTotal(userCount);
+				result.setRecords(userInfo);
 				return result;
 			}
-			List<UserExtendInfo> list = new ArrayList<>();
-			for (int i = 0; i < user.size(); i++) {
-				JSONObject object = (JSONObject) user.get(i);
-				UserExtendInfo sysUser = new UserExtendInfo();
-				sysUser.setUsername(object.getStr("UserName"));
-				sysUser.setPhone(object.getStr("Mobile"));
-				sysUser.setEmail(object.getStr("Email"));
-				sysUser.setUserType(object.getStr("UserType"));
-				sysUser.setUserCode(object.getStr("UserCode"));
-				sysUser.setUserTypeName(object.getStr("UserTypeName"));
-				sysUser.setDeptCode(object.getStr("DeptCode"));
-				sysUser.setDeptName(object.getStr("DeptName"));
-				list.add(sysUser);
-			}
-			result.setTotal(totalInt);
-			result.setRecords(list);
+			// sso新版的走这里
+			return remoteService.findUserInfo(current, size, ossClientInfoMap);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return result;
-	}
-
-	private String getWsdlUrl(String wsdlUrl) {
-		if (StrUtil.isEmpty(wsdlUrl)) {
-			return null;
-		}
-		if (!wsdlUrl.startsWith("http")) {
-			wsdlUrl = "http://" + wsdlUrl;
-		}
-		return wsdlUrl;
 	}
 
 	public IPage getUserWithRolePageOld(Page page, UserDTO userDTO) {

@@ -52,15 +52,15 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 		}
 		Map<String, String> localLoginInfo = toLocalLogin(serverToken + key);
 		Map ossClientInfoMap = getSSOClientInfo();
-		String privileges = getUserPrivileges(pigUser.getUserCode() + key);
+		//String privileges = getUserPrivileges(pigUser.getUserCode() + key);
 		List<SSOPrivilege> userPrivileges = null;
-		log.info("获取缓存权限信息结束");
+		/*log.info("获取缓存权限信息结束");
 		if (!StrUtil.isEmpty(privileges)) {
 			log.info("从缓存获取数据");
 			UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
 			JSONObject object = JSONUtil.parseObj(privileges);
 			userPrivileges = roleInfoParse.parse(object, SSOPrivilege.class, SoapTypeEnum.SOAP_PER);
-		}
+		}*/
 		List<MenuTree> list = new ArrayList<>();
 		if (CollectionUtils.isEmpty(userPrivileges)) {
 			log.info("从远端获取数据");
@@ -89,6 +89,7 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 			menuTree.setName(privilege.getPrivilegeName());
 			menuTree.setType("0");
 			menuTree.setId(idWorker.getIntId());
+			menuTree.setHasChildren(false);
 			menuTree.setPermission(privilege.getPrivilegeCode());
 			menuTree.setPath(privilege.getExtPropertyInfo() != null ? privilege.getExtPropertyInfo().getPrivilege_Property_URL() : "");
 			menuTree.setSort(privilege.getSequence());
@@ -113,6 +114,7 @@ public class SysMenu2SSOServiceImpl extends BaseSysServiceImpl {
 			menuTree.setParentId(parentId);
 			menuTree.setName(child.getPrivilegeName());
 			menuTree.setType("0");
+			menuTree.setHasChildren(false);
 			menuTree.setPermission(child.getPrivilegeCode());
 			menuTree.setPath(child.getExtPropertyInfo() != null ? child.getExtPropertyInfo().getPrivilege_Property_URL() : "");
 			menuTree.setSort(child.getSequence());

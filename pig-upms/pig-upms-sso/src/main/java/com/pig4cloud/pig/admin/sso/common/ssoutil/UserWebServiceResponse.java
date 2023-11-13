@@ -1,5 +1,6 @@
 package com.pig4cloud.pig.admin.sso.common.ssoutil;
 
+import cn.hutool.core.net.URLDecoder;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -8,6 +9,7 @@ import cn.hutool.json.XML;
 import com.pig4cloud.pig.admin.sso.common.constants.SSOWebServiceConstants;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -24,14 +26,22 @@ public class UserWebServiceResponse {
 		}
 		try {
 			JSONObject root = XML.toJSONObject(xml);
-			if (Objects.isNull(root) || !root.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ENVELOPE)) {
+			if (Objects.isNull(root) || (!root.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ENVELOPE)
+					&& !root.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ENVELOPE_1_1))) {
 				return null;
 			}
 			JSONObject envelope = root.getJSONObject(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ENVELOPE);
-			if (Objects.isNull(envelope) || !envelope.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_BODY)) {
+			if (envelope == null) {
+				envelope = root.getJSONObject(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ENVELOPE_1_1);
+			}
+			if (Objects.isNull(envelope) || (!envelope.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_BODY)
+					&& !envelope.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_BODY_1_1))) {
 				return null;
 			}
 			JSONObject body = envelope.getJSONObject(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_BODY);
+			if (body == null) {
+				body = envelope.getJSONObject(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_BODY_1_1);
+			}
 			JSONObject res = null;
 			switch (type) {
 				// 角色
@@ -53,7 +63,15 @@ public class UserWebServiceResponse {
 		}
 	}
 
-	public static JSONObject xmlToJsonByString(String xml, SoapTypeEnum type) {
+	public static JSONArray toJsonArrForString(String str) {
+		if (StrUtil.isEmpty(str)) {
+			return null;
+		}
+		JSONArray objects = JSONUtil.parseArray(str);
+		return objects;
+	}
+
+	public static JSONObject toJsonForString(String xml, SoapTypeEnum type) {
 		if (StrUtil.isEmpty(xml)) {
 			return null;
 		}
@@ -68,7 +86,8 @@ public class UserWebServiceResponse {
 				if (StrUtil.isEmpty(content)) {
 					return null;
 				}
-				JSONObject object = JSONUtil.xmlToJson(content);
+				String decode = URLDecoder.decode(content, StandardCharsets.UTF_8);
+				JSONObject object = JSONUtil.xmlToJson(decode);
 				if (object == null) {
 					return null;
 				}
@@ -76,10 +95,9 @@ public class UserWebServiceResponse {
 			}
 			if (type.equals(SoapTypeEnum.SOAP_USER_PAGE_TOTAL)) {
 				return root.getJSONObject("int");
-
 			}
 		} catch (Exception e) {
-
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -97,7 +115,8 @@ public class UserWebServiceResponse {
 			return null;
 		}
 		// 再来转一次，来获取用户的信息
-		JSONObject role = XML.toJSONObject(str);
+		String decode = URLDecoder.decode(str, StandardCharsets.UTF_8);
+		JSONObject role = XML.toJSONObject(decode);
 		return role;
 	}
 
@@ -113,8 +132,9 @@ public class UserWebServiceResponse {
 		if (StrUtil.isEmpty(str)) {
 			return null;
 		}
+		String decode = URLDecoder.decode(str, StandardCharsets.UTF_8);
 		// 再来转一次，来获取用户的信息
-		JSONObject pri = XML.toJSONObject(str);
+		JSONObject pri = XML.toJSONObject(decode);
 		return pri;
 	}
 
@@ -131,7 +151,8 @@ public class UserWebServiceResponse {
 			return null;
 		}
 		// 再来转一次，来获取用户的信息
-		JSONObject org = XML.toJSONObject(str);
+		String decode = URLDecoder.decode(str, StandardCharsets.UTF_8);
+		JSONObject org = XML.toJSONObject(decode);
 		return org;
 	}
 }

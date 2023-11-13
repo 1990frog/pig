@@ -13,6 +13,8 @@ import java.util.List;
 // SSO的权限，是一个array
 @Data
 public class SSOPrivilege {
+	private Integer id;
+	private Integer parentId;
 	private Integer sequence;
 	private String privilegeName;
 	private SSOPermissionExtPropertyInfo extPropertyInfo;

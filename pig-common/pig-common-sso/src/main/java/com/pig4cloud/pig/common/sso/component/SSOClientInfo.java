@@ -23,6 +23,8 @@ public class SSOClientInfo implements Serializable {
 
 	private String ssoHost;
 
+	private Integer type = 2; // 1-soap1.1(230 SSO) ,2-soap1.2
+
 	private List<String> apps;
 
 	private String serverUrl;
@@ -130,5 +132,13 @@ public class SSOClientInfo implements Serializable {
 
 	public void setCryptogram(String cryptogram) {
 		this.cryptogram = cryptogram;
+	}
+
+	public Integer getType() {
+		return type;
+	}
+
+	public void setType(Integer type) {
+		this.type = type;
 	}
 }

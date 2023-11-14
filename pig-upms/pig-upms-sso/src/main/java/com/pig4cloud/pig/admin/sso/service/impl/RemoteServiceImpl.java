@@ -97,6 +97,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		Integer type = (Integer) ssoClientInfo.get("type");
 		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
 		if (admin && SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
+			log.info("是管理员用户，获取所有菜单,getSSOPrivilege()");
 			return findSSOPerInfoByHttp(appCode, ssoClientInfo);
 		}
 		//String sysClass = serverInfoMap.get("sysClass");
@@ -121,6 +122,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		Integer type = (Integer) ssoClientInfo.get("type");
 		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
 		if (admin && SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
+			log.info("是管理员用户，获取所有菜单，getSSOMenus()");
 			List<SSOPrivilege> ssoPrivileges = findSSOPerInfoByHttp(appCode, ssoClientInfo);
 			if (CollectionUtils.isEmpty(ssoPrivileges)) {
 				return null;

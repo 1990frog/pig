@@ -35,8 +35,10 @@ public class UserWebServiceRequest {
 		try {
 			SOAPMessage soapMessage = null;
 			if (SSOTypeEnum.SOAP_1_1.equals(soapEntity.getSsoType())) {
+				log.info("使用soap1.1");
 				soapMessage = MessageFactory.newInstance(SOAPConstants.SOAP_1_1_PROTOCOL).createMessage();
 			} else {
+				log.info("使用soap1.2");
 				soapMessage = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL).createMessage();
 			}
 			soapMessage.setProperty(SOAPMessage.CHARACTER_SET_ENCODING, "UTF-8");

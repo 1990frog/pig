@@ -338,6 +338,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		}
 		Map map = (Map) cache.get(key).get();
 		// 如果是
+		log.info("userInfo={}", map);
 		return map.containsKey("IsAdmin") && (boolean) map.get("IsAdmin");
 	}
 

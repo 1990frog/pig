@@ -427,6 +427,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		wdslUrl += "cm/api/AppPrivilege/all/byapp/" + appId;
 		//UserWebServiceRequest.buildMessage(soapEntity);
 		soapEntity.setWdslUrl(wdslUrl);
+		log.info("获取用户菜单:url ={}", wdslUrl);
 		JSONArray roleInfo = WebServiceHttpClient.getToArray(soapEntity);
 		List<SSOPrivilege> privileges = new ArrayList<>();
 		if (roleInfo == null) {

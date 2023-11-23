@@ -1,4 +1,4 @@
-FROM dockerhub.clinbrain.com/jdk:1.8.0_181
+FROM dockerhub.clinbrain.com/jdk:1.8.0_202
 ENV TZ=Asia/Shanghai
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 COPY target/pig-auth.jar /home/java/application-1.0-SNAPSHOT.jar

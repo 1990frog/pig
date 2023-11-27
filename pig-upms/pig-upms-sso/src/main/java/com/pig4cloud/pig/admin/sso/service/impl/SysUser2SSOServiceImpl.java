@@ -109,14 +109,21 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 	public UserInfo getUserInfo(SysUser sysUser) {
 		// 内部调用的时候没有token
 		String token = LocalTokenHolder.getToken();
+		UserInfo userInfo = null;
 		if ((sysUser == null || StringUtils.isEmpty(sysUser.getUsername())
 				|| StringUtils.isEmpty(sysUser.getSysClass())) && !StrUtil.isEmpty(token)) {
 			// 这儿就用token去获取
-			return getUserInfoByToken(token);
+			userInfo = getUserInfoByToken(token);
 		} else {
 			// 就用名称去获取
-			return fillUserInfo(sysUser.getUsername(), sysUser.getSysClass());
+			userInfo = fillUserInfo(sysUser.getUsername(), sysUser.getSysClass());
 		}
+		if (userInfo == null) {
+			return null;
+		}
+		String username = userInfo.getSysUser().getUsername();
+		userInfo.getSysUser().setUsername(username.split("@@")[0]);
+		return userInfo;
 	}
 
 	private UserInfo fillUserInfo(String userName, String sysClass) {

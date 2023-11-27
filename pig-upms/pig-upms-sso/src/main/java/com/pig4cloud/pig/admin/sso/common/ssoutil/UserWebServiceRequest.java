@@ -128,7 +128,11 @@ public class UserWebServiceRequest {
 		LocalDateTime localDateTime = LocalDateTime.now();
 		long timeStamp = localDateTime.toEpochSecond(zoneOffset);
 		soapEntity.setTimeStamp(timeStamp);
-		String buffer = base64AppName + "|" + soapEntity.getAppCode() + "|" + timeStamp + "|" + soapEntity.getToken();
+		String buffer = null;
+		if (SSOTypeEnum.SOAP_1_1.equals(soapEntity.getSsoType())) {
+			return base64AppName + "|" + soapEntity.getAppCode() + "|" + timeStamp;
+		} else
+			buffer = base64AppName + "|" + soapEntity.getAppCode() + "|" + timeStamp + "|" + soapEntity.getToken();
 		String sign = SecureUtil.md5(buffer);
 		return sign;
 	}

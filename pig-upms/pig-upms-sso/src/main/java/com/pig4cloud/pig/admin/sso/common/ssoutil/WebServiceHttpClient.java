@@ -3,6 +3,7 @@ package com.pig4cloud.pig.admin.sso.common.ssoutil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.pig4cloud.pig.admin.sso.common.enums.SSOTypeEnum;
 import com.pig4cloud.pig.admin.sso.model.SoapEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class WebServiceHttpClient {
 				con.setRequestProperty("Content-Type", "application/soap+xml; charset=utf-8");
 			}
 			con.setRequestProperty("Host", soapEntity.getHost());
+			con.setRequestProperty("Authorization", soapEntity.getToken());
 			//conn.setRequestProperty("Content-Type", "text/xml;charset=UTF-8");
 			//conn.setRequestProperty("SOAPAction", "http://Centralism.WebService/GetUserRoles");
 			// 3，通过流的方式将请求体发送出去：
@@ -74,6 +76,7 @@ public class WebServiceHttpClient {
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Host", soapEntity.getHost());
+			headers.set("Authorization", soapEntity.getToken());
 			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 			HttpEntity httpEntity = new HttpEntity(headers);
 			System.out.println(soapEntity.getWdslUrl());
@@ -95,6 +98,7 @@ public class WebServiceHttpClient {
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Host", soapEntity.getHost());
+			headers.set("Authorization", soapEntity.getToken());
 			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 			HttpEntity httpEntity = new HttpEntity(headers);
 			System.out.println(soapEntity.getWdslUrl());
@@ -102,6 +106,28 @@ public class WebServiceHttpClient {
 			String res = exchange.getBody();
 			log.info("sso response = {}", res);
 			JSONObject jsonObject = UserWebServiceResponse.toJsonForString(res, soapEntity.getType());
+			log.info("sso 本地解析后 = {}", jsonObject);
+			return jsonObject;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static JSONObject get4api(SoapEntity soapEntity) {
+
+		try {
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Host", soapEntity.getHost());
+			headers.set("Authorization", soapEntity.getToken());
+			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+			HttpEntity httpEntity = new HttpEntity(headers);
+			System.out.println(soapEntity.getWdslUrl());
+			ResponseEntity<String> exchange = restTemplate.exchange(soapEntity.getWdslUrl(), HttpMethod.GET, httpEntity, String.class);
+			String res = exchange.getBody();
+			log.info("sso response = {}", res);
+			JSONObject jsonObject = JSONUtil.parseObj(res);
 			log.info("sso 本地解析后 = {}", jsonObject);
 			return jsonObject;
 		} catch (Exception e) {

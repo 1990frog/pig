@@ -7,15 +7,14 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
+import com.pig4cloud.pig.admin.sso.common.constants.SSOWebServiceConstants;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SSOTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.UserRoleInfoParse;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.UserWebServiceRequest;
-import com.pig4cloud.pig.admin.sso.common.ssoutil.UserWebServiceResponse;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.WebServiceHttpClient;
 import com.pig4cloud.pig.admin.sso.model.SSOPermissionExtPropertyInfo;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
@@ -27,20 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -69,8 +60,8 @@ public class RemoteServiceImpl implements IRemoteService {
 		Integer type = (Integer) ssoClientInfo.get("type");
 		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
 		// 就需要获取,当前app下的所有的角色信息
-		if (admin && SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
-			return findSSORoleInfoByHttp(appCode, ssoClientInfo);
+		if (admin || SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
+			return findSSORoleInfoByHttp(admin, appCode, serverToken, ssoClientInfo);
 		}
 		return findSSORoleInfoBySoap(appCode, appName, userCode, sysClass, serverToken, ssoClientInfo);
 	}
@@ -96,9 +87,9 @@ public class RemoteServiceImpl implements IRemoteService {
 		boolean admin = isAdmin(serverToken, sysClass);
 		Integer type = (Integer) ssoClientInfo.get("type");
 		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
-		if (admin && SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
+		if (admin || SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
 			log.info("是管理员用户，获取所有菜单,getSSOPrivilege()");
-			return findSSOPerInfoByHttp(appCode, ssoClientInfo);
+			return findSSOPriInfoByHttp(admin, userCode, appCode, serverToken, ssoClientInfo);
 		}
 		//String sysClass = serverInfoMap.get("sysClass");
 		//JSONObject permissionInfo = null;
@@ -121,9 +112,9 @@ public class RemoteServiceImpl implements IRemoteService {
 		boolean admin = isAdmin(serverToken, sysClass);
 		Integer type = (Integer) ssoClientInfo.get("type");
 		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
-		if (admin && SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
+		if (admin || SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
 			log.info("是管理员用户，获取所有菜单，getSSOMenus()");
-			List<SSOPrivilege> ssoPrivileges = findSSOPerInfoByHttp(appCode, ssoClientInfo);
+			List<SSOPrivilege> ssoPrivileges = findSSOPriInfoByHttp(admin, userCode, appCode, serverToken, ssoClientInfo);
 			if (CollectionUtils.isEmpty(ssoPrivileges)) {
 				return null;
 			}
@@ -226,18 +217,19 @@ public class RemoteServiceImpl implements IRemoteService {
 	}
 
 	@Override
-	public IPage<UserExtendInfo> findUserInfo(Long current, Long size, Map ssoClientInfo) {
+	public IPage<UserExtendInfo> findUserInfo(Long current, Long size, String serverToken, Map ssoClientInfo) {
 		IPage<UserExtendInfo> res = new Page<>(current, size);
 		try {
 			SoapEntity soapEntity = new SoapEntity();
 			soapEntity.setCurrent(current);
 			soapEntity.setSize(size);
+			soapEntity.setToken(serverToken);
 			soapEntity.setAppCode("");
 			soapEntity.setAppName("");
 			soapEntity.setSsoType(findSSOType(ssoClientInfo));
 			soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
 			UserWebServiceRequest.buildMessage(soapEntity);
-			JSONObject permissionInfo = WebServiceHttpClient.get(soapEntity);
+			JSONObject permissionInfo = WebServiceHttpClient.get4api(soapEntity);
 			JSONArray items = permissionInfo.getJSONArray("Items");
 			if (items == null || items.size() <= 0) {
 				return res;
@@ -324,7 +316,7 @@ public class RemoteServiceImpl implements IRemoteService {
 
 	private SSOTypeEnum findSSOType(Map ssoClientInfo) {
 		Integer type = (Integer) ssoClientInfo.get("type");
-		if (type == null || type.intValue() != 1 || type.intValue() != 2) {
+		if (type == null || (type.intValue() != 1 && type.intValue() != 2)) {
 			type = 2;
 		}
 		return SSOTypeEnum.parse(type);
@@ -352,7 +344,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		// 设置一下wsdl的路径
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
-		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		String wsdlUrl = (String) ssoClientInfo.get(SSOWebServiceConstants.SSO_HOST);
 		if (StrUtil.isEmpty(wsdlUrl)) {
 			return null;
 		}
@@ -371,11 +363,12 @@ public class RemoteServiceImpl implements IRemoteService {
 		return roleInfos;
 	}
 
-	private List<SSORoleInfo> findSSORoleInfoByHttp(String appCode, Map ssoClientInfo) {
+	private List<SSORoleInfo> findSSORoleInfoByHttp(boolean admin, String appCode, String serverToken, Map ssoClientInfo) {
 		SoapEntity soapEntity = new SoapEntity();
+		soapEntity.setToken(serverToken);
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
-		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		String wsdlUrl = (String) ssoClientInfo.get(SSOWebServiceConstants.SSO_HOST);
 		if (StrUtil.isEmpty(wsdlUrl)) {
 			return null;
 		}
@@ -383,9 +376,18 @@ public class RemoteServiceImpl implements IRemoteService {
 		// 请求角色
 		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
 		String wdslUrl = soapEntity.getWdslUrl();
-		wdslUrl += (wdslUrl.endsWith("/") ? "" : "/") + "cm/api/AppRole/listbyapp/" + appCode;
+		wdslUrl += (wdslUrl.endsWith("/") ? "" : "/");
+		String url = "";
+		if (admin) { // 管理员获取所有的角色信息
+			url = wdslUrl + String.format(SSOWebServiceConstants.SSO_API_ROLE_URL_ADMIN, appCode);//"cm/api/AppRole/listbyapp/" + appCode;
+		} else { // 否则只获取当前用户的角色信息
+			// 获取一下用户id
+			url = wdslUrl + SSOWebServiceConstants.SSO_API_USER_INFO_URL;
+			Integer userId = findUserId(soapEntity, url);
+			url = wdslUrl + String.format(SSOWebServiceConstants.SSO_API_ROLE_URL, userId);//"cm/api/AppRole/listbyuser/" + userId + "/all";
+		}
 		//UserWebServiceRequest.buildMessage(soapEntity);
-		soapEntity.setWdslUrl(wdslUrl);
+		soapEntity.setWdslUrl(url);
 		JSONArray roleInfo = WebServiceHttpClient.getToArray(soapEntity);
 		List<SSORoleInfo> roleInfos = new ArrayList<>();
 		if (roleInfo == null) {
@@ -401,11 +403,21 @@ public class RemoteServiceImpl implements IRemoteService {
 		return roleInfos;
 	}
 
-	private List<SSOPrivilege> findSSOPerInfoByHttp(String appCode, Map ssoClientInfo) {
+	private Integer findUserId(SoapEntity entity, String url) {
+		entity.setWdslUrl(url);
+		JSONObject jsonObject = WebServiceHttpClient.get4api(entity);
+		if (jsonObject != null && jsonObject.containsKey("UserID")) {
+			return jsonObject.getInt("UserID");
+		}
+		return -1;
+	}
+
+	private List<SSOPrivilege> findSSOPriInfoByHttp(boolean admin, String userCode, String appCode, String serverToken, Map ssoClientInfo) {
 		SoapEntity soapEntity = new SoapEntity();
+		soapEntity.setToken(serverToken);
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
-		String wsdlUrl = (String) ssoClientInfo.get("ssoHost");
+		String wsdlUrl = (String) ssoClientInfo.get(SSOWebServiceConstants.SSO_HOST);
 		if (StrUtil.isEmpty(wsdlUrl)) {
 			return null;
 		}
@@ -424,7 +436,11 @@ public class RemoteServiceImpl implements IRemoteService {
 		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
 		String wdslUrl = soapEntity.getWdslUrl();
 		wdslUrl += wdslUrl.endsWith("/") ? "" : "/";
-		wdslUrl += "cm/api/AppPrivilege/all/byapp/" + appId;
+		if (admin) {
+			wdslUrl += String.format(SSOWebServiceConstants.SSO_API_PRI_URL_ADMIN, appId);//"cm/api/AppPrivilege/all/byapp/" + appId;
+		} else {
+			wdslUrl += String.format(SSOWebServiceConstants.SSO_API_PRI_URL, userCode, appCode);//"cm/api/AppPrivilege/listbyuser/" + userCode + "?appcode=" + appCode;
+		}
 		//UserWebServiceRequest.buildMessage(soapEntity);
 		soapEntity.setWdslUrl(wdslUrl);
 		log.info("获取用户菜单:url ={}", wdslUrl);

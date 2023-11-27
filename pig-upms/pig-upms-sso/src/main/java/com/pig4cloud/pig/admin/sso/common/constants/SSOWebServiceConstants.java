@@ -48,4 +48,11 @@ public interface SSOWebServiceConstants {
 
 	String WEB_SERVICE_USER_PAGE_1_1 = "/cm/api/User/paged/v2";
 
+	String SSO_HOST = "ssoHost";
+	String SSO_API_PRI_URL = "cm/api/AppPrivilege/listbyuser/%s?appcode=%s";
+	String SSO_API_PRI_URL_ADMIN = "cm/api/AppPrivilege/all/byapp/%s";
+	String SSO_API_ROLE_URL = "cm/api/AppRole/listbyuser/%s/all";
+	String SSO_API_ROLE_URL_ADMIN = "cm/api/AppRole/listbyapp/%s";
+
+	String SSO_API_USER_INFO_URL = "cm/api/User/current";
 }

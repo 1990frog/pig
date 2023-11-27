@@ -94,7 +94,7 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 			// 走sso 获取用户信息
 			final Map userInfo = getUser(token, appNameMap.get(sysClass), appCodeMap.get(sysClass), sysClass);
 			// 是否需要把appId和appCode存储
-			cacheAppCodeAndId(appCodeMap);
+			cacheAppCodeAndId(appCodeMap, token);
 			if (userInfo != null && (userInfo.containsKey("Identity"))) {
 				// 这儿使用用户的真实userCode 和 appName
 				// 获取一下拿到的真实用户信息
@@ -150,19 +150,23 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		return chain.filter(exchange);
 	}
 
-	private void cacheAppCodeAndId(Map<String, String> appCodeMap) {
+	// 获取一下appid，后面需要用appid
+	private void cacheAppCodeAndId(Map<String, String> appCodeMap, String token) {
 		Integer type = ssoClientInfo.getType();
 		// 传统的sso不需要，
 		if (type == null || type.intValue() == 2) {
 			return;
 		}
 		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Authorization", token);
+			final HttpEntity<String> entity = new HttpEntity<String>(headers);
 			Set<String> appCodes = appCodeMap.values().stream().collect(Collectors.toSet());
 			String ssoHost = ssoClientInfo.getSsoHost();
 			String url = ssoHost != null && ssoHost.startsWith("http") ? ssoHost : "http://" + ssoHost;
 			url += (url.endsWith("/") ? "" : "/");
 			url += "cm/api/App/all";
-			ResponseEntity<List<Map<String, Object>>> exchange = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Map<String, Object>>>() {
+			ResponseEntity<List<Map<String, Object>>> exchange = restTemplate.exchange(url, HttpMethod.GET, entity, new ParameterizedTypeReference<List<Map<String, Object>>>() {
 			});
 			if (exchange == null) {
 				return;
@@ -199,6 +203,19 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		formData.add("token", token);
 		//header = Base64(AppName)|TimeStamp|Sign
 		//Sign= MD5(Base64(AppName)|AppCode|TimeStamp|Token)
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Basic " + buildAuthorization(token, appName, appCode));
+		final HttpEntity<String> entity = new HttpEntity<String>(headers);
+		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
+				HttpMethod.GET, entity, Map.class).getBody();
+		if (map != null && !map.keySet().isEmpty()
+				&& StrUtil.isNotBlank(Optional.ofNullable(map.get("Identity")).orElse("").toString())) {
+			cache.put(key, map);
+		}
+		return map;
+	}
+
+	private String buildAuthorization(String token, String appName, String appCode) {
 		byte[] textByte = appName.getBytes(StandardCharsets.UTF_8);
 		String base64AppName = Base64.encode(textByte);
 
@@ -209,18 +226,9 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 		long TimeStamp = localDateTime.toEpochSecond(zoneOffset);
 		String buffer = base64AppName + "|" + appCode + "|" + TimeStamp + "|" + token;
 		String Sign = SecureUtil.md5(buffer);
-		String header = base64AppName + "|" + TimeStamp + "|" + Sign;
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Basic " + header);
-		final HttpEntity<String> entity = new HttpEntity<String>(headers);
-		final Map map = restTemplate.exchange(ssoClientInfo.getGetUserInfo() + "?token=" + token,
-				HttpMethod.GET, entity, Map.class).getBody();
-		if (map != null && !map.keySet().isEmpty()
-				&& StrUtil.isNotBlank(Optional.ofNullable(map.get("Identity")).orElse("").toString())) {
-			cache.put(key, map);
-		}
-		return map;
+		String basic = base64AppName + "|" + TimeStamp + "|" + Sign;
+		log.info("basic= {}", basic);
+		return basic;
 	}
 
 	/**

@@ -27,5 +27,5 @@ public interface IRemoteService {
 
 	List<UserExtendInfo> findUserInfo(String userName, Long current, Long size, Map ssoClientInfo);
 
-	IPage<UserExtendInfo> findUserInfo(Long current, Long size, Map ssoClientInfo);
+	IPage<UserExtendInfo> findUserInfo(Long current, Long size, String serverToken, Map ssoClientInfo);
 }

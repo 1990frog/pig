@@ -55,7 +55,8 @@ public class SSOTestModel {
 		//testUserPageOld();
 		//testAppAll();
 		//testAppRoleAll();
-		testAppPerAll();
+		//testAppPerAll();
+		testUserPage();
 	}
 
 	public static void testUserPageOld() {
@@ -67,11 +68,12 @@ public class SSOTestModel {
 		soapEntity.setUserCode("sys");
 		soapEntity.setAppName("ETL数据集成平台");
 		soapEntity.setAppCode("ETL");
-		soapEntity.setToken("64fd8deb-38f7-4057-881b-f2b0f6fd6070");
+		soapEntity.setToken("b0480d6e-e362-406f-a818-811ffaee5d7f");
 		soapEntity.setCurrent(1l);
 		soapEntity.setSize(20l);
 		UserWebServiceRequest.buildMessage(soapEntity);
 		JSONObject object = WebServiceHttpClient.get(soapEntity);
+		System.out.println(object);
 	}
 
 	public static void testUserPage() {
@@ -80,14 +82,16 @@ public class SSOTestModel {
 		soapEntity.setHost("http://192.168.0.230:10023");
 		soapEntity.setWdslUrl("http://192.168.0.230:10023");
 		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
-		soapEntity.setUserCode("sys");
-		soapEntity.setAppName("ETL数据集成平台");
-		soapEntity.setAppCode("ETL");
+		soapEntity.setUserCode("dq");
+		soapEntity.setAppName("数据质量核查与分析软件");
+		soapEntity.setAppCode("DATA_QUALIT");
 		soapEntity.setCurrent(1l);
 		soapEntity.setSize(20l);
-		soapEntity.setToken("64fd8deb-38f7-4057-881b-f2b0f6fd6070");
+		soapEntity.setToken("75292283-daa3-46a5-a7a4-cc922cb425e4");
 		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject object = WebServiceHttpClient.get(soapEntity);
+		JSONObject object = WebServiceHttpClient.get4api(soapEntity);
+		System.out.println("----------");
+		System.out.println(object);
 	}
 
 	public static void testUserOrgOld() {
@@ -99,7 +103,7 @@ public class SSOTestModel {
 		soapEntity.setUserCode("sys");
 		soapEntity.setAppName("ETL数据集成平台");
 		soapEntity.setAppCode("ETL");
-		soapEntity.setToken("64fd8deb-38f7-4057-881b-f2b0f6fd6070");
+		soapEntity.setToken("b0480d6e-e362-406f-a818-811ffaee5d7f");
 		soapEntity.setCurrent(1l);
 		soapEntity.setSize(20l);
 		UserWebServiceRequest.buildMessage(soapEntity);

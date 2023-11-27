@@ -96,6 +96,7 @@ public class UserWebServiceResponse {
 			if (type.equals(SoapTypeEnum.SOAP_USER_PAGE_TOTAL)) {
 				return root.getJSONObject("int");
 			}
+			return root;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

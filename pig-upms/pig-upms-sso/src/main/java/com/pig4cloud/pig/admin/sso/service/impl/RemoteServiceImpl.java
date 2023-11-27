@@ -217,7 +217,7 @@ public class RemoteServiceImpl implements IRemoteService {
 	}
 
 	@Override
-	public IPage<UserExtendInfo> findUserInfo(Long current, Long size, String serverToken, Map ssoClientInfo) {
+	public IPage<UserExtendInfo> findUserInfo(Long current, Long size, String serverToken, String keyword, Map ssoClientInfo) {
 		IPage<UserExtendInfo> res = new Page<>(current, size);
 		try {
 			SoapEntity soapEntity = new SoapEntity();
@@ -226,6 +226,7 @@ public class RemoteServiceImpl implements IRemoteService {
 			soapEntity.setToken(serverToken);
 			soapEntity.setAppCode("");
 			soapEntity.setAppName("");
+			soapEntity.setUserName(keyword);
 			soapEntity.setSsoType(findSSOType(ssoClientInfo));
 			soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
 			UserWebServiceRequest.buildMessage(soapEntity);

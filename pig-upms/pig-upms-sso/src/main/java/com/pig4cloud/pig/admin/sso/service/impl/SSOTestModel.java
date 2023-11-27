@@ -79,14 +79,15 @@ public class SSOTestModel {
 	public static void testUserPage() {
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setSsoType(SSOTypeEnum.SOAP_1_1);
-		soapEntity.setHost("http://192.168.0.230:10023");
-		soapEntity.setWdslUrl("http://192.168.0.230:10023");
+		soapEntity.setHost("http://192.168.0.220:10023");
+		soapEntity.setWdslUrl("http://192.168.0.220:10023");
 		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
 		soapEntity.setUserCode("dq");
 		soapEntity.setAppName("数据质量核查与分析软件");
 		soapEntity.setAppCode("DATA_QUALIT");
 		soapEntity.setCurrent(1l);
 		soapEntity.setSize(20l);
+		soapEntity.setUserName("测试");
 		soapEntity.setToken("75292283-daa3-46a5-a7a4-cc922cb425e4");
 		UserWebServiceRequest.buildMessage(soapEntity);
 		JSONObject object = WebServiceHttpClient.get4api(soapEntity);

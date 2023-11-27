@@ -252,7 +252,7 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 			String token = LocalTokenHolder.getToken();
 			String serverToken = getServerToken(token);
 			// sso新版的走这里
-			return remoteService.findUserInfo(current, size, serverToken, ossClientInfoMap);
+			return remoteService.findUserInfo(current, size, serverToken, userName, ossClientInfoMap);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -97,6 +97,9 @@ public class UserWebServiceRequest {
 					curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_PAGE_1_1;
 					curWsdlUrl += "?pageindex=" + soapEntity.getCurrent();
 					curWsdlUrl += "&pagesize=" + soapEntity.getSize();
+					if (!StrUtil.isEmpty(soapEntity.getUserName())) {
+						curWsdlUrl += "&keyword=" + soapEntity.getUserName();
+					}
 				} else {
 					String search = "<Search UserCode=\"\" UserName=\"%s\" IsDepth=\"false\" OrgCode=\"\" UserType=\"Normal\" />";
 					// <Pager CurrentPage="1" PageSize="20" />

@@ -72,6 +72,22 @@ public class SecurityUtils {
 			return null;
 		}
 		CacheManager cacheManager = SpringContextFactory.getApplicationContext().getBean(CacheManager.class);
+		if (enableSSO(cacheManager)) {
+			return getUserNew(cacheManager);
+		}
+		return getUser(authentication);
+	}
+
+	public String getSSOToken() {
+		String token = LocalTokenHolder.getToken();
+		CacheManager cacheManager = SpringContextFactory.getApplicationContext().getBean(CacheManager.class);
+		if (enableSSO(cacheManager)) {
+			return getSSOToken(token, cacheManager);
+		}
+		return token;
+	}
+
+	private boolean enableSSO(CacheManager cacheManager) {
 		if (cacheManager != null) {
 			Map map = null;
 			Cache cache = cacheManager.getCache(CacheConstants.SSO_CLIENT_INFO);
@@ -81,11 +97,11 @@ public class SecurityUtils {
 			if (map != null) {
 				Boolean enable = (Boolean) map.get("enable");
 				if (enable != null && enable.booleanValue()) {
-					return getUserNew(cacheManager);
+					return true;
 				}
 			}
 		}
-		return getUser(authentication);
+		return false;
 	}
 
 	private PigUser getUserNew(CacheManager cacheManager) {
@@ -93,6 +109,14 @@ public class SecurityUtils {
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_LOCAL_SERVER_TOKEN);
 		if (cache != null && cache.get(token) != null) {
 			return (PigUser) cache.get(token).get();
+		}
+		return null;
+	}
+
+	private String getSSOToken(String token, CacheManager cacheManager) {
+		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_SERVER_LOCAL_TOKEN);
+		if (serverTokenCache != null || serverTokenCache.get(token) != null) {
+			return (String) serverTokenCache.get(token).get();
 		}
 		return null;
 	}

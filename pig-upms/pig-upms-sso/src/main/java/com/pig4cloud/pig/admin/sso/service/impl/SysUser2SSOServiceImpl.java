@@ -122,7 +122,7 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 			return null;
 		}
 		String username = userInfo.getSysUser().getUsername();
-		userInfo.getSysUser().setUsername(username.split("@@")[0]);
+		userInfo.getSysUser().setUsername(username);
 		return userInfo;
 	}
 

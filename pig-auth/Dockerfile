@@ -1,7 +1,13 @@
-FROM dockerhub.clinbrain.com/jdk:1.8.0_202
-ENV TZ=Asia/Shanghai
-RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-COPY target/pig-auth.jar /home/java/application-1.0-SNAPSHOT.jar
+FROM moxm/java:1.8-full
 
-WORKDIR /home/java
-ENTRYPOINT java "-Djava.security.egd=file:/dev/./urandom" ${JAVA_OPTS:=-Xms1024m -Xmx1024m} -jar /home/java/application-1.0-SNAPSHOT.jar ${BOOT_OPTIONS:='--server.port=8080'}
+WORKDIR /pig-auth
+
+ARG JAR_FILE=target/pig-auth.jar
+
+COPY ${JAR_FILE} app.jar
+
+EXPOSE 3000
+
+ENV TZ=Asia/Shanghai JAVA_OPTS="-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom"
+
+CMD sleep 60; java $JAVA_OPTS -jar app.jar

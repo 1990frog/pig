@@ -18,4 +18,16 @@ spring:
   profiles:
     active: @profiles.active@
 
+sso:
+  enable: ${SSO-ENABLE:false}
+  type: 2
+  apps:
+    - 数据采集平台|REPORT｜DQ
+  ssoHost: ${SS0-HOST:http://hxdmc.wchscu.cn/klsso}/cws/
+  serverUrl: ${SS0-HOST:http://hxdmc.wchscu.cn/klsso}?AppName=
+  verifyUrl: ${SS0-HOST:http://hxdmc.wchscu.cn/klsso}/Home/Verify?AppName=
+  logoutUrl: ${SS0-HOST:http://hxdmc.wchscu.cn/klsso}/Home/Logout?AppName=
+  userServiceUrl: ${SS0-HOST:http://hxdmc.wchscu.cn/klsso}/cws/UserWebService.asmx
+  getUserInfo: ${SS0-HOST:http://hxdmc.wchscu.cn/klsso}/sso/api/SSOService/GetUser
+  oauthTokenUrl: http://pig-auth:3000/token/innerLogin
 

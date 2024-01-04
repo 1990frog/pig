@@ -1,6 +1,6 @@
 FROM moxm/java:1.8-full
 
-WORKDIR /pig-auth
+WORKDIR /app
 
 ARG JAR_FILE=target/pig-auth.jar
 

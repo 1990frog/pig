@@ -8,7 +8,7 @@ FROM moxm/java:1.8-full
 LABEL maintainer="jclazz@outlook.com"
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk --no-cache add libstdc++
 ENV TZ=Asia/Shanghai JAVA_OPTS="-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom"
-WORKDIR pig-register
+WORKDIR app
 
 COPY --from=builder /build/dependencies/ ./
 COPY --from=builder /build/snapshot-dependencies/ ./

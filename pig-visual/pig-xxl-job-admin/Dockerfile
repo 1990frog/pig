@@ -1,6 +1,6 @@
 FROM moxm/java:1.8-full
 
-WORKDIR /pig-xxl-job
+WORKDIR /app
 
 ARG JAR_FILE=target/pig-xxl-job-admin.jar
 

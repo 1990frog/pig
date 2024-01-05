@@ -19,15 +19,15 @@ spring:
     active: @profiles.active@
 
 sso:
-  enable: ${SSO_ENABLE:false}
+  enable: ${SSO-ENABLE:false}
   type: 2
   apps:
-    - 数据采集平台|REPORT｜DQ
-  ssoHost: ${SS0_HOST:http://hxdmc.wchscu.cn/klsso}/cws/
-  serverUrl: ${SS0_HOST:http://hxdmc.wchscu.cn/klsso}?AppName=
-  verifyUrl: ${SS0_HOST:http://hxdmc.wchscu.cn/klsso}/Home/Verify?AppName=
-  logoutUrl: ${SS0_HOST:http://hxdmc.wchscu.cn/klsso}/Home/Logout?AppName=
-  userServiceUrl: ${SS0_HOST:http://hxdmc.wchscu.cn/klsso}/cws/UserWebService.asmx
-  getUserInfo: ${SS0_HOST:http://hxdmc.wchscu.cn/klsso}/sso/api/SSOService/GetUser
+    - 数据采集平台|REPORT|DQ
+  ssoHost: ${SSO-URL:sso}/klsso/cws/
+  serverUrl: ${SSO-URL:sso}/klsso?AppName=
+  verifyUrl: ${SSO-URL:sso}/klsso/Home/Verify?AppName=
+  logoutUrl: ${SSO-URL:sso}/klsso/Home/Logout?AppName=
+  userServiceUrl: ${SSO-URL:sso}/klsso/cws/UserWebService.asmx
+  getUserInfo: ${SSO-URL:sso}/klsso/sso/api/SSOService/GetUser
   oauthTokenUrl: http://pig-auth:3000/token/innerLogin
 

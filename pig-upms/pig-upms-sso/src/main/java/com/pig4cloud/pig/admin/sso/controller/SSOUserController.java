@@ -1,7 +1,9 @@
 package com.pig4cloud.pig.admin.sso.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
+import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.sso.service.impl.SysUser2SSOServiceImpl;
 import com.pig4cloud.pig.common.core.util.R;
@@ -29,7 +31,15 @@ public class SSOUserController {
 	}
 
 	public R info() {
-		return R.ok(sysUser2SSOService.getUserInfo(null));
+		UserInfo userInfo = sysUser2SSOService.getUserInfo(null);
+		if (userInfo == null || userInfo.getSysUser() == null) {
+			return R.ok(userInfo);
+		}
+		SysUser sysUser = userInfo.getSysUser();
+		String username = StrUtil.isEmpty(sysUser.getUsername()) ? "" : sysUser.getUsername();
+		sysUser.setUsername(username.split("@@")[0]);
+		userInfo.setSysUser(sysUser);
+		return R.ok(userInfo);
 	}
 
 	public R infoNew(String username, String sysClass) {

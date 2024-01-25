@@ -54,9 +54,11 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 		// 分发任务
 		try {
 			if (curRequestPath.matches("/user/info")) {
+				log.info("通过/user/info 接口获取用户信息");
 				userInfo = ssoUserController.info();
 				outputStream.write(processResponse(userInfo));
 			} else if (curRequestPath.matches("/user/info/(.+)/(.+)")) {
+				log.info("通过/user/infoNew 接口获取用户信息");
 				Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 				String username = uriTemplateVars.get("username");
 				String sysClass = uriTemplateVars.get("sysClass");

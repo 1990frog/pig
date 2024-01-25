@@ -57,7 +57,7 @@ public class SSOTokenGranter {
 		// 把localToken 和 serverToken 做一个缓存
 		cacheServerTokenAndLocalToken(oAuth2Authentication.getUserAuthentication().getPrincipal(), accessToken.getValue(), parameters.get("token"));
 		// 处理一下名称
-		accessToken.getAdditionalInformation().put("username", parameters.get("username").split("@@")[0]);
+		//accessToken.getAdditionalInformation().put("username", parameters.get("username").split("@@")[0]);
 		return accessToken;
 	}
 

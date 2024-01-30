@@ -28,7 +28,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
  * <p>
  * 网关应用
  */
-@EnablePigSwagger2
+//@EnablePigSwagger2
 @EnableDiscoveryClient
 @SpringBootApplication
 @RefreshScope

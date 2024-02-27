@@ -1,5 +1,6 @@
 package com.pig4cloud.pig.common.sso.component;
 
+import lombok.ToString;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import java.util.List;
  * @Description 目前依然使用配置的形式来解决
  * @Date 2022/7/20 14:37
  **/
+@ToString
 @Configuration
 @RefreshScope
 @ConfigurationProperties(prefix = "sso")

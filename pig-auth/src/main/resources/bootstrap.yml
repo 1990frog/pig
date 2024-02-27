@@ -1,13 +1,12 @@
 server:
-  port: 8080
-
+  port: 3000
 spring:
   application:
     name: @artifactId@
   cloud:
     nacos:
       discovery:
-        server-addr: ${NACOS_HOST:nacos}:${NACOS_PORT:8848}
+        server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
         namespace: data-middle-platform
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}

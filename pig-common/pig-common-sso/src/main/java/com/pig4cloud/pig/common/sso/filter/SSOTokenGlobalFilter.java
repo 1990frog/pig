@@ -67,6 +67,8 @@ public class SSOTokenGlobalFilter implements GlobalFilter, Ordered {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
+		log.info(ssoClientInfo.toString());
+
 		ServerHttpRequest request = exchange.getRequest();
 		final String authorization = request.getHeaders().getFirst("Authorization");
 		if (!ssoClientInfo.isEnable()

@@ -89,24 +89,6 @@ public class BaseSysServiceImpl {
 		return null;
 	}
 
-	protected UserInfo getUserInfoByToken(String localToken) {
-		// 拿localToken换serverToken
-		PigUser pigUser = findUserByToken(localToken);
-		String key = pigUser.getUserCode() + "@@" + pigUser.getSysClass();
-		//String key = "@@" + userName.split("@@")[1];
-		//String serverToken = getServerToken(localToken + key);
-		//Map<String, String> serverInfoMap = getLocalLoginUserInfo(serverToken + key);
-		Cache userInfoCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE);
-		if (userInfoCache == null) {
-			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
-		}
-		UserInfo userInfo = (UserInfo) userInfoCache.get(key).get();
-		if (userInfo == null) {
-			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
-		}
-		return userInfo;
-	}
-
 	protected PigUser findUserByToken(String token) {
 		OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(token);
 		OAuth2Authentication auth2Authentication = tokenStore.readAuthentication(oAuth2AccessToken);

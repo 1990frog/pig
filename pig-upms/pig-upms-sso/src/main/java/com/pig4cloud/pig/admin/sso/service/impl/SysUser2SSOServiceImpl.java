@@ -113,7 +113,12 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		if ((sysUser == null || StringUtils.isEmpty(sysUser.getUsername())
 				|| StringUtils.isEmpty(sysUser.getSysClass())) && !StrUtil.isEmpty(token)) {
 			// 这儿就用token去获取
-			userInfo = getUserInfoByToken(token);
+			// 拿localToken换serverToken
+			PigUser pigUser = findUserByToken(token);
+			userInfo = getUserInfoByToken(pigUser);
+			if (userInfo == null) {
+				userInfo = fillUserInfo(pigUser.getUserCode(), pigUser.getSysClass());
+			}
 		} else {
 			// 就用名称去获取
 			userInfo = fillUserInfo(sysUser.getUsername(), sysUser.getSysClass());
@@ -123,6 +128,27 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		}
 		String username = userInfo.getSysUser().getUsername();
 		userInfo.getSysUser().setUsername(username);
+		return userInfo;
+	}
+
+	private UserInfo getUserInfoByToken(PigUser pigUser) {
+
+		String key = pigUser.getUserCode() + "@@" + pigUser.getSysClass();
+		//String key = "@@" + userName.split("@@")[1];
+		//String serverToken = getServerToken(localToken + key);
+		//Map<String, String> serverInfoMap = getLocalLoginUserInfo(serverToken + key);
+		Cache userInfoCache = cacheManager.getCache(CacheConstants.SSO_LOCAL_USER_INFO_CACHE);
+		if (userInfoCache == null) {
+			return null;
+		}
+		Cache.ValueWrapper valueWrapper = userInfoCache.get(key);
+		if (valueWrapper == null) {
+			return null;
+		}
+		UserInfo userInfo = (UserInfo) userInfoCache.get(key).get();
+		if (userInfo == null) {
+			return null;
+		}
 		return userInfo;
 	}
 

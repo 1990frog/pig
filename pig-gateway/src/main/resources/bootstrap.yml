@@ -6,6 +6,8 @@ spring:
     name: @artifactId@
   cloud:
     nacos:
+      username: ${NACOS_USER:nacos}
+      password: ${NACOS_PWD:nacos}
       discovery:
         server-addr: ${NACOS_HOST:pig-register}:${NACOS_PORT:8848}
         namespace: data-middle-platform
@@ -18,16 +20,16 @@ spring:
   profiles:
     active: @profiles.active@
 
-sso:
-  enable: ${SSO-ENABLE:false}
-  type: 2
-  apps:
-    - 数据采集平台|REPORT|DQ
-  ssoHost: ${SSO-URL:sso}/klsso/cws/
-  serverUrl: ${SSO-URL:sso}/klsso?AppName=
-  verifyUrl: ${SSO-URL:sso}/klsso/Home/Verify?AppName=
-  logoutUrl: ${SSO-URL:sso}/klsso/Home/Logout?AppName=
-  userServiceUrl: ${SSO-URL:sso}/klsso/cws/UserWebService.asmx
-  getUserInfo: ${SSO-URL:sso}/klsso/sso/api/SSOService/GetUser
-  oauthTokenUrl: http://pig-auth:3000/token/innerLogin
+#sso:
+#  enable: ${SSO-ENABLE:false}
+#  type: 2
+#  apps:
+#    - 数据采集平台|REPORT|DQ
+#  ssoHost: ${SSO-URL:sso}/klsso/cws/
+#  serverUrl: ${SSO-URL:sso}/klsso?AppName=
+#  verifyUrl: ${SSO-URL:sso}/klsso/Home/Verify?AppName=
+#  logoutUrl: ${SSO-URL:sso}/klsso/Home/Logout?AppName=
+#  userServiceUrl: ${SSO-URL:sso}/klsso/cws/UserWebService.asmx
+#  getUserInfo: ${SSO-URL:sso}/klsso/sso/api/SSOService/GetUser
+#  oauthTokenUrl: http://pig-auth:3000/token/innerLogin
 

@@ -21,12 +21,11 @@
 	<parent>
 		<groupId>com.pig4cloud</groupId>
 		<artifactId>pig-common</artifactId>
-		<version>3.1.0</version>
+		<version>3.1.2</version>
 	</parent>
 
 	<artifactId>pig-common-core</artifactId>
 	<packaging>jar</packaging>
-	<version>3.1.4</version>
 
 	<description>pig 公共工具类核心包</description>
 

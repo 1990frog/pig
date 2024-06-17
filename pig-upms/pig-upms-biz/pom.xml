@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>com.pig4cloud</groupId>
 		<artifactId>pig-upms</artifactId>
-		<version>3.1.0</version>
+		<version>3.1.2</version>
 	</parent>
 
 	<artifactId>pig-upms-biz</artifactId>
@@ -34,33 +34,32 @@
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-upms-api</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.pig4cloud</groupId>
-			<artifactId>pig-upms-sso</artifactId>
-			<version>3.1.0</version>
+			<version>${pig.common.version}</version>
 		</dependency>
 
 		<!--安全模块-->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-security</artifactId>
+			<version>${pig.common.version}</version>
 		</dependency>
 		<!--日志处理-->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-log</artifactId>
+			<version>${pig.common.version}</version>
 		</dependency>
 		<!--接口文档-->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-swagger</artifactId>
+			<version>${pig.common.version}</version>
 		</dependency>
 		<!--mybatis 模块-->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-common-mybatis</artifactId>
+			<version>${pig.common.version}</version>
 		</dependency>
 		<!--注册中心客户端-->
 		<dependency>
@@ -86,7 +85,7 @@
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
 			<artifactId>pig-upms-sso</artifactId>
-			<version>3.1.0</version>
+			<version>${pig.common.version}</version>
 		</dependency>
 
 		<!--达梦JDBC包-->

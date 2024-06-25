@@ -6,7 +6,7 @@
 
 	<groupId>com.pig4cloud</groupId>
 	<artifactId>pig-common-bom</artifactId>
-	<version>3.1.2</version>
+	<version>3.1.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>pig-common-bom</name>
@@ -14,7 +14,7 @@
 	<description>pig cloud parent</description>
 
 	<properties>
-		<pig.common.version>3.1.2</pig.common.version>
+		<pig.common.version>3.1.2-SNAPSHOT</pig.common.version>
 		<spring-boot.version>2.6.7</spring-boot.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<security.oauth.version>2.1.8.RELEASE</security.oauth.version>

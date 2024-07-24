@@ -51,6 +51,7 @@ public class LogController {
 	 * @return
 	 */
 	@GetMapping("/page")
+	@PreAuthorize("@pms.hasPermission('ROLE_sys_log')")
 	public R getLogPage(Page page, SysLogDTO sysLog) {
 		return R.ok(sysLogService.getLogByPage(page, sysLog));
 	}
@@ -61,7 +62,7 @@ public class LogController {
 	 * @return success/false
 	 */
 	@DeleteMapping("/{id}")
-	@PreAuthorize("@pms.hasPermission('sys_log_del')")
+	@PreAuthorize("@pms.hasPermission('ROLE_sys_log_del')")
 	public R removeById(@PathVariable Long id) {
 		return R.ok(sysLogService.removeById(id));
 	}

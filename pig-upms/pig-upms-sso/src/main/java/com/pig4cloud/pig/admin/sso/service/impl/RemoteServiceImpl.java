@@ -229,6 +229,9 @@ public class RemoteServiceImpl implements IRemoteService {
 			soapEntity.setUserName(keyword);
 			soapEntity.setSsoType(findSSOType(ssoClientInfo));
 			soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
+
+			processHostAndWsdl(soapEntity, ssoClientInfo);
+
 			UserWebServiceRequest.buildMessage(soapEntity);
 			JSONObject permissionInfo = WebServiceHttpClient.get4api(soapEntity);
 			JSONArray items = permissionInfo.getJSONArray("Items");

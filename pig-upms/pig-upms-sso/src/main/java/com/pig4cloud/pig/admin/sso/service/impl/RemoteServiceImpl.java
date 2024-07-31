@@ -248,8 +248,10 @@ public class RemoteServiceImpl implements IRemoteService {
 				sysUser.setUserType(object.getStr("UserType"));
 				sysUser.setUserCode(object.getStr("Code"));
 				sysUser.setUserTypeName(object.getStr("UserTypeName"));
-				sysUser.setDeptCode(object.getStr("DeptOrgCode"));
-				sysUser.setDeptName(object.getStr("DeptOrgName"));
+				sysUser.setDeptCode(StrUtil.isEmpty(object.getStr("DeptOrgCode")) ?
+						object.getStr("OrgCode") : object.getStr("DeptOrgCode"));
+				sysUser.setDeptName(StrUtil.isEmpty(object.getStr("DeptOrgName")) ?
+						object.getStr("OrgName") : object.getStr("DeptOrgName"));
 				list.add(sysUser);
 			}
 			Integer total = permissionInfo.getInt("Total");

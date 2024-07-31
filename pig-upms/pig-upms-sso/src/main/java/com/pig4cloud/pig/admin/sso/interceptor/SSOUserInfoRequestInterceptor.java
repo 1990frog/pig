@@ -66,6 +66,15 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 				outputStream.write(processResponse(userInfo));
 			} else if (curRequestPath.matches("/user/extend/page")) {
 				Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+
+				if (uriTemplateVars.isEmpty()) {
+					Map<String, String[]> parameterMap = request.getParameterMap();
+					parameterMap.keySet().stream().forEach(s -> {
+						if (parameterMap.get(s) != null && parameterMap.get(s).length > 0) {
+							uriTemplateVars.put(s, parameterMap.get(s)[0]);
+						}
+					});
+				}
 				String keyword = uriTemplateVars.get("keyword");
 				String currentStr = uriTemplateVars.get("current");
 				String sizeStr = uriTemplateVars.get("size");

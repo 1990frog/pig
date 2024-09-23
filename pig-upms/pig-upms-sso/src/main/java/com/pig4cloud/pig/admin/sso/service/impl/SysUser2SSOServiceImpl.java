@@ -2,29 +2,26 @@ package com.pig4cloud.pig.admin.sso.service.impl;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
+import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.entity.UserExtendInfo;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.enums.SSOTypeEnum;
-import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
-import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.SnowFlakeUtil;
-import com.pig4cloud.pig.admin.sso.common.ssoutil.UserWebServiceRequest;
-import com.pig4cloud.pig.admin.sso.common.ssoutil.WebServiceHttpClient;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
+import com.pig4cloud.pig.admin.sso.model.SSORoleDTO;
 import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
-import com.pig4cloud.pig.admin.sso.model.SoapEntity;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
+import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.core.GrantedAuthority;
@@ -51,6 +48,7 @@ import java.util.stream.Collectors;
  * @Date 2022/7/21 17:15
  **/
 @Component
+@Slf4j
 public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 
 
@@ -117,11 +115,11 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 			PigUser pigUser = findUserByToken(token);
 			userInfo = getUserInfoByToken(pigUser);
 			if (userInfo == null) {
-				userInfo = fillUserInfo(pigUser.getUserCode(), pigUser.getSysClass());
+				userInfo = fillUserInfo(pigUser.getUserCode(), pigUser.getSysClass(), token);
 			}
 		} else {
 			// 就用名称去获取
-			userInfo = fillUserInfo(sysUser.getUsername(), sysUser.getSysClass());
+			userInfo = fillUserInfo(sysUser.getUsername(), sysUser.getSysClass(), token);
 		}
 		if (userInfo == null) {
 			return null;
@@ -152,7 +150,7 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		return userInfo;
 	}
 
-	private UserInfo fillUserInfo(String userName, String sysClass) {
+	private UserInfo fillUserInfo(String userName, String sysClass, String token) {
 		UserInfo userInfo = getUserInfo(userName, sysClass);
 		if (!Objects.isNull(userInfo)) {
 			return userInfo;
@@ -172,10 +170,12 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		}
 		//去远端拿信息了
 		Map ossClientInfoMap = getSSOClientInfo();
-		List<SSORoleInfo> ssoRoleInfo = remoteService.getSSORoleInfo(serverToken, localLoginInfo, ossClientInfoMap);
+		SSORoleDTO ssoRoleInfo = remoteService.getSSORoleInfo(serverToken, localLoginInfo, ossClientInfoMap);
+		cacheRoles(ssoRoleInfo, token);
+
 		List<SSOPrivilege> ssoPrivilege = remoteService.getSSOPrivilege(serverToken, localLoginInfo, ossClientInfoMap);
 		//PigUser pigUser = fillPigUser(localLoginInfo, ssoRoleInfo, ssoPrivilege);
-		UserInfo fillUserInfo = fillUserInfo(localLoginInfo, ssoRoleInfo, ssoPrivilege);
+		UserInfo fillUserInfo = fillUserInfo(localLoginInfo, ssoRoleInfo.isAdmin() ? ssoRoleInfo.getAll() : ssoRoleInfo.getCurrent(), ssoPrivilege);
 		return fillUserInfo;
 	}
 
@@ -268,15 +268,16 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		try {
 			Integer type = (Integer) ossClientInfoMap.get("type");
 			SSOTypeEnum ssoType = SSOTypeEnum.parse(type);
+			String token = LocalTokenHolder.getToken();
+			String serverToken = getServerToken(token);
 			if (SSOTypeEnum.SOAP_1_2.equals(ssoType)) {
-				Integer userCount = remoteService.findUserCount(userName, ossClientInfoMap);
-				List<UserExtendInfo> userInfo = remoteService.findUserInfo(userName, current, size, ossClientInfoMap);
+				log.info("老版本sso获取用户详情");
+				Integer userCount = remoteService.findUserCount(userName, serverToken, ossClientInfoMap);
+				List<UserExtendInfo> userInfo = remoteService.findUserInfo(userName, serverToken, current, size, ossClientInfoMap);
 				result.setTotal(userCount);
 				result.setRecords(userInfo);
 				return result;
 			}
-			String token = LocalTokenHolder.getToken();
-			String serverToken = getServerToken(token);
 			// sso新版的走这里
 			return remoteService.findUserInfo(current, size, serverToken, userName, ossClientInfoMap);
 		} catch (Exception e) {
@@ -334,5 +335,43 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		return iPage;
 	}
 
+	public List<SysRole> getRollAll() {
+		String token = LocalTokenHolder.getToken();
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		if (cache == null || cache.get(token) == null) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		SSORoleDTO dto = (SSORoleDTO) cache.get(token).get();
+		if (dto == null || dto.getAll() == null) {
+			return new ArrayList<>();
+		}
+		List<SysRole> res = new ArrayList<>();
+		for (SSORoleInfo info : dto.getAll()) {
+			SysRole role = new SysRole();
+			role.setRoleCode(info.getRoleCode());
+			role.setRoleName(info.getRoleName());
+			res.add(role);
+		}
+		return res;
+	}
 
+	public List<SysRole> getRollCurrent() {
+		String token = LocalTokenHolder.getToken();
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		if (cache == null || cache.get(token) == null) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		SSORoleDTO dto = (SSORoleDTO) cache.get(token).get();
+		if (dto == null || dto.getCurrent() == null) {
+			return new ArrayList<>();
+		}
+		List<SysRole> res = new ArrayList<>();
+		for (SSORoleInfo info : dto.getCurrent()) {
+			SysRole role = new SysRole();
+			role.setRoleCode(info.getRoleCode());
+			role.setRoleName(info.getRoleName());
+			res.add(role);
+		}
+		return res;
+	}
 }

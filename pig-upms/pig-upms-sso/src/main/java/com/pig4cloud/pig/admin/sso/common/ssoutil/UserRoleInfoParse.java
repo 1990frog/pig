@@ -2,7 +2,6 @@ package com.pig4cloud.pig.admin.sso.common.ssoutil;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
-import com.pig4cloud.pig.admin.api.dto.MenuTree;
 import com.pig4cloud.pig.admin.sso.common.enums.SoapTypeEnum;
 import com.pig4cloud.pig.admin.sso.model.SSOPermissionExtPropertyInfo;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
@@ -40,6 +39,7 @@ public class UserRoleInfoParse {
 		List<T> res = new ArrayList<>();
 		// 拿到
 		switch (soapTypeEnum) {
+			case SOAP_ALL_ROLE:
 			case SOAP_ROLE:
 				parseByRole(source, t, res);
 				break;

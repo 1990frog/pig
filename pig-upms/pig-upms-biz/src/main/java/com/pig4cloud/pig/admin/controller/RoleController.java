@@ -22,6 +22,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.RoleMenuOperate;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
+import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.vo.RoleVo;
 import com.pig4cloud.pig.admin.service.SysRoleMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
@@ -30,18 +31,24 @@ import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.service.PigUser;
+import com.pig4cloud.pig.common.security.util.LocalTokenHolder;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author lengleng
@@ -57,8 +64,11 @@ public class RoleController {
 
 	private final SysRoleMenuService sysRoleMenuService;
 
+	private final TokenStore tokenStore;
+
 	/**
 	 * 通过ID查询角色信息
+	 *
 	 * @param id ID
 	 * @return 角色信息
 	 */
@@ -69,6 +79,7 @@ public class RoleController {
 
 	/**
 	 * 添加角色
+	 *
 	 * @param sysRole 角色信息
 	 * @return success、false
 	 */
@@ -81,6 +92,7 @@ public class RoleController {
 
 	/**
 	 * 修改角色
+	 *
 	 * @param sysRole 角色信息
 	 * @return success/false
 	 */
@@ -93,6 +105,7 @@ public class RoleController {
 
 	/**
 	 * 删除角色
+	 *
 	 * @param id
 	 * @return
 	 */
@@ -105,6 +118,7 @@ public class RoleController {
 
 	/**
 	 * 获取角色列表
+	 *
 	 * @return 角色列表
 	 */
 	@GetMapping("/list")
@@ -114,24 +128,25 @@ public class RoleController {
 
 	/**
 	 * 分页查询角色信息
+	 *
 	 * @param page 分页对象
 	 * @return 分页对象
 	 */
 	@GetMapping("/page")
-	public R getRolePage(Page page,String sysClass) {
-		SysRole role =new SysRole();
+	public R getRolePage(Page page, String sysClass) {
+		SysRole role = new SysRole();
 		List<String> sysClassList = new ArrayList<>();
-		if(sysClass==null || sysClass.isEmpty()){
+		if (sysClass == null || sysClass.isEmpty()) {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 			Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 			authorities.stream().filter(granted -> StrUtil.startWith(granted.getAuthority(), SecurityConstants.SYS_CLASS))
 					.forEach(granted -> {
-				String temp = StrUtil.removePrefix(granted.getAuthority(), SecurityConstants.SYS_CLASS);
+						String temp = StrUtil.removePrefix(granted.getAuthority(), SecurityConstants.SYS_CLASS);
 						sysClassList.add(temp);
-			});
+					});
 			sysClass = sysClassList.get(0);
 		}
-		if(!"SUPER".equals(sysClass)){
+		if (!"SUPER".equals(sysClass)) {
 			role.setSysClass(sysClass);
 		}
 		return R.ok(sysRoleService.page(page, Wrappers.lambdaQuery(role)));
@@ -139,6 +154,7 @@ public class RoleController {
 
 	/**
 	 * 更新角色菜单
+	 *
 	 * @param roleVo 角色对象
 	 * @return success、false
 	 */
@@ -152,6 +168,7 @@ public class RoleController {
 
 	/**
 	 * 根据code获取角色
+	 *
 	 * @return 角色
 	 */
 	@GetMapping("/one")
@@ -163,6 +180,7 @@ public class RoleController {
 
 	/**
 	 * 根据code删除角色
+	 *
 	 * @return 角色
 	 */
 	@SysLog("删除角色")
@@ -174,6 +192,7 @@ public class RoleController {
 
 	/**
 	 * 角色权限操作
+	 *
 	 * @return 角色
 	 */
 	@SysLog("角色权限新增和删除")
@@ -185,12 +204,23 @@ public class RoleController {
 
 	/**
 	 * 获取角色列表
+	 *
 	 * @return 角色列表
 	 */
 	@Inner
 	@GetMapping("/list/{sysClass}")
-	public List<SysRole> getRoleList(@PathVariable("sysClass") String sysClass){
+	public List<SysRole> getRoleList(@PathVariable("sysClass") String sysClass) {
 		return sysRoleService.getRoleList(sysClass);
 	}
 
+	@GetMapping("/info/list/current")
+	public List<SysRole> getRoleByCurrent() {
+		PigUser user = SecurityUtils.getUser();
+		return sysRoleService.findRolesByUserId(user.getId());
+	}
+
+	@GetMapping("/info/list/all")
+	public List<SysRole> getRoleByAll() {
+		return sysRoleService.list();
+	}
 }

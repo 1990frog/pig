@@ -18,6 +18,7 @@ import com.pig4cloud.pig.admin.sso.common.ssoutil.UserWebServiceRequest;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.WebServiceHttpClient;
 import com.pig4cloud.pig.admin.sso.model.SSOPermissionExtPropertyInfo;
 import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
+import com.pig4cloud.pig.admin.sso.model.SSORoleDTO;
 import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
 import com.pig4cloud.pig.admin.sso.model.SoapEntity;
 import com.pig4cloud.pig.admin.sso.service.IRemoteService;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,7 +50,7 @@ public class RemoteServiceImpl implements IRemoteService {
 	protected CacheManager cacheManager;
 
 	@Override
-	public List<SSORoleInfo> getSSORoleInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
+	public SSORoleDTO getSSORoleInfo(String serverToken, Map<String, String> serverInfoMap, Map ssoClientInfo) {
 		String userCode = serverInfoMap.get("userCode");
 		if (StrUtil.isEmpty(userCode)) {
 			throw new SSOBusinessException(ResponseCodeEnum.USER_INFO_NOT_EXIST);
@@ -61,7 +63,7 @@ public class RemoteServiceImpl implements IRemoteService {
 		SSOTypeEnum ssoTypeEnum = SSOTypeEnum.parse(type == null ? 2 : type);
 		// 就需要获取,当前app下的所有的角色信息
 		if (admin || SSOTypeEnum.SOAP_1_1.equals(ssoTypeEnum)) {
-			return findSSORoleInfoByHttp(admin, appCode, serverToken, ssoClientInfo);
+			return findSSORoleInfoByHttp(appCode, serverToken, ssoClientInfo);
 		}
 		return findSSORoleInfoBySoap(appCode, appName, userCode, sysClass, serverToken, ssoClientInfo);
 	}
@@ -154,11 +156,12 @@ public class RemoteServiceImpl implements IRemoteService {
 	}
 
 	@Override
-	public Integer findUserCount(String userName, Map ssoClientInfo) {
+	public Integer findUserCount(String userName, String serverToken, Map ssoClientInfo) {
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setUserName(userName);
 		soapEntity.setAppCode("");
 		soapEntity.setAppName("");
+		soapEntity.setToken(serverToken);
 		soapEntity.setSsoType(findSSOType(ssoClientInfo));
 		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE_TOTAL);
 		processHostAndWsdl(soapEntity, ssoClientInfo);
@@ -175,11 +178,12 @@ public class RemoteServiceImpl implements IRemoteService {
 	}
 
 	@Override
-	public List<UserExtendInfo> findUserInfo(String userName, Long current, Long size, Map ssoClientInfo) {
+	public List<UserExtendInfo> findUserInfo(String userName, String serverToken, Long current, Long size, Map ssoClientInfo) {
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setCurrent(current);
 		soapEntity.setSize(size);
 		soapEntity.setUserName(userName);
+		soapEntity.setToken(serverToken);
 		soapEntity.setAppCode("");
 		soapEntity.setAppName("");
 		soapEntity.setSsoType(findSSOType(ssoClientInfo));
@@ -286,6 +290,7 @@ public class RemoteServiceImpl implements IRemoteService {
 	}
 
 	private void processHostAndWsdl(SoapEntity soapEntity, Map ssoClientInfo) {
+		soapEntity.setWdslUrl(null);
 		String hostUrl = (String) ssoClientInfo.get("ssoHost");
 		if (StrUtil.isEmpty(hostUrl)) {
 			throw new SSOBusinessException("sso获取信息失败,缺少host");
@@ -340,19 +345,21 @@ public class RemoteServiceImpl implements IRemoteService {
 		return map.containsKey("IsAdmin") && (boolean) map.get("IsAdmin");
 	}
 
-	private List<SSORoleInfo> findSSORoleInfoBySoap(String appCode, String appName, String userCode, String sysClass, String serverToken, Map ssoClientInfo) {
+	private SSORoleDTO findSSORoleInfoBySoap(String appCode, String appName, String userCode, String sysClass, String serverToken, Map ssoClientInfo) {
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setAppCode(appCode);
 		soapEntity.setAppName(appName);
 		soapEntity.setUserCode(userCode);
 		soapEntity.setToken(serverToken);
 		soapEntity.setSsoType(findSSOType(ssoClientInfo));
+
+		SSORoleDTO dto = new SSORoleDTO();
 		// 设置一下wsdl的路径
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
 		String wsdlUrl = (String) ssoClientInfo.get(SSOWebServiceConstants.SSO_HOST);
 		if (StrUtil.isEmpty(wsdlUrl)) {
-			return null;
+			return dto;
 		}
 		processHostAndWsdl(soapEntity, ssoClientInfo);
 		// 请求角色
@@ -366,17 +373,27 @@ public class RemoteServiceImpl implements IRemoteService {
 		}
 		UserRoleInfoParse roleInfoParse = UserRoleInfoParse.getInstance();
 		List<SSORoleInfo> roleInfos = roleInfoParse.parse(roleInfo, SSORoleInfo.class, SoapTypeEnum.SOAP_ROLE);
-		return roleInfos;
+		dto.setCurrent(roleInfos);
+		// 获取所有的角色
+		processHostAndWsdl(soapEntity, ssoClientInfo);
+		soapEntity.setType(SoapTypeEnum.SOAP_ALL_ROLE);
+		UserWebServiceRequest.buildMessage(soapEntity);
+		JSONObject roleInfoAll = WebServiceHttpClient.post(soapEntity);
+		List<SSORoleInfo> roleInfoAlls = roleInfoParse.parse(roleInfoAll, SSORoleInfo.class, SoapTypeEnum.SOAP_ALL_ROLE);
+		dto.setAll(roleInfoAlls);
+		return dto;
 	}
 
-	private List<SSORoleInfo> findSSORoleInfoByHttp(boolean admin, String appCode, String serverToken, Map ssoClientInfo) {
+	private SSORoleDTO findSSORoleInfoByHttp(String appCode, String serverToken, Map ssoClientInfo) {
+		SSORoleDTO dto = new SSORoleDTO();
+
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setToken(serverToken);
 		//String url = (String) ssoClientInfo.get("serverUrl");
 		//String wsdlUrl = getWsdlUrl(url);
 		String wsdlUrl = (String) ssoClientInfo.get(SSOWebServiceConstants.SSO_HOST);
 		if (StrUtil.isEmpty(wsdlUrl)) {
-			return null;
+			return dto;
 		}
 		processHostAndWsdl(soapEntity, ssoClientInfo);
 		// 请求角色
@@ -384,29 +401,40 @@ public class RemoteServiceImpl implements IRemoteService {
 		String wdslUrl = soapEntity.getWdslUrl();
 		wdslUrl += (wdslUrl.endsWith("/") ? "" : "/");
 		String url = "";
-		if (admin) { // 管理员获取所有的角色信息
-			url = wdslUrl + String.format(SSOWebServiceConstants.SSO_API_ROLE_URL_ADMIN, appCode);//"cm/api/AppRole/listbyapp/" + appCode;
-		} else { // 否则只获取当前用户的角色信息
-			// 获取一下用户id
-			url = wdslUrl + SSOWebServiceConstants.SSO_API_USER_INFO_URL;
-			Integer userId = findUserId(soapEntity, url);
-			url = wdslUrl + String.format(SSOWebServiceConstants.SSO_API_ROLE_URL, userId);//"cm/api/AppRole/listbyuser/" + userId + "/all";
+		// 获取当前应用的所有角色信息
+		url = wdslUrl + String.format(SSOWebServiceConstants.SSO_API_ROLE_URL_ADMIN, appCode);//"cm/api/AppRole/listbyapp/" + appCode;
+		soapEntity.setWdslUrl(url);
+		JSONArray roleInfoAll = WebServiceHttpClient.getToArray(soapEntity);
+		List<SSORoleInfo> roleAllInfos = new ArrayList<>();
+		if (roleInfoAll != null) {
+			for (int i = 0; i < roleInfoAll.size(); i++) {
+				SSORoleInfo role = new SSORoleInfo();
+				JSONObject cur = (JSONObject) roleInfoAll.get(i);
+				role.setRoleCode((String) cur.get("Code"));
+				role.setRoleName((String) cur.get("Name"));
+				roleAllInfos.add(role);
+			}
 		}
-		//UserWebServiceRequest.buildMessage(soapEntity);
+		dto.setAll(roleAllInfos);
+		// 获取当前用户的角色信息
+		// 获取一下用户id
+		url = wdslUrl + SSOWebServiceConstants.SSO_API_USER_INFO_URL;
+		Integer userId = findUserId(soapEntity, url);
+		url = wdslUrl + String.format(SSOWebServiceConstants.SSO_API_ROLE_URL, userId);//"cm/api/AppRole/listbyuser/" + userId + "/all";
 		soapEntity.setWdslUrl(url);
 		JSONArray roleInfo = WebServiceHttpClient.getToArray(soapEntity);
 		List<SSORoleInfo> roleInfos = new ArrayList<>();
-		if (roleInfo == null) {
-			return roleInfos;
+		if (roleInfo != null) {
+			for (int i = 0; i < roleInfo.size(); i++) {
+				SSORoleInfo role = new SSORoleInfo();
+				JSONObject cur = (JSONObject) roleInfo.get(i);
+				role.setRoleCode((String) cur.get("Code"));
+				role.setRoleName((String) cur.get("Name"));
+				roleInfos.add(role);
+			}
 		}
-		for (int i = 0; i < roleInfo.size(); i++) {
-			SSORoleInfo role = new SSORoleInfo();
-			JSONObject cur = (JSONObject) roleInfo.get(i);
-			role.setRoleCode((String) cur.get("Code"));
-			role.setRoleName((String) cur.get("Name"));
-			roleInfos.add(role);
-		}
-		return roleInfos;
+		dto.setCurrent(roleInfos);
+		return dto;
 	}
 
 	private Integer findUserId(SoapEntity entity, String url) {

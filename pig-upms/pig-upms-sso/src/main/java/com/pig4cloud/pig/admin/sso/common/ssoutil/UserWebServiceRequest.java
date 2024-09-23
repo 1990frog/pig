@@ -117,6 +117,11 @@ public class UserWebServiceRequest {
 				curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_PAGE_TOTAL;
 				curWsdlUrl += "?searchXml=" + String.format(searchTotal, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName());
 				break;
+			case SOAP_ALL_ROLE:
+				qName = new QName(SSOWebServiceConstants.WEB_SERVICE_NAMESPACE, SSOWebServiceConstants.WEB_SERVICE_USER_ALL_ROLE_REQUEST, "");
+				body.addChildElement(qName);//.addChildElement("userCode").setValue(soapEntity.getUserCode());
+				curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_ROLE;
+				break;
 		}
 		soapEntity.setWdslUrl(soapEntity.getWdslUrl() + curWsdlUrl);
 	}

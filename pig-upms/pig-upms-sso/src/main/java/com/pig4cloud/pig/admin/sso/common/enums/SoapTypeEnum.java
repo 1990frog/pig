@@ -13,6 +13,8 @@ public enum SoapTypeEnum {
 	SOAP_USER_PAGE(4, "请求用户分页信息"),
 
 	SOAP_USER_PAGE_TOTAL(5, "请求用户总数"),
+
+	SOAP_ALL_ROLE(6, "请求所有的角色信息"),
 	;
 
 

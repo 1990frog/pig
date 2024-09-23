@@ -56,7 +56,8 @@ public class SSOTestModel {
 		//testAppAll();
 		//testAppRoleAll();
 		//testAppPerAll();
-		testUserPage();
+		//testUserPage();
+		testUserRole();
 	}
 
 	public static void testUserPageOld() {
@@ -202,7 +203,7 @@ public class SSOTestModel {
 		soapEntity.setUserCode("sys");
 		soapEntity.setAppName("ETL数据集成平台");
 		soapEntity.setAppCode("ETL");
-		soapEntity.setToken("64fd8deb-38f7-4057-881b-f2b0f6fd6070");
+		soapEntity.setToken("40c7601f-cd72-44a1-b6b1-9abb0008f068");
 		soapEntity.setCurrent(1l);
 		soapEntity.setSize(20l);
 		UserWebServiceRequest.buildMessage(soapEntity);
@@ -215,11 +216,11 @@ public class SSOTestModel {
 		soapEntity.setHost("http://192.168.0.72:9011");
 		soapEntity.setSsoType(SSOTypeEnum.SOAP_1_2);
 		soapEntity.setWdslUrl("http://192.168.0.72:9011/cws");
-		soapEntity.setType(SoapTypeEnum.SOAP_ROLE);
+		soapEntity.setType(SoapTypeEnum.SOAP_ALL_ROLE);
 		soapEntity.setUserCode("sys");
 		soapEntity.setAppName("ETL数据集成平台");
 		soapEntity.setAppCode("ETL");
-		soapEntity.setToken("64fd8deb-38f7-4057-881b-f2b0f6fd6070");
+		soapEntity.setToken("27236c0b-f035-447c-8f8a-fe2f014f9728");
 		soapEntity.setCurrent(1l);
 		soapEntity.setSize(20l);
 		UserWebServiceRequest.buildMessage(soapEntity);

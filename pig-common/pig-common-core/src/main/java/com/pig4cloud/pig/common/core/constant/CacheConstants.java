@@ -95,7 +95,7 @@ public interface CacheConstants {
 	/**
 	 * 缓存角色信息
 	 */
-	String SSO_USER_ROLE_INFO = "sso_user_role_info:usercode";
+	String SSO_USER_ROLE_INFO = "sso_user_role_info:token";
 
 	/**
 	 * 缓存权限信息

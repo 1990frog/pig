@@ -56,4 +56,12 @@ public class SSOUserController {
 	public R getUserPageList(Page page, UserDTO userDTO) {
 		return R.ok(sysUser2SSOService.getUserWithRolePageOld(page, userDTO));
 	}
+
+	public R getRoleAll() {
+		return R.ok(sysUser2SSOService.getRollAll());
+	}
+
+	public R getRoleCurrent() {
+		return R.ok(sysUser2SSOService.getRollCurrent());
+	}
 }

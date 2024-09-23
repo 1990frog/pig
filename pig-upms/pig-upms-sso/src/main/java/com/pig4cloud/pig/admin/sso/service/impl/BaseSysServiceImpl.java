@@ -1,13 +1,10 @@
 package com.pig4cloud.pig.admin.sso.service.impl;
 
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.sso.common.enums.ResponseCodeEnum;
 import com.pig4cloud.pig.admin.sso.common.execption.SSOBusinessException;
 import com.pig4cloud.pig.admin.sso.common.ssoutil.SnowFlakeUtil;
-import com.pig4cloud.pig.admin.sso.model.SSOPrivilege;
-import com.pig4cloud.pig.admin.sso.model.SSORoleInfo;
+import com.pig4cloud.pig.admin.sso.model.SSORoleDTO;
 import com.pig4cloud.pig.admin.sso.service.IRemoteService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.security.service.PigUser;
@@ -19,9 +16,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.util.CollectionUtils;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -122,18 +117,10 @@ public class BaseSysServiceImpl {
 	}
 
 
-	protected String getUserRoles(String key) {
+	protected void cacheRoles(SSORoleDTO dto, String token) {
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
-		if (cache == null) {
-			return null;
-		}
-		if (cache.get(key) == null) {
-			return null;
-		}
-		if (cache.get(key).get() == null) {
-			return null;
-		}
-		return (String) cache.get(key).get();
+		cache.put(token, dto);
+		log.info("成功");
 	}
 
 

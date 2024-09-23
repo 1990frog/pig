@@ -56,6 +56,9 @@ public class UserWebServiceResponse {
 				case SOAP_ORG:
 					res = parsUserOrg(body);
 					break;
+				case SOAP_ALL_ROLE:
+					res = parsUserRoleAll(body);
+					break;
 			}
 			return res;
 		} catch (Exception e) {
@@ -112,6 +115,24 @@ public class UserWebServiceResponse {
 			return null;
 		}
 		String str = roleResponse.getStr(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ROLE_RESULT);
+		if (StrUtil.isEmpty(str)) {
+			return null;
+		}
+		// 再来转一次，来获取用户的信息
+		String decode = URLDecoder.decode(str, StandardCharsets.UTF_8);
+		JSONObject role = XML.toJSONObject(decode);
+		return role;
+	}
+
+	private static JSONObject parsUserRoleAll(JSONObject json) {
+		if (Objects.isNull(json) || !json.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ALL_ROLE)) {
+			return null;
+		}
+		JSONObject roleResponse = json.getJSONObject(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ALL_ROLE);
+		if (Objects.isNull(roleResponse) || !roleResponse.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ALL_ROLE_RESULT)) {
+			return null;
+		}
+		String str = roleResponse.getStr(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_ALL_ROLE_RESULT);
 		if (StrUtil.isEmpty(str)) {
 			return null;
 		}

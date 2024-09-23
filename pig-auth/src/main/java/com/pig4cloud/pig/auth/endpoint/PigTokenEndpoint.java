@@ -247,8 +247,8 @@ public class PigTokenEndpoint {
 		}
 		// SSO_USER_ROLE_INFO = "sso_user_role_info:usercode";
 		Cache cache2 = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
-		if (cache2 != null && cache2.get(pigUser.getUserCode() + key) != null) {
-			cache2.evict(pigUser.getUserCode() + key);
+		if (cache2 != null && cache2.get(localToken) != null) {
+			cache2.evict(localToken);
 		}
 		// SSO_USER_PRI_INFO = "sso_user_pri_info:usercode";
 		Cache cache3 = cacheManager.getCache(CacheConstants.SSO_USER_PRI_INFO);

@@ -29,6 +29,10 @@ public interface SSOWebServiceConstants {
 	String WEB_SERVICE_RESPONSE_ROLE = "GetUserRolesResponse";
 	String WEB_SERVICE_RESPONSE_ROLE_RESULT = "GetUserRolesResult";
 
+	// 获取所有的角色信息
+	String WEB_SERVICE_USER_ALL_ROLE_REQUEST = "GetAllRoles";
+	String WEB_SERVICE_RESPONSE_ALL_ROLE = "GetAllRolesResponse";
+	String WEB_SERVICE_RESPONSE_ALL_ROLE_RESULT = "GetAllRolesResult";
 	// 获取用户权限
 	String WEB_SERVICE_USER_PRIVILEGE = "/PrivilegeWebService.asmx";
 	String WEB_SERVICE_USER_PRIVILEGE_REQUEST = "GetUserAccessAllPrivileges";
@@ -55,4 +59,7 @@ public interface SSOWebServiceConstants {
 	String SSO_API_ROLE_URL_ADMIN = "cm/api/AppRole/listbyapp/%s";
 
 	String SSO_API_USER_INFO_URL = "cm/api/User/current";
+
+	String ROLE_ALL = "ROLE_ALL";
+	String ROLE_CURRENT = "ROLE_CURRENT";
 }

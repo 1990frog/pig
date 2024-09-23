@@ -2,6 +2,8 @@ package com.pig4cloud.pig.admin.sso.model;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @ClassName SSORoleInfo
  * @Author Duys
@@ -9,7 +11,7 @@ import lombok.Data;
  * @Date 2021/12/14 10:41
  **/
 @Data
-public class SSORoleInfo {
+public class SSORoleInfo implements Serializable {
 	private String roleCode;
 	private String roleName;
 }

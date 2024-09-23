@@ -35,6 +35,7 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 		urls.add("/user/info");
 		urls.add("/user/extend/page");
 		urls.add("/user/info/(.+)/(.+)");
+		urls.add("/role/info/list/(.+)");
 	}
 
 	@Override
@@ -66,7 +67,7 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 				outputStream.write(processResponse(userInfo));
 			} else if (curRequestPath.matches("/user/extend/page")) {
 				Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-
+				log.info("通过/user/extend/page 接口获取用户信息 参数信息={}", uriTemplateVars);
 				if (uriTemplateVars.isEmpty()) {
 					Map<String, String[]> parameterMap = request.getParameterMap();
 					parameterMap.keySet().stream().forEach(s -> {
@@ -83,6 +84,12 @@ public class SSOUserInfoRequestInterceptor extends AbstractSSORequestInterceptor
 				// current size
 				userInfo = ssoUserController.getUserExtendPage(keyword, current, size);
 				outputStream.write(processResponsePage(userInfo));
+			} else if (curRequestPath.matches("/role/info/list/all")) {
+				R roleAll = ssoUserController.getRoleAll();
+				outputStream.write(processResponse(roleAll));
+			} else if (curRequestPath.matches("/role/info/list/current")) {
+				R roleAll = ssoUserController.getRoleCurrent();
+				outputStream.write(processResponse(roleAll));
 			}
 			response.setStatus(HttpStatus.OK.value());
 			return false;

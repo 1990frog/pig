@@ -94,4 +94,10 @@ public class RemoteUserServiceFallbackImpl implements RemoteUserService {
 		return null;
 	}
 
+	@Override
+	public Page<UserExtendInfo> userPage(Long current, Long size, String keyword) {
+		log.error("feign 查询用户信息失败:currentUserInfo={}, token = {}", keyword, cause);
+		return null;
+	}
+
 }

@@ -98,4 +98,9 @@ public interface RemoteUserService {
 								  @RequestParam("size") Long size,
 								  @RequestParam(value = "keyword", required = false) String keyword,
 								  @RequestHeader(SecurityConstants.FROM) String from);
+
+	@GetMapping("/user/extend/page")
+	Page<UserExtendInfo> userPage(@RequestParam("current") Long current,
+								  @RequestParam("size") Long size,
+								  @RequestParam(value = "keyword", required = false) String keyword);
 }

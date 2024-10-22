@@ -1,0 +1,161 @@
+### Application Pod
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations: {}
+  labels:
+    app: pig-xxl-job-admin
+    k8s.kuboard.cn/layer: pig
+    k8s.kuboard.cn/name: pig-xxl-job-admin
+  name: pig-xxl-job-admin
+  namespace: data-middle-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pig-xxl-job-admin
+  template:
+    metadata:
+      labels:
+        app: pig-xxl-job-admin
+    spec:
+      containers:
+        - name: pig-xxl-job-admin
+          image: "dockerhub.clinbrain.com/data-middle-platform/pig-xxl-job-admin:20240125_644912e2"
+          imagePullPolicy: Always
+          env:
+            - name: LANG
+              value: C.utf-8
+            - name: NACOS_HOST
+              value: nacos
+            - name: NACOS_PORT
+              value: '8848'
+            - name: DB_USER
+              value: root
+            - name: DB_PASSWORD
+              value: P@ssw0rd123
+            - name : DB_DATABASE
+              value: pig_job
+          volumeMounts:
+            - mountPath: /home/java/bootstrap.yml
+              name: config-volume
+              subPath: bootstrap.yml
+            - mountPath: /home/java/application.yml
+              name: config-volume
+              subPath: application.yml
+            - mountPath: /home/java/logback-spring.xml
+              name: config-volume
+              subPath: logback-spring.xml
+      dnsConfig:
+        searches:
+          - clinbrain-plugin.svc.cluster.local
+      dnsPolicy: ClusterFirst
+      volumes:
+        - name: config-volume
+          configMap:
+            name: pig-xxl-job-admin-config
+
+### Application Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pig-xxl-job-admin
+  namespace: data-middle-platform
+spec:
+  type: NodePort
+  ports:
+    - port: 14034
+      nodePort: 14034
+      targetPort: 8080
+  selector:
+    app: pig-xxl-job-admin
+---
+apiVersion: v1
+data:
+  application.yml: |
+    # xxl
+    xxl:
+      job:
+        i18n: zh_CN
+        logretentiondays: 30
+        triggerpool:
+          fast.max: 200
+          slow.max: 200
+
+    # mybatis
+    mybatis:
+      mapper-locations: classpath:/mybatis-mapper/*Mapper.xml
+
+    # spring
+    spring:
+      datasource:
+        driver-class-name: ${DB_DRIVER:com.mysql.cj.jdbc.Driver}
+        url: jdbc:${DB_TYPE:mysql}://${DB_HOST:mariadb}:${DB_PORT:3306}/${DB_DATABASE:pig_job}?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true
+        username: ${DB_USER:root}
+        password: ${DB_PASSWORD:root}
+      mvc:
+        static-path-pattern: /static/**
+      freemarker:
+        suffix: .ftl
+        request-context-attribute: request
+        settings:
+          number_format: 0.##########
+      mail:
+        host: smtp.mxhichina.com
+        port: 465
+        from: xxxx@gitee.wang
+        username: xxxx@gitee.wang
+        password: xxxx
+        properties:
+          mail:
+            smtp:
+              auth: true
+              ssl.enable: true
+              starttls.enable: false
+              required: false
+
+    # spring boot admin 配置
+    management:
+      health:
+        mail:
+          enabled: false
+      endpoints:
+        web:
+          exposure:
+            include: '*'
+      endpoint:
+        health:
+          show-details: ALWAYS
+  bootstrap.yml: |-
+    # 此配置只适合开发测试环境，详细配置参考： http://t.cn/A64RaHJm
+    server:
+      port: 5004
+      servlet:
+        context-path: /xxl-job-admin
+
+    spring:
+      application:
+        name: pig-xxl-job-admin
+      cloud:
+        nacos:
+          username: ${NACOS_USERNAME:nacos}
+          password: ${NACOS_PASSWORD:nacos}
+          discovery:
+            server-addr: ${NACOS_HOST:nacos}:${NACOS_PORT:8848}
+            namespace: data-middle-platform
+          config:
+            server-addr: ${spring.cloud.nacos.discovery.server-addr}
+            file-extension: yml
+            shared-configs:
+              - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+            namespace: data-middle-platform
+      profiles:
+        active: dev
+  logback-spring.xml: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration debug=\"false\" scan=\"false\">\n\t<springProperty scop=\"context\" name=\"spring.application.name\" source=\"spring.application.name\" defaultValue=\"\"/>\n\t<property name=\"log.path\" value=\"logs/${spring.application.name}\"/>\n\t<!-- 彩色日志格式 -->\n\t<property name=\"CONSOLE_LOG_PATTERN\"\n\t\t\t  value=\"${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}\"/>\n\t<!-- 彩色日志依赖的渲染类 -->\n\t<conversionRule conversionWord=\"clr\" converterClass=\"org.springframework.boot.logging.logback.ColorConverter\"/>\n\t<conversionRule conversionWord=\"wex\"\n\t\t\t\t\tconverterClass=\"org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter\"/>\n\t<conversionRule conversionWord=\"wEx\"\n\t\t\t\t\tconverterClass=\"org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter\"/>\n\t<!-- Console log output -->\n\t<appender name=\"console\" class=\"ch.qos.logback.core.ConsoleAppender\">\n\t\t<encoder>\n\t\t\t<pattern>${CONSOLE_LOG_PATTERN}</pattern>\n\t\t</encoder>\n\t</appender>\n\n\t<!-- Log file debug output -->\n\t<appender name=\"debug\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n\t\t<file>${log.path}/debug.log</file>\n\t\t<rollingPolicy class=\"ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy\">\n\t\t\t<fileNamePattern>${log.path}/%d{yyyy-MM, aux}/debug.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>\n\t\t\t<maxFileSize>50MB</maxFileSize>\n\t\t\t<maxHistory>30</maxHistory>\n\t\t</rollingPolicy>\n\t\t<encoder>\n\t\t\t<pattern>%date [%thread] %-5level [%logger{50}] %file:%line - %msg%n</pattern>\n\t\t</encoder>\n\t</appender>\n\n\t<!-- Log file error output -->\n\t<appender name=\"error\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\">\n\t\t<file>${log.path}/error.log</file>\n\t\t<rollingPolicy class=\"ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy\">\n\t\t\t<fileNamePattern>${log.path}/%d{yyyy-MM}/error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>\n\t\t\t<maxFileSize>50MB</maxFileSize>\n\t\t\t<maxHistory>30</maxHistory>\n\t\t</rollingPolicy>\n\t\t<encoder>\n\t\t\t<pattern>%date [%thread] %-5level [%logger{50}] %file:%line - %msg%n</pattern>\n\t\t</encoder>\n\t\t<filter class=\"ch.qos.logback.classic.filter.ThresholdFilter\">\n\t\t\t<level>ERROR</level>\n\t\t</filter>\n\t</appender>\n\n\t<!--nacos 心跳 INFO 屏蔽-->\n\t<logger name=\"com.alibaba.nacos\" level=\"OFF\">\n\t\t<appender-ref ref=\"error\"/>\n\t</logger>\n\n\t<!-- Level: FATAL 0  ERROR 3  WARN 4  INFO 6  DEBUG 7 -->\n\t<root level=\"INFO\">\n\t\t<appender-ref ref=\"console\"/>\n\t\t<appender-ref ref=\"debug\"/>\n\t\t<appender-ref ref=\"error\"/>\n\t</root>\n</configuration>\n"
+kind: ConfigMap
+metadata:
+  name: pig-xxl-job-admin-config
+  namespace: data-middle-platform
+  resourceVersion: '723872854'

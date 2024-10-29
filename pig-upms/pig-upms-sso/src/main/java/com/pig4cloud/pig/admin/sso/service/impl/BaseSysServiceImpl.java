@@ -117,9 +117,9 @@ public class BaseSysServiceImpl {
 	}
 
 
-	protected void cacheRoles(SSORoleDTO dto, String token) {
+	protected void cacheRoles(SSORoleDTO dto, String key) {
 		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
-		cache.put(token, dto);
+		cache.put(key, dto);
 		log.info("成功");
 	}
 

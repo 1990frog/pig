@@ -164,9 +164,17 @@ public class RemoteServiceImpl implements IRemoteService {
 		soapEntity.setToken(serverToken);
 		soapEntity.setSsoType(findSSOType(ssoClientInfo));
 		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE_TOTAL);
+		boolean soap = (boolean) ssoClientInfo.getOrDefault("soap", false);
+		soapEntity.setSoap(soap);
+		soapEntity.setOrgCode((String) ssoClientInfo.getOrDefault("orgCode", ""));
 		processHostAndWsdl(soapEntity, ssoClientInfo);
 		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject total = WebServiceHttpClient.get(soapEntity);
+		JSONObject total = null;
+		if (soap) {
+			total = WebServiceHttpClient.post(soapEntity);
+		} else {
+			total = WebServiceHttpClient.get(soapEntity);
+		}
 		if (total == null) {
 			return null;
 		}
@@ -188,9 +196,22 @@ public class RemoteServiceImpl implements IRemoteService {
 		soapEntity.setAppName("");
 		soapEntity.setSsoType(findSSOType(ssoClientInfo));
 		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
+
+		boolean soap = (boolean) ssoClientInfo.getOrDefault("soap", false);
+		soapEntity.setSoap(soap);
+		soapEntity.setOrgCode((String) ssoClientInfo.getOrDefault("orgCode", ""));
+
 		processHostAndWsdl(soapEntity, ssoClientInfo);
 		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject users = WebServiceHttpClient.get(soapEntity);
+		JSONObject users = null;
+		if (soap) {
+			users = WebServiceHttpClient.post(soapEntity);
+			if (users != null && users.containsKey("Users")) {
+				users = users.getJSONObject("Users");
+			}
+		} else {
+			users = WebServiceHttpClient.get(soapEntity);
+		}
 		if (users == null) {
 			return null;
 		}

@@ -171,7 +171,7 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 		//去远端拿信息了
 		Map ossClientInfoMap = getSSOClientInfo();
 		SSORoleDTO ssoRoleInfo = remoteService.getSSORoleInfo(serverToken, localLoginInfo, ossClientInfoMap);
-		cacheRoles(ssoRoleInfo, token);
+		cacheRoles(ssoRoleInfo, key);
 
 		List<SSOPrivilege> ssoPrivilege = remoteService.getSSOPrivilege(serverToken, localLoginInfo, ossClientInfoMap);
 		//PigUser pigUser = fillPigUser(localLoginInfo, ssoRoleInfo, ssoPrivilege);
@@ -337,11 +337,16 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 
 	public List<SysRole> getRollAll() {
 		String token = LocalTokenHolder.getToken();
-		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_LOCAL_TOKEN_KEY);
 		if (cache == null || cache.get(token) == null) {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
-		SSORoleDTO dto = (SSORoleDTO) cache.get(token).get();
+		String key = (String) cache.get(token).get();
+		Cache datas = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		if (datas == null || datas.get(key) == null) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		SSORoleDTO dto = (SSORoleDTO) datas.get(key).get();
 		if (dto == null || dto.getAll() == null) {
 			return new ArrayList<>();
 		}
@@ -357,11 +362,16 @@ public class SysUser2SSOServiceImpl extends BaseSysServiceImpl {
 
 	public List<SysRole> getRollCurrent() {
 		String token = LocalTokenHolder.getToken();
-		Cache cache = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_LOCAL_TOKEN_KEY);
 		if (cache == null || cache.get(token) == null) {
 			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
 		}
-		SSORoleDTO dto = (SSORoleDTO) cache.get(token).get();
+		String key = (String) cache.get(token).get();
+		Cache datas = cacheManager.getCache(CacheConstants.SSO_USER_ROLE_INFO);
+		if (datas == null || datas.get(key) == null) {
+			throw new SSOBusinessException(ResponseCodeEnum.LOGIN_EXPIRED);
+		}
+		SSORoleDTO dto = (SSORoleDTO) datas.get(key).get();
 		if (dto == null || dto.getCurrent() == null) {
 			return new ArrayList<>();
 		}

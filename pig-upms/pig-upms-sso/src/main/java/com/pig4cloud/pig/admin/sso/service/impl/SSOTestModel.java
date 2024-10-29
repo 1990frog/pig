@@ -52,28 +52,32 @@ public class SSOTestModel {
 		//testUserPer();
 		//testUserPage();
 		System.out.println("--------");
-		//testUserPageOld();
+		testUserPageOld();
 		//testAppAll();
 		//testAppRoleAll();
 		//testAppPerAll();
 		//testUserPage();
-		testUserRole();
+		//testUserRole();
 	}
 
 	public static void testUserPageOld() {
 		SoapEntity soapEntity = new SoapEntity();
 		soapEntity.setSsoType(SSOTypeEnum.SOAP_1_2);
-		soapEntity.setHost("http://192.168.0.72:9011");
-		soapEntity.setWdslUrl("http://192.168.0.72:9011/cws");
+		soapEntity.setHost("http://192.168.0.147:9011");
+		soapEntity.setWdslUrl("http://192.168.0.147:9011/cws");
 		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE);
+		soapEntity.setSoap(true);
+		soapEntity.setOrgCode("");
 		soapEntity.setUserCode("sys");
 		soapEntity.setAppName("ETL数据集成平台");
 		soapEntity.setAppCode("ETL");
-		soapEntity.setToken("b0480d6e-e362-406f-a818-811ffaee5d7f");
+		soapEntity.setToken("d689e457-72b8-46a5-8741-31d25a056730");
 		soapEntity.setCurrent(1l);
-		soapEntity.setSize(20l);
+		soapEntity.setSize(3l);
 		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject object = WebServiceHttpClient.get(soapEntity);
+		JSONObject object = WebServiceHttpClient.post(soapEntity);
+		System.out.println(object);
+		object = object.getJSONObject("Users");
 		System.out.println(object);
 	}
 
@@ -230,17 +234,22 @@ public class SSOTestModel {
 
 	public static void testUserTotal() {
 		SoapEntity soapEntity = new SoapEntity();
-		soapEntity.setHost("http://192.168.0.230:10023");
-		soapEntity.setWdslUrl("http://192.168.0.230:10023");
+		soapEntity.setHost("http://192.168.0.147:9011/cws");
+		soapEntity.setWdslUrl("http://192.168.0.147:9011/cws");
 		soapEntity.setType(SoapTypeEnum.SOAP_USER_PAGE_TOTAL);
+		soapEntity.setSsoType(SSOTypeEnum.SOAP_1_2);
 		soapEntity.setUserCode("sys");
 		soapEntity.setAppName("ETL数据集成平台");
 		soapEntity.setAppCode("ETL");
-		soapEntity.setToken("9f6ae9f6-5431-44ad-9dde-0a1869e9873f");
+		soapEntity.setSoap(true);
+		soapEntity.setOrgCode("");
+
+		soapEntity.setToken("d689e457-72b8-46a5-8741-31d25a056730");
 		soapEntity.setCurrent(1l);
 		soapEntity.setSize(20l);
 		UserWebServiceRequest.buildMessage(soapEntity);
-		JSONObject object = WebServiceHttpClient.get(soapEntity);
+		JSONObject object = WebServiceHttpClient.post(soapEntity);
+		System.out.println(object);
 
 		/*String json = "searchXml=<Search UserCode=\"\" UserName=\"\" IsDepth=\"false\" OrgCode=\"\" UserType=\"Normal\" />";
 		RestTemplate restTemplate = new RestTemplate();

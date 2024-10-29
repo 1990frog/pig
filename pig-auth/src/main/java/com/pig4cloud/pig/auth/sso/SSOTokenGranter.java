@@ -58,6 +58,7 @@ public class SSOTokenGranter {
 		cacheServerTokenAndLocalToken(oAuth2Authentication.getUserAuthentication().getPrincipal(), accessToken.getValue(), parameters.get("token"));
 		// 处理一下名称
 		//accessToken.getAdditionalInformation().put("username", parameters.get("username").split("@@")[0]);
+		cacheLocalTokenAndKey(accessToken.getValue(), parameters);
 		return accessToken;
 	}
 
@@ -103,6 +104,15 @@ public class SSOTokenGranter {
 		// 缓存token
 		Cache serverTokenCache = cacheManager.getCache(CacheConstants.SSO_SERVER_LOCAL_TOKEN);
 		serverTokenCache.put(localToken, serverToken);
+	}
+
+	private void cacheLocalTokenAndKey(String localToken, Map<String, String> parameters) {
+		if (StringUtils.isEmpty(localToken)) {
+			return;
+		}
+		String key = parameters.get("userCode") + "@@" + parameters.get("sysClass");
+		Cache cache = cacheManager.getCache(CacheConstants.SSO_LOCAL_TOKEN_KEY);
+		cache.put(localToken, key);
 	}
 
 	/**

@@ -29,4 +29,7 @@ public class SoapEntity {
 	private String wdslUrl;
 	private String sign;
 	private SOAPMessage soapMessage;
+
+	private String orgCode; // orgcode
+	private boolean soap; // 模式
 }

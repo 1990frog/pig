@@ -101,21 +101,46 @@ public class UserWebServiceRequest {
 						curWsdlUrl += "&keyword=" + soapEntity.getUserName();
 					}
 				} else {
-					String search = "<Search UserCode=\"\" UserName=\"%s\" IsDepth=\"false\" OrgCode=\"\" UserType=\"Normal\" />";
+					String search = "<Search UserCode=\"\" UserName=\"%s\" IsDepth=\"false\" OrgCode=\"%s\" UserType=\"Normal\" />";
 					// <Pager CurrentPage="1" PageSize="20" />
 					String page = "<Pager CurrentPage=\"%s\" PageSize=\"%s\" />";
-					curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_PAGE;
-					curWsdlUrl += "?searchXml=" + String.format(search, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName()) + "&";
-					curWsdlUrl += "pagerXml=" + String.format(page, soapEntity.getCurrent(), soapEntity.getSize()) + "&";
-					curWsdlUrl += "orderField=Code&";
-					curWsdlUrl += "isAscending=false";
+					if (soapEntity.isSoap()) {
+						qName = new QName(SSOWebServiceConstants.WEB_SERVICE_NAMESPACE, SSOWebServiceConstants.WEB_SERVICE_USER_PAGE_SOAP, "");
+						String searchXml = "<![CDATA[" + search + "]]>";
+						String pagerXml = "<![CDATA[" + page + "]]>";
+						SOAPElement soapElementQueryPage = body.addChildElement(qName);
+						soapElementQueryPage.addChildElement("searchXml")
+								.setValue(String.format(searchXml, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName(), soapEntity.getOrgCode()));
+						soapElementQueryPage.addChildElement("pagerXml")
+								.setValue(String.format(pagerXml, soapEntity.getCurrent(), soapEntity.getSize()));
+						soapElementQueryPage.addChildElement("orderField").setValue("Code");
+						soapElementQueryPage.addChildElement("isAscending").setValue("false");
+						curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER;
+					} else {
+						curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_PAGE;
+						curWsdlUrl += "?searchXml=" + String.format(search, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName(), soapEntity.getOrgCode()) + "&";
+						curWsdlUrl += "pagerXml=" + String.format(page, soapEntity.getCurrent(), soapEntity.getSize()) + "&";
+						curWsdlUrl += "orderField=Code&";
+						curWsdlUrl += "isAscending=false";
+					}
 				}
 				break;
 			case SOAP_USER_PAGE_TOTAL:
-				String searchTotal = "<Search UserCode=\"\" UserName=\"%s\" IsDepth=\"false\" OrgCode=\"\" UserType=\"Normal\" />";
-				// <Pager CurrentPage="1" PageSize="20" />
-				curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_PAGE_TOTAL;
-				curWsdlUrl += "?searchXml=" + String.format(searchTotal, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName());
+				boolean soap = soapEntity.isSoap();
+				String searchTotal = "<Search UserCode=\"\" UserName=\"%s\" IsDepth=\"false\" OrgCode=\"%s\" UserType=\"Normal\" />";
+				if (soap) {
+					qName = new QName(SSOWebServiceConstants.WEB_SERVICE_NAMESPACE, SSOWebServiceConstants.WEB_SERVICE_USER_PAGE_TOTAL_SOAP, "");
+					SOAPElement soapElementQueryCount = body.addChildElement(qName);
+					String queryCountValue = "<![CDATA[" + searchTotal + "]]>";
+					soapElementQueryCount.addChildElement("searchXml")
+							.setValue(String.format(queryCountValue, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName(),
+									soapEntity.getOrgCode()));
+					curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER;
+				} else {
+					// <Pager CurrentPage="1" PageSize="20" />
+					curWsdlUrl = SSOWebServiceConstants.WEB_SERVICE_USER_PAGE_TOTAL;
+					curWsdlUrl += "?searchXml=" + String.format(searchTotal, StrUtil.isEmpty(soapEntity.getUserName()) ? "" : soapEntity.getUserName(), "");
+				}
 				break;
 			case SOAP_ALL_ROLE:
 				qName = new QName(SSOWebServiceConstants.WEB_SERVICE_NAMESPACE, SSOWebServiceConstants.WEB_SERVICE_USER_ALL_ROLE_REQUEST, "");

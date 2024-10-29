@@ -59,6 +59,12 @@ public class UserWebServiceResponse {
 				case SOAP_ALL_ROLE:
 					res = parsUserRoleAll(body);
 					break;
+				case SOAP_USER_PAGE_TOTAL:
+					res = parsUserTotal(body);
+					break;
+				case SOAP_USER_PAGE:
+					res = parsUserByPage(body);
+					break;
 			}
 			return res;
 		} catch (Exception e) {
@@ -140,6 +146,43 @@ public class UserWebServiceResponse {
 		String decode = URLDecoder.decode(str, StandardCharsets.UTF_8);
 		JSONObject role = XML.toJSONObject(decode);
 		return role;
+	}
+
+	private static JSONObject parsUserByPage(JSONObject json) {
+		if (Objects.isNull(json) || !json.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_USER_PAGE_SOAP)) {
+			return null;
+		}
+		JSONObject roleResponse = json.getJSONObject(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_USER_PAGE_SOAP);
+		if (Objects.isNull(roleResponse) || !roleResponse.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_USER_PAGE_RESULT)) {
+			return null;
+		}
+		String str = roleResponse.getStr(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_USER_PAGE_RESULT);
+		if (StrUtil.isEmpty(str)) {
+			return null;
+		}
+		// 再来转一次，来获取用户的信息
+		String decode = URLDecoder.decode(str, StandardCharsets.UTF_8);
+		JSONObject users = XML.toJSONObject(decode);
+		return users;
+	}
+
+	private static JSONObject parsUserTotal(JSONObject json) {
+		if (Objects.isNull(json) || !json.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_USER_PAGE_TOTAL_SOAP)) {
+			return null;
+		}
+		JSONObject roleResponse = json.getJSONObject(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_USER_PAGE_TOTAL_SOAP);
+		if (Objects.isNull(roleResponse) || !roleResponse.containsKey(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_USER_PAGE_TOTAL_RESULT)) {
+			return null;
+		}
+		String str = roleResponse.getStr(SSOWebServiceConstants.WEB_SERVICE_RESPONSE_USER_PAGE_TOTAL_RESULT);
+		if (StrUtil.isEmpty(str)) {
+			return null;
+		}
+		// 再来转一次，来获取用户的信息
+		String decode = URLDecoder.decode(str, StandardCharsets.UTF_8);
+		JSONObject count = new JSONObject();
+		count.putOnce("content", Integer.valueOf(decode));
+		return count;
 	}
 
 	private static JSONObject parsUserPri(JSONObject json) {

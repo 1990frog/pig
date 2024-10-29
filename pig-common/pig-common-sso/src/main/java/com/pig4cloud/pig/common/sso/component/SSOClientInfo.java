@@ -25,6 +25,10 @@ public class SSOClientInfo implements Serializable {
 
 	private Integer type = 2; // 1-soap1.1(230 SSO) ,2-soap1.2
 
+	private boolean soap = false;
+
+	private String orgCode = "";
+
 	private List<String> apps;
 
 	private String serverUrl;
@@ -140,5 +144,21 @@ public class SSOClientInfo implements Serializable {
 
 	public void setType(Integer type) {
 		this.type = type;
+	}
+
+	public boolean isSoap() {
+		return soap;
+	}
+
+	public void setSoap(boolean soap) {
+		this.soap = soap;
+	}
+
+	public String getOrgCode() {
+		return orgCode;
+	}
+
+	public void setOrgCode(String orgCode) {
+		this.orgCode = orgCode;
 	}
 }

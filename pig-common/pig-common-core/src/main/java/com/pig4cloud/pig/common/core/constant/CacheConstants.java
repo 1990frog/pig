@@ -106,4 +106,6 @@ public interface CacheConstants {
 
 	String SSO_APPCODE_ID = "sso_appcode_id";
 
+	String SSO_LOCAL_TOKEN_KEY = "sso_local_token_key:token";
+
 }

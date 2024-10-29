@@ -47,7 +47,15 @@ public interface SSOWebServiceConstants {
 
 
 	// 获取用户组织
+	String WEB_SERVICE_USER = "/UserWebService.asmx";
 	String WEB_SERVICE_USER_PAGE = "/UserWebService.asmx/QueryUsersByPager";
+	String WEB_SERVICE_USER_PAGE_SOAP = "QueryUsersByPager";
+	String WEB_SERVICE_USER_PAGE_TOTAL_SOAP = "QueryUserCount";
+	String WEB_SERVICE_RESPONSE_USER_PAGE_SOAP = "QueryUsersByPagerResponse";
+	String WEB_SERVICE_RESPONSE_USER_PAGE_RESULT = "QueryUsersByPagerResult";
+	String WEB_SERVICE_RESPONSE_USER_PAGE_TOTAL_SOAP = "QueryUserCountResponse";
+
+	String WEB_SERVICE_RESPONSE_USER_PAGE_TOTAL_RESULT = "QueryUserCountResult";
 	String WEB_SERVICE_USER_PAGE_TOTAL = "/UserWebService.asmx/QueryUserCount";
 
 	String WEB_SERVICE_USER_PAGE_1_1 = "/cm/api/User/paged/v2";
